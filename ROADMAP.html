@@ -1,0 +1,299 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>basicERP – Fahrplan und Testhilfe</title>
+  <style>
+    :root {
+      --ink: #172033;
+      --muted: #667085;
+      --line: #dbe2ea;
+      --paper: #ffffff;
+      --wash: #f3f6fa;
+      --navy: #101828;
+      --blue: #175cd3;
+      --cyan: #0e9384;
+      --green: #067647;
+      --amber: #b54708;
+      --red: #b42318;
+      --radius: 22px;
+      --shadow: 0 18px 48px rgba(16, 24, 40, .08);
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 10% 0%, rgba(23,92,211,.10), transparent 28rem),
+        radial-gradient(circle at 90% 10%, rgba(14,147,132,.09), transparent 25rem),
+        var(--wash);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.55;
+    }
+    a { color: var(--blue); }
+    code, pre { font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace; }
+    code { font-size: .92em; }
+    .shell { width: min(1180px, calc(100% - 32px)); margin: 0 auto; }
+    .hero { padding: 52px 0 34px; }
+    .hero-grid { display: grid; grid-template-columns: 1.4fr .6fr; gap: 24px; align-items: stretch; }
+    .hero-main, .status-card, .panel, .phase, .test-card {
+      border: 1px solid rgba(255,255,255,.75);
+      background: rgba(255,255,255,.91);
+      box-shadow: var(--shadow);
+      border-radius: var(--radius);
+    }
+    .hero-main { padding: clamp(28px, 5vw, 58px); overflow: hidden; position: relative; }
+    .hero-main::after {
+      content: ""; position: absolute; width: 240px; height: 240px; border-radius: 999px;
+      right: -95px; top: -85px; background: linear-gradient(145deg, #84caff, #5fe9d0); opacity: .35;
+    }
+    .eyebrow { margin: 0 0 12px; color: var(--blue); font-size: .77rem; font-weight: 800; letter-spacing: .18em; text-transform: uppercase; }
+    h1, h2, h3 { color: var(--navy); letter-spacing: -.035em; line-height: 1.12; }
+    h1 { margin: 0; max-width: 760px; font-size: clamp(2.5rem, 6vw, 5.4rem); }
+    h2 { margin: 0 0 18px; font-size: clamp(1.7rem, 3vw, 2.6rem); }
+    h3 { margin: 0 0 10px; font-size: 1.2rem; }
+    .lede { max-width: 760px; margin: 24px 0 0; color: #475467; font-size: 1.08rem; }
+    .chips { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 28px; }
+    .chip { padding: 7px 11px; border-radius: 999px; background: #eff8ff; color: #1849a9; font-size: .78rem; font-weight: 750; }
+    .status-card { padding: 28px; color: white; background: var(--navy); border-color: var(--navy); }
+    .status-card h2, .status-card strong { color: white; }
+    .status-card p { color: #cbd5e1; }
+    .big-number { margin: 24px 0 0; font-size: 4.2rem; font-weight: 850; line-height: 1; letter-spacing: -.07em; }
+    .progress { height: 11px; margin: 18px 0; background: #344054; border-radius: 99px; overflow: hidden; }
+    .progress > span { display: block; width: 45%; height: 100%; background: linear-gradient(90deg, #53b1fd, #5fe9d0); }
+    .meta { display: grid; gap: 8px; padding: 0; list-style: none; font-size: .88rem; }
+    nav { position: sticky; top: 0; z-index: 20; border-block: 1px solid var(--line); background: rgba(255,255,255,.88); backdrop-filter: blur(15px); }
+    nav .shell { display: flex; gap: 22px; overflow-x: auto; padding-block: 13px; }
+    nav a { flex: none; color: #344054; text-decoration: none; font-size: .84rem; font-weight: 750; }
+    main { padding: 38px 0 80px; }
+    section { scroll-margin-top: 70px; margin-top: 28px; }
+    .panel { padding: clamp(24px, 4vw, 42px); }
+    .decision-grid, .test-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .decision, .test-card { padding: 20px; border: 1px solid var(--line); border-radius: 17px; background: #fff; }
+    .decision small { color: var(--green); font-weight: 800; text-transform: uppercase; letter-spacing: .08em; }
+    .decision p, .phase p, .test-card p { color: var(--muted); }
+    .phase-list { display: grid; gap: 14px; }
+    .phase { padding: 24px; box-shadow: none; border-color: var(--line); }
+    .phase-head { display: grid; grid-template-columns: auto 1fr auto; gap: 16px; align-items: center; }
+    .number { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 13px; color: white; background: var(--navy); font-weight: 850; }
+    .phase h3 { margin: 0; }
+    .state { padding: 6px 10px; border-radius: 999px; font-size: .74rem; font-weight: 850; text-transform: uppercase; letter-spacing: .07em; }
+    .active { background: #eff8ff; color: var(--blue); }
+    .planned { background: #f2f4f7; color: #475467; }
+    .done { background: #ecfdf3; color: var(--green); }
+    .checklist { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 18px; padding: 0; list-style: none; }
+    .checklist li { position: relative; padding-left: 27px; color: #475467; }
+    .checklist li::before { content: "○"; position: absolute; left: 1px; color: #98a2b3; font-weight: 900; }
+    .checklist li.ok::before { content: "✓"; color: var(--green); }
+    .checklist li.wait::before { content: "◐"; color: var(--amber); }
+    .notice { margin: 18px 0; padding: 16px 18px; border-left: 4px solid var(--amber); border-radius: 12px; background: #fffaeb; color: #7a2e0e; }
+    .success { border-color: var(--green); background: #ecfdf3; color: #05603a; }
+    pre { overflow-x: auto; padding: 17px; border-radius: 14px; background: #101828; color: #e6edf7; font-size: .86rem; line-height: 1.65; }
+    .steps { counter-reset: step; display: grid; gap: 13px; padding: 0; list-style: none; }
+    .steps > li { counter-increment: step; position: relative; min-height: 44px; padding: 7px 0 7px 58px; }
+    .steps > li::before { content: counter(step); position: absolute; left: 0; top: 0; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 12px; color: white; background: var(--blue); font-weight: 850; }
+    table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+    th, td { padding: 12px 10px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+    th { color: #344054; font-size: .75rem; text-transform: uppercase; letter-spacing: .08em; }
+    details { border-top: 1px solid var(--line); padding: 15px 0; }
+    summary { cursor: pointer; font-weight: 750; color: var(--navy); }
+    footer { padding: 32px 0 48px; color: var(--muted); font-size: .86rem; }
+    @media (max-width: 860px) {
+      .hero-grid, .decision-grid, .test-grid { grid-template-columns: 1fr; }
+      .checklist { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 560px) {
+      .shell { width: min(100% - 20px, 1180px); }
+      .hero { padding-top: 20px; }
+      .hero-main, .status-card, .panel { border-radius: 18px; padding: 22px; }
+      .phase-head { grid-template-columns: auto 1fr; }
+      .phase-head .state { grid-column: 2; justify-self: start; }
+    }
+    @media print {
+      nav { display: none; }
+      body { background: white; }
+      .hero-main, .status-card, .panel, .phase { box-shadow: none; break-inside: avoid; }
+      .status-card { color: black; background: white; border-color: var(--line); }
+      .status-card h2, .status-card strong, .status-card p { color: black; }
+    }
+  </style>
+</head>
+<body>
+  <header class="hero">
+    <div class="shell hero-grid">
+      <div class="hero-main">
+        <p class="eyebrow">Lebendes Projektdokument · v0.1</p>
+        <h1>basicERP Fahrplan</h1>
+        <p class="lede">Plan, Architekturentscheidungen, aktueller Umsetzungsstand und Schritt-für-Schritt-Testhilfe für das lokale System. Diese Datei wird nach jedem abgeschlossenen Projektschritt aktualisiert.</p>
+        <div class="chips">
+          <span class="chip">AGPL-3.0-or-later</span>
+          <span class="chip">Solo + Codex</span>
+          <span class="chip">Docker: Windows &amp; Ubuntu</span>
+          <span class="chip">API-first</span>
+          <span class="chip">Single-Tenant</span>
+        </div>
+      </div>
+      <aside class="status-card">
+        <p class="eyebrow" style="color:#84caff">Aktueller Stand</p>
+        <h2>Phase 0 läuft</h2>
+        <div class="big-number">60%</div>
+        <div class="progress" aria-label="Phase 0 zu 60 Prozent abgeschlossen"><span style="width:60%"></span></div>
+        <ul class="meta">
+          <li><strong>Gesamtfortschritt:</strong> ca. 7 %</li>
+          <li><strong>Letzte Aktualisierung:</strong> 05.10.2026</li>
+          <li><strong>Nächster Schritt:</strong> Rollen &amp; Firmeneinstellungen</li>
+          <li><strong>Zieltermin:</strong> keiner; Qualität vor Kalender</li>
+        </ul>
+      </aside>
+    </div>
+  </header>
+
+  <nav aria-label="Seitennavigation">
+    <div class="shell">
+      <a href="#entscheidungen">Entscheidungen</a>
+      <a href="#status">Status</a>
+      <a href="#phasen">Phasen</a>
+      <a href="#windows">Windows-Test</a>
+      <a href="#ubuntu">Ubuntu-Test</a>
+      <a href="#betrieb">Betrieb</a>
+      <a href="#aenderungen">Änderungen</a>
+    </div>
+  </nav>
+
+  <main class="shell">
+    <section id="entscheidungen" class="panel">
+      <p class="eyebrow">Bestätigte Leitplanken</p>
+      <h2>Projektentscheidungen</h2>
+      <div class="decision-grid">
+        <article class="decision"><small>Entschieden</small><h3>AGPL-3.0-or-later</h3><p>Offene Weiterentwicklung wird geschützt; ein geschlossener SaaS-Fork soll vermieden werden.</p></article>
+        <article class="decision"><small>Entschieden</small><h3>Solo-Umsetzung</h3><p>Ein Projektinhaber, Codex setzt um. Es gibt keinen Fixtermin; geplant wird in überprüfbaren vertikalen Schritten.</p></article>
+        <article class="decision"><small>Entschieden</small><h3>Windows &amp; Ubuntu</h3><p>Offizieller Docker-Pfad auf Windows mit Docker Desktop/Linux-Containern und Ubuntu mit Docker Engine.</p></article>
+      </div>
+    </section>
+
+    <section id="status" class="panel">
+      <p class="eyebrow">Arbeitsstand</p>
+      <h2>Phase 0 – Fundament</h2>
+      <ul class="checklist">
+        <li class="ok">Roadmap, Projektplan und Architektur erstellt</li>
+        <li class="ok">Architekturentscheidung: modularer Monolith</li>
+        <li class="ok">Git-Repository lokal initialisiert</li>
+        <li class="ok">Django/DRF-Grundgerüst mit Custom User</li>
+        <li class="ok">React/TypeScript/Tailwind-App-Shell</li>
+        <li class="ok">PostgreSQL, Redis, Web, Worker und Nginx in Compose</li>
+        <li class="ok">Admin-Bootstrap admin/admin</li>
+        <li class="ok">Erzwungener Passwortwechsel nach Erstanmeldung</li>
+        <li class="ok">Windows- und Ubuntu-Installationsskripte</li>
+        <li class="ok">Lokale Backend-Tests, Ruff, OpenAPI, Frontend-Lint und -Build</li>
+        <li class="ok">CI-Workflow für Backend, Frontend und Container-Build angelegt</li>
+        <li class="ok">Windows-Installer und vollständiger Docker-Lauftest erfolgreich</li>
+        <li>Rollenmodell Admin/Mitarbeiter</li>
+        <li>Firmeneinstellungen und Logo</li>
+        <li>CI erstmalig auf GitHub ausführen</li>
+        <li>OpenAPI-/Frontend-Vertragstest automatisieren</li>
+      </ul>
+      <div class="notice success">Der reale Windows-Durchstich ist bestätigt: Build, Migration, Admin-Bootstrap, fünf laufende Dienste, Readiness, Startseite, HTML-Fahrplan, API-Dokumentation, Login, erzwungener Passwortwechselstatus und Logout funktionieren.</div>
+    </section>
+
+    <section id="phasen" class="panel">
+      <p class="eyebrow">Lieferfolge</p>
+      <h2>Phasen bis 1.0</h2>
+      <div class="phase-list">
+        <article class="phase"><div class="phase-head"><span class="number">0</span><div><h3>v0.1 – Fundament</h3><p>Docker, Auth, Firma, API, App-Shell, CI.</p></div><span class="state active">In Arbeit · 60 %</span></div></article>
+        <article class="phase"><div class="phase-head"><span class="number">1</span><div><h3>v0.2 – CRM &amp; Katalog</h3><p>Kontakte, Adressen, Aktivitäten, Leistungen, CSV-Import.</p></div><span class="state planned">Geplant</span></div></article>
+        <article class="phase"><div class="phase-head"><span class="number">1a</span><div><h3>v0.2.1 – E-Rechnungseingang light</h3><p>Originalannahme, Prüfung, Metadaten und sichere Ablage.</p></div><span class="state planned">Geplant</span></div></article>
+        <article class="phase"><div class="phase-head"><span class="number">2</span><div><h3>v0.3 – Projekte</h3><p>Projekte, Arbeitspakete, Budgets, Sätze und Board.</p></div><span class="state planned">Geplant</span></div></article>
+        <article class="phase"><div class="phase-head"><span class="number">3</span><div><h3>v0.4 – Zeit &amp; Portal</h3><p>Zeiten, Leistungen, Abwesenheiten und Ist-Controlling.</p></div><span class="state planned">Geplant</span></div></article>
+        <article class="phase"><div class="phase-head"><span class="number">4</span><div><h3>v0.5 – Dokumentkern</h3><p>Angebot, Rechnung, Festschreibung, PDF, Versand und Zahlung.</p></div><span class="state planned">Geplant</span></div></article>
+        <article class="phase"><div class="phase-head"><span class="number">5</span><div><h3>v0.6 – E-Rechnungsausgang</h3><p>XRechnung, ZUGFeRD, PDF/A-3 und offizielle Validierung.</p></div><span class="state planned">Geplant</span></div></article>
+        <article class="phase"><div class="phase-head"><span class="number">6</span><div><h3>v0.7 – Vorlagen-Editor</h3><p>Kontrollierte Zonen/Blöcke mit gemeinsamer Renderquelle.</p></div><span class="state planned">Geplant</span></div></article>
+        <article class="phase"><div class="phase-head"><span class="number">7</span><div><h3>v0.8 – Mahnen &amp; Archiv</h3><p>OPOS, Mahnlauf, Integrität und Verfahrensdokumentation.</p></div><span class="state planned">Geplant</span></div></article>
+        <article class="phase"><div class="phase-head"><span class="number">8</span><div><h3>v0.9 – HR</h3><p>Personalstamm, geschützte Akte, Konten und Portal.</p></div><span class="state planned">Geplant</span></div></article>
+        <article class="phase"><div class="phase-head"><span class="number">9</span><div><h3>v1.0 – Integrationen &amp; Härtung</h3><p>API-Keys, Webhooks, DATEV, Backup/Restore und Release-Dokumentation.</p></div><span class="state planned">Geplant</span></div></article>
+      </div>
+      <p>Gesamtgröße: grob 55–84 Personenwochen plus Reserve. Da Codex umsetzt und kein Zieltermin vorgegeben ist, wird nach jeder Phase anhand realer Ergebnisse neu geschätzt.</p>
+    </section>
+
+    <section id="windows" class="panel">
+      <p class="eyebrow">Aktuelles System</p>
+      <h2>Installation und Selbsttest unter Windows</h2>
+      <ol class="steps">
+        <li><strong>Docker Desktop starten.</strong> In den Einstellungen müssen Linux-Container aktiv sein. Warten, bis „Docker Engine running“ angezeigt wird.</li>
+        <li><strong>PowerShell im Projektordner öffnen</strong> und den Installer starten:<pre>powershell -ExecutionPolicy Bypass -File .\scripts\install-windows.ps1</pre></li>
+        <li><strong>Fragen beantworten.</strong> Für den lokalen Test sind <code>localhost</code>, Port <code>8080</code>, Projektname <code>basicerp</code> und kein externer HTTPS-Proxy passend.</li>
+        <li><strong>Anwendung öffnen:</strong> <a href="http://localhost:8080/">http://localhost:8080/</a>. Mit <code>admin</code> / <code>admin</code> anmelden.</li>
+        <li><strong>Passwort sofort ändern.</strong> basicERP sperrt das Dashboard bis ein neues, ausreichend starkes Passwort gespeichert wurde.</li>
+        <li><strong>Vier Prüfungen durchführen:</strong> Dashboard sichtbar, Readiness liefert <code>{"status":"ready"}</code>, API-Doku öffnet, alle Container sind healthy/running.</li>
+      </ol>
+      <div class="test-grid">
+        <article class="test-card"><h3>1 · Container</h3><pre>docker compose ps</pre><p>db, redis, web, worker und nginx sollen laufen; Healthchecks dürfen kurz „starting“ zeigen.</p></article>
+        <article class="test-card"><h3>2 · Readiness</h3><pre>Invoke-RestMethod http://localhost:8080/api/v1/health/ready/</pre><p>Erwartet: Status <code>ready</code>.</p></article>
+        <article class="test-card"><h3>3 · Logs</h3><pre>docker compose logs --tail 100</pre><p>Keine dauerhaften Tracebacks, Neustartschleifen oder Datenbankfehler.</p></article>
+      </div>
+      <div class="notice success">Am 05.10.2026 auf dem aktuellen Windows-System erfolgreich getestet. Alle fünf Dienste laufen; db, redis, web und nginx melden healthy, der Celery-Worker ist mit zwei Prozessen verbunden.</div>
+    </section>
+
+    <section id="ubuntu" class="panel">
+      <p class="eyebrow">Server oder Arbeitsplatz</p>
+      <h2>Installation und Selbsttest unter Ubuntu</h2>
+      <p>Voraussetzungen: Docker Engine, Compose-Plugin, OpenSSL und curl. Der Benutzer muss Docker verwenden dürfen. Danach:</p>
+      <pre>chmod +x ./scripts/install-ubuntu.sh
+./scripts/install-ubuntu.sh</pre>
+      <p>Nicht-interaktive Beispielinstallation:</p>
+      <pre>./scripts/install-ubuntu.sh \
+  --domain erp.example.de \
+  --http-port 8080 \
+  --project-name basicerp \
+  --behind-https-proxy \
+  --non-interactive</pre>
+      <p>Bei <code>--behind-https-proxy</code> terminiert ein externer Reverse Proxy TLS und leitet intern auf den gewählten HTTP-Port weiter. Das Skript beschafft bewusst noch kein Zertifikat.</p>
+      <pre>docker compose ps
+curl --fail http://localhost:8080/api/v1/health/ready/
+docker compose logs --tail 100</pre>
+    </section>
+
+    <section id="betrieb" class="panel">
+      <p class="eyebrow">Alltag</p>
+      <h2>Betriebsbefehle</h2>
+      <table>
+        <thead><tr><th>Zweck</th><th>Befehl</th><th>Hinweis</th></tr></thead>
+        <tbody>
+          <tr><td>Status</td><td><code>docker compose ps</code></td><td>Zeigt Dienste und Healthchecks.</td></tr>
+          <tr><td>Logs</td><td><code>docker compose logs -f --tail 100</code></td><td>Mit Strg+C verlassen; Container laufen weiter.</td></tr>
+          <tr><td>Stoppen</td><td><code>docker compose stop</code></td><td>Datenvolumes bleiben erhalten.</td></tr>
+          <tr><td>Starten</td><td><code>docker compose up -d</code></td><td>Startet vorhandene Installation.</td></tr>
+          <tr><td>Neubauen</td><td><code>docker compose up -d --build</code></td><td>Nach Quellcodeänderungen.</td></tr>
+          <tr><td>Django-Prüfung</td><td><code>docker compose run --rm web python manage.py check</code></td><td>Prüft die installierte Backend-Konfiguration.</td></tr>
+        </tbody>
+      </table>
+      <div class="notice"><strong>Nicht unbedacht ausführen:</strong> <code>docker compose down -v</code> löscht die Docker-Volumes und damit Datenbank sowie Dateien. Für normale Stopps immer <code>docker compose stop</code> verwenden.</div>
+      <details><summary>Was macht der Installer?</summary><p>Er validiert Docker, fragt Domain/Port/Projektname ab, erzeugt zufällige Django- und Datenbank-Secrets in der nicht versionierten <code>.env</code>, baut Images, startet PostgreSQL/Redis, führt Migrationen aus, erstellt den Admin einmalig und startet alle Dienste.</p></details>
+      <details><summary>Was passiert bei erneutem Start?</summary><p>Ein bestehender Admin wird nicht zurückgesetzt. Eine vorhandene <code>.env</code> wird nur nach Bestätigung beziehungsweise mit <code>-Force</code>/<code>--force</code> überschrieben. Ein Überschreiben nach produktiver Nutzung ist nicht vorgesehen.</p></details>
+      <details><summary>Wann brauche ich GitHub?</summary><p>Für die lokale Umsetzung nicht. GitHub-Zugang wird erst benötigt, wenn ein Remote-Repository, Pull Requests oder GitHub Actions eingerichtet werden sollen. Dafür genügt später ein vom Projektinhaber angelegtes leeres Repository und eine sichere Anmeldung über GitHub CLI oder einen verbundenen GitHub-Connector; Zugangsdaten gehören nie in den Chat oder das Repository.</p></details>
+    </section>
+
+    <section id="aenderungen" class="panel">
+      <p class="eyebrow">Nachvollziehbarkeit</p>
+      <h2>Änderungsprotokoll</h2>
+      <table>
+        <thead><tr><th>Datum</th><th>Schritt</th><th>Ergebnis</th></tr></thead>
+        <tbody>
+          <tr><td>05.10.2026</td><td>Planung</td><td>Projektplan, Systemarchitektur und zwei ADRs erstellt.</td></tr>
+          <tr><td>05.10.2026</td><td>Entscheidungen</td><td>AGPL-3.0-or-later, Solo-Umsetzung ohne Zieltermin, Docker auf Windows und Ubuntu bestätigt.</td></tr>
+          <tr><td>05.10.2026</td><td>Phase 0 / Schritt 1</td><td>Git, Django/DRF, React/Tailwind, Compose, Login, Passwortwechsel, Installer und HTML-Fahrplan angelegt.</td></tr>
+          <tr><td>05.10.2026</td><td>Verifikation</td><td>3 Backend-Tests inklusive CSRF und Passwortwechsel, Ruff, Migrationscheck, Django-Systemcheck, OpenAPI-Validierung, Frontend-Lint/-Build, PowerShell-/Bash-Syntax und Compose-Konfiguration erfolgreich.</td></tr>
+          <tr><td>05.10.2026</td><td>Docker-Vorprüfung</td><td>Windows-Installer erkannte die zunächst gestoppte Docker-Engine korrekt und brach vor Änderungen an .env ab.</td></tr>
+          <tr><td>05.10.2026</td><td>Installer-Härtung</td><td>Wiederaufnahme mit vorhandener .env sowie dreistufige Retries für Image-Build und Infrastrukturstart ergänzt.</td></tr>
+          <tr><td>05.10.2026</td><td>Windows-Durchstich</td><td>Docker-Installation vollständig erfolgreich; Health, UI, Fahrplan, API-Doku, Login-Session, Passwortwechselpflicht und Logout real geprüft.</td></tr>
+          <tr><td>05.10.2026</td><td>GitHub</td><td>Lokales Repository mit github.com/SRyoshi2/basicERP verbunden; Initial-Commit und CI-Ausführung vorbereitet.</td></tr>
+        </tbody>
+      </table>
+    </section>
+  </main>
+
+  <footer class="shell">basicERP · Lebender Fahrplan · Maßgeblich sind Quellcode, Tests, ADRs und die jeweils zuletzt aktualisierte Fassung dieser Datei.</footer>
+</body>
+</html>

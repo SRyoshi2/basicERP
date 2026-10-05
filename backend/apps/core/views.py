@@ -1,0 +1,114 @@
+from django.contrib.auth import authenticate, login, logout
+from django.db import connection
+from django.middleware.csrf import get_token
+from django.views.decorators.csrf import csrf_protect
+from django.views.decorators.csrf import ensure_csrf_cookie
+from django.utils.decorators import method_decorator
+from drf_spectacular.utils import extend_schema
+from rest_framework import status
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from .serializers import (
+    ChangePasswordSerializer,
+    CsrfTokenSerializer,
+    HealthSerializer,
+    LoginSerializer,
+    UserSerializer,
+)
+
+
+def user_payload(user):
+    return {
+        "id": str(user.pk),
+        "username": user.username,
+        "email": user.email,
+        "is_staff": user.is_staff,
+        "must_change_password": user.must_change_password,
+    }
+
+
+class LiveHealthView(APIView):
+    authentication_classes = []
+    permission_classes = [AllowAny]
+
+    @extend_schema(responses=HealthSerializer)
+    def get(self, request):
+        return Response({"status": "ok"})
+
+
+class ReadyHealthView(APIView):
+    authentication_classes = []
+    permission_classes = [AllowAny]
+
+    @extend_schema(responses=HealthSerializer)
+    def get(self, request):
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT 1")
+            cursor.fetchone()
+        return Response({"status": "ready"})
+
+
+@method_decorator(ensure_csrf_cookie, name="dispatch")
+class CsrfView(APIView):
+    authentication_classes = []
+    permission_classes = [AllowAny]
+
+    @extend_schema(responses=CsrfTokenSerializer)
+    def get(self, request):
+        return Response({"csrfToken": get_token(request)})
+
+
+@method_decorator(csrf_protect, name="dispatch")
+class LoginView(APIView):
+    authentication_classes = []
+    permission_classes = [AllowAny]
+
+    @extend_schema(request=LoginSerializer, responses={200: UserSerializer})
+    def post(self, request):
+        serializer = LoginSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = authenticate(
+            request,
+            username=serializer.validated_data["identifier"],
+            password=serializer.validated_data["password"],
+        )
+        if user is None:
+            return Response(
+                {"detail": "Anmeldedaten sind ungültig."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        login(request, user)
+        return Response(user_payload(user))
+
+
+class LogoutView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    @extend_schema(request=None, responses={204: None})
+    def post(self, request):
+        logout(request)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class MeView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    @extend_schema(responses=UserSerializer)
+    def get(self, request):
+        return Response(user_payload(request.user))
+
+
+class ChangePasswordView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    @extend_schema(request=ChangePasswordSerializer, responses={200: UserSerializer})
+    def post(self, request):
+        serializer = ChangePasswordSerializer(data=request.data, context={"request": request})
+        serializer.is_valid(raise_exception=True)
+        request.user.set_password(serializer.validated_data["new_password"])
+        request.user.must_change_password = False
+        request.user.save(update_fields=["password", "must_change_password"])
+        login(request, request.user)
+        return Response(user_payload(request.user))
