@@ -9,6 +9,7 @@ import {
   type CompanyProfile,
   type User,
 } from "./api";
+import { ContactsPage } from "./Contacts";
 
 function Brand() {
   return (
@@ -18,7 +19,7 @@ function Brand() {
       </div>
       <div>
         <p className="m-0 text-lg font-bold tracking-tight text-slate-950">basicERP</p>
-        <p className="m-0 text-xs font-medium uppercase tracking-[0.2em] text-slate-500">Phase 0</p>
+        <p className="m-0 text-xs font-medium uppercase tracking-[0.2em] text-slate-500">Phase 1</p>
       </div>
     </div>
   );
@@ -237,7 +238,7 @@ function CompanySettings({ user, onBack }: { user: User; onBack: () => void }) {
 }
 
 function Dashboard({ user, onLogout }: { user: User; onLogout: () => void }) {
-  const [view, setView] = useState<"dashboard" | "company">("dashboard");
+  const [view, setView] = useState<"dashboard" | "company" | "contacts">("dashboard");
 
   return (
     <div className="min-h-screen bg-slate-100">
@@ -250,14 +251,18 @@ function Dashboard({ user, onLogout }: { user: User; onLogout: () => void }) {
           </div>
         </div>
       </header>
-      {view === "company" ? <CompanySettings user={user} onBack={() => setView("dashboard")} /> : (
+      {view === "company" ? <CompanySettings user={user} onBack={() => setView("dashboard")} /> : view === "contacts" ? <ContactsPage user={user} onBack={() => setView("dashboard")} /> : (
       <main className="mx-auto max-w-7xl px-6 py-10">
         <div className="rounded-[2rem] bg-slate-950 p-8 text-white shadow-xl">
-          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-cyan-300">Fundament aktiv</p>
+          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-cyan-300">Phase 1 · CRM</p>
           <h1 className="mt-3 text-4xl font-bold tracking-tight">Hallo {user.username}.</h1>
-          <p className="mt-4 max-w-2xl leading-7 text-slate-300">basicERP läuft. Login, Passwortwechsel, API-Dokumentation, PostgreSQL, Redis und Worker bilden den ersten Phase-0-Durchstich.</p>
+          <p className="mt-4 max-w-2xl leading-7 text-slate-300">Das Fundament steht. Im CRM kannst du jetzt Firmen und Personen samt Adressen und Ansprechpartnern verwalten.</p>
         </div>
         <div className="mt-8 grid gap-5 md:grid-cols-2 lg:grid-cols-4">
+          <button onClick={() => setView("contacts")} className="rounded-2xl border border-blue-200 bg-blue-50 p-6 text-left shadow-sm transition hover:-translate-y-1 hover:shadow-lg">
+            <p className="text-sm font-bold uppercase tracking-wider text-blue-700">CRM</p>
+            <p className="mt-3 font-semibold text-slate-900">Kontakte verwalten</p>
+          </button>
           <button onClick={() => setView("company")} className="rounded-2xl border border-slate-200 bg-white p-6 text-left shadow-sm transition hover:-translate-y-1 hover:shadow-lg">
             <p className="text-sm font-bold uppercase tracking-wider text-blue-700">Firma</p>
             <p className="mt-3 font-semibold text-slate-900">Firmeneinstellungen {user.role === "admin" ? "bearbeiten" : "ansehen"}</p>

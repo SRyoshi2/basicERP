@@ -4,7 +4,7 @@ info:
   version: 0.1.0
   description: API-first ERP für kleine Unternehmen
 paths:
-  /auth/change-password/:
+  /api/v1/auth/change-password/:
     post:
       operationId: auth_change_password_create
       tags:
@@ -36,7 +36,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ApiErrorResponse'
           description: ''
-  /auth/csrf/:
+  /api/v1/auth/csrf/:
     get:
       operationId: auth_csrf_retrieve
       tags:
@@ -50,7 +50,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/CsrfToken'
           description: ''
-  /auth/login/:
+  /api/v1/auth/login/:
     post:
       operationId: auth_login_create
       tags:
@@ -88,7 +88,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ApiErrorResponse'
           description: ''
-  /auth/logout/:
+  /api/v1/auth/logout/:
     post:
       operationId: auth_logout_create
       tags:
@@ -98,7 +98,7 @@ paths:
       responses:
         '204':
           description: No response body
-  /auth/me/:
+  /api/v1/auth/me/:
     get:
       operationId: auth_me_retrieve
       tags:
@@ -112,7 +112,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/User'
           description: ''
-  /company/:
+  /api/v1/company/:
     get:
       operationId: company_retrieve
       tags:
@@ -174,7 +174,205 @@ paths:
               schema:
                 $ref: '#/components/schemas/ApiErrorResponse'
           description: ''
-  /health/live/:
+  /api/v1/crm/contacts/:
+    get:
+      operationId: crm_contacts_list
+      parameters:
+      - in: query
+        name: archived
+        schema:
+          type: string
+          enum:
+          - all
+          - 'false'
+          - 'true'
+        description: Aktive, archivierte oder alle Kontakte
+      - in: query
+        name: kind
+        schema:
+          type: string
+          enum:
+          - organization
+          - person
+        description: Firma oder Person
+      - name: page
+        required: false
+        in: query
+        description: Eine Seitenzahl in der paginierten Ergebnismenge.
+        schema:
+          type: integer
+      - in: query
+        name: search
+        schema:
+          type: string
+        description: Name, E-Mail oder Kundennummer
+      tags:
+      - crm
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedContactList'
+          description: ''
+    post:
+      operationId: crm_contacts_create
+      tags:
+      - crm
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContactCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ContactCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ContactCreate'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Contact'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+          description: ''
+  /api/v1/crm/contacts/{id}/:
+    get:
+      operationId: crm_contacts_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Ein UUID-String, der contact identifiziert.
+        required: true
+      tags:
+      - crm
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Contact'
+          description: ''
+    patch:
+      operationId: crm_contacts_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Ein UUID-String, der contact identifiziert.
+        required: true
+      tags:
+      - crm
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedContactUpdate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedContactUpdate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedContactUpdate'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Contact'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+          description: ''
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+          description: ''
+  /api/v1/crm/contacts/{id}/archive/:
+    post:
+      operationId: crm_contacts_archive_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Ein UUID-String, der contact identifiziert.
+        required: true
+      tags:
+      - crm
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Contact'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+          description: ''
+  /api/v1/crm/contacts/{id}/history/:
+    get:
+      operationId: crm_contacts_history_list
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Ein UUID-String, der contact identifiziert.
+        required: true
+      tags:
+      - crm
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ContactAuditEvent'
+          description: ''
+  /api/v1/health/live/:
     get:
       operationId: health_live_retrieve
       tags:
@@ -188,7 +386,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Health'
           description: ''
-  /health/ready/:
+  /api/v1/health/ready/:
     get:
       operationId: health_ready_retrieve
       tags:
@@ -204,6 +402,58 @@ paths:
           description: ''
 components:
   schemas:
+    ActionEnum:
+      enum:
+      - created
+      - updated
+      - archived
+      type: string
+      description: |-
+        * `created` - Erstellt
+        * `updated` - Geändert
+        * `archived` - Archiviert
+    Address:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        kind:
+          $ref: '#/components/schemas/AddressKindEnum'
+        label:
+          type: string
+          maxLength: 100
+        street:
+          type: string
+          maxLength: 200
+        postal_code:
+          type: string
+          maxLength: 20
+        city:
+          type: string
+          maxLength: 120
+        country_code:
+          type: string
+          default: DE
+          pattern: ^[A-Za-z]{2}$
+        is_default:
+          type: boolean
+      required:
+      - city
+      - id
+      - postal_code
+      - street
+    AddressKindEnum:
+      enum:
+      - billing
+      - shipping
+      - other
+      type: string
+      description: |-
+        * `billing` - Rechnung
+        * `shipping` - Lieferung
+        * `other` - Sonstige
     ApiError:
       type: object
       properties:
@@ -289,6 +539,208 @@ components:
       - country_code
       - logo_url
       - updated_at
+    Contact:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        customer_number:
+          type: string
+          readOnly: true
+        kind:
+          $ref: '#/components/schemas/ContactKindEnum'
+        display_name:
+          type: string
+          readOnly: true
+        company_name:
+          type: string
+          maxLength: 200
+        salutation:
+          type: string
+          maxLength: 30
+        title:
+          type: string
+          maxLength: 50
+        first_name:
+          type: string
+          maxLength: 120
+        last_name:
+          type: string
+          maxLength: 120
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        phone:
+          type: string
+          maxLength: 50
+        website:
+          type: string
+          format: uri
+          maxLength: 200
+        vat_id:
+          type: string
+          maxLength: 32
+        leitweg_id:
+          type: string
+          maxLength: 64
+        version:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        archived_at:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        addresses:
+          type: array
+          items:
+            $ref: '#/components/schemas/Address'
+          readOnly: true
+        contact_persons:
+          type: array
+          items:
+            $ref: '#/components/schemas/ContactPerson'
+          readOnly: true
+      required:
+      - addresses
+      - contact_persons
+      - created_at
+      - customer_number
+      - display_name
+      - id
+      - kind
+      - updated_at
+    ContactAuditEvent:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        action:
+          $ref: '#/components/schemas/ActionEnum'
+        version:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        changes: {}
+        actor:
+          type: string
+          nullable: true
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - action
+      - actor
+      - created_at
+      - id
+      - version
+    ContactCreate:
+      type: object
+      properties:
+        kind:
+          $ref: '#/components/schemas/ContactKindEnum'
+        company_name:
+          type: string
+          maxLength: 200
+        salutation:
+          type: string
+          maxLength: 30
+        title:
+          type: string
+          maxLength: 50
+        first_name:
+          type: string
+          maxLength: 120
+        last_name:
+          type: string
+          maxLength: 120
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        phone:
+          type: string
+          maxLength: 50
+        website:
+          type: string
+          format: uri
+          maxLength: 200
+        vat_id:
+          type: string
+          maxLength: 32
+        leitweg_id:
+          type: string
+          maxLength: 64
+        addresses:
+          type: array
+          items:
+            $ref: '#/components/schemas/Address'
+        contact_persons:
+          type: array
+          items:
+            $ref: '#/components/schemas/ContactPerson'
+      required:
+      - kind
+    ContactKindEnum:
+      enum:
+      - organization
+      - person
+      type: string
+      description: |-
+        * `organization` - Firma
+        * `person` - Person
+    ContactPerson:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        salutation:
+          type: string
+          maxLength: 30
+        title:
+          type: string
+          maxLength: 50
+        first_name:
+          type: string
+          maxLength: 120
+        last_name:
+          type: string
+          maxLength: 120
+        role:
+          type: string
+          maxLength: 120
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        phone:
+          type: string
+          maxLength: 50
+        is_primary:
+          type: boolean
+      required:
+      - first_name
+      - id
+      - last_name
     CsrfToken:
       type: object
       properties:
@@ -315,6 +767,29 @@ components:
       required:
       - identifier
       - password
+    PaginatedContactList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Contact'
     PatchedCompanyProfile:
       type: object
       properties:
@@ -366,6 +841,54 @@ components:
           type: string
           format: date-time
           readOnly: true
+    PatchedContactUpdate:
+      type: object
+      properties:
+        kind:
+          $ref: '#/components/schemas/ContactKindEnum'
+        company_name:
+          type: string
+          maxLength: 200
+        salutation:
+          type: string
+          maxLength: 30
+        title:
+          type: string
+          maxLength: 50
+        first_name:
+          type: string
+          maxLength: 120
+        last_name:
+          type: string
+          maxLength: 120
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        phone:
+          type: string
+          maxLength: 50
+        website:
+          type: string
+          format: uri
+          maxLength: 200
+        vat_id:
+          type: string
+          maxLength: 32
+        leitweg_id:
+          type: string
+          maxLength: 64
+        addresses:
+          type: array
+          items:
+            $ref: '#/components/schemas/Address'
+        contact_persons:
+          type: array
+          items:
+            $ref: '#/components/schemas/ContactPerson'
+        version:
+          type: integer
+          minimum: 1
     RoleEnum:
       enum:
       - admin

@@ -138,13 +138,13 @@
       </div>
       <aside class="status-card">
         <p class="eyebrow" style="color:#84caff">Aktueller Stand</p>
-        <h2>Phase 0 abgeschlossen</h2>
-        <div class="big-number">100%</div>
-        <div class="progress" aria-label="Phase 0 vollständig abgeschlossen"><span style="width:100%"></span></div>
+        <h2>Phase 1 läuft</h2>
+        <div class="big-number">30%</div>
+        <div class="progress" aria-label="Phase 1 zu 30 Prozent abgeschlossen"><span style="width:30%"></span></div>
         <ul class="meta">
-          <li><strong>Gesamtfortschritt:</strong> ca. 10 %</li>
+          <li><strong>Gesamtfortschritt:</strong> ca. 13 %</li>
           <li><strong>Letzte Aktualisierung:</strong> 06.10.2026</li>
-          <li><strong>Nächster Schritt:</strong> Phase 1 · CRM-Datenmodell &amp; Berechtigungen</li>
+          <li><strong>Nächster Schritt:</strong> Katalog &amp; gültigkeitsbasierte Preise</li>
           <li><strong>Zieltermin:</strong> keiner; Qualität vor Kalender</li>
         </ul>
       </aside>
@@ -176,26 +176,22 @@
 
     <section id="status" class="panel">
       <p class="eyebrow">Arbeitsstand</p>
-      <h2>Phase 0 – Fundament</h2>
+      <h2>Phase 1 – CRM &amp; Katalog</h2>
       <ul class="checklist">
-        <li class="ok">Roadmap, Projektplan und Architektur erstellt</li>
-        <li class="ok">Architekturentscheidung: modularer Monolith</li>
-        <li class="ok">Git-Repository lokal initialisiert</li>
-        <li class="ok">Django/DRF-Grundgerüst mit Custom User</li>
-        <li class="ok">React/TypeScript/Tailwind-App-Shell</li>
-        <li class="ok">PostgreSQL, Redis, Web, Worker und Nginx in Compose</li>
-        <li class="ok">Admin-Bootstrap admin/admin</li>
-        <li class="ok">Erzwungener Passwortwechsel nach Erstanmeldung</li>
-        <li class="ok">Windows- und Ubuntu-Installationsskripte</li>
-        <li class="ok">Lokale Backend-Tests, Ruff, OpenAPI, Frontend-Lint und -Build</li>
-        <li class="ok">CI-Workflow für Backend, Frontend und Container-Build angelegt</li>
-        <li class="ok">Windows-Installer und vollständiger Docker-Lauftest erfolgreich</li>
-        <li class="ok">Rollenmodell Admin/Mitarbeiter mit negativen Berechtigungstests</li>
-        <li class="ok">Firmeneinstellungen und sicher begrenzter Rasterlogo-Upload</li>
-        <li class="ok">GitHub-CI für Backend, Frontend und Container vollständig grün</li>
-        <li class="ok">Einheitliches API-Fehlerformat und automatisierter OpenAPI-/Frontend-Vertragstest</li>
+        <li class="ok">Eigenständiges CRM-Modul im modularen Monolithen</li>
+        <li class="ok">Firmen und Personen mit stabiler Kundennummer</li>
+        <li class="ok">Mehrere typisierte Adressen und Ansprechpartner</li>
+        <li class="ok">API und Oberfläche für Anlegen, Lesen und Bearbeiten</li>
+        <li class="ok">Suche, Typfilter und wiederverwendbare Pagination</li>
+        <li class="ok">Optimistisches Locking gegen verlorene Änderungen</li>
+        <li class="ok">Archivierung nur durch Administratoren</li>
+        <li class="ok">Änderungsverlauf und positive/negative Berechtigungstests</li>
+        <li>Katalog für Artikel und Leistungen</li>
+        <li>Preise und Steuersätze mit zeitlicher Gültigkeit</li>
+        <li>Robuster CSV-Import mit Vorschau und Fehlerbericht</li>
+        <li>Kontaktaktivitäten und Notizen</li>
       </ul>
-      <div class="notice success">Phase 0 ist abgenommen: Der reale Windows-Durchstich, Rollen und Firmenprofil, ein stabiler Fehler-Envelope, der versionierte OpenAPI-Vertrag, daraus generierte TypeScript-Typen und die vollständige GitHub-CI sind bestätigt.</div>
+      <div class="notice success">Der CRM-Durchstich ist auf PostgreSQL bestätigt: Anlegen, verschachtelte Adressen/Ansprechpartner, Suche, Änderung, Versionskonflikt, Rollenprüfung und Archivierung funktionieren über die reale HTTP-Schnittstelle. Temporäre Testdaten wurden anschließend entfernt.</div>
     </section>
 
     <section id="phasen" class="panel">
@@ -203,7 +199,7 @@
       <h2>Phasen bis 1.0</h2>
       <div class="phase-list">
         <article class="phase"><div class="phase-head"><span class="number">0</span><div><h3>v0.1 – Fundament</h3><p>Docker, Auth, Firma, API, App-Shell, CI.</p></div><span class="state done">Abgeschlossen</span></div></article>
-        <article class="phase"><div class="phase-head"><span class="number">1</span><div><h3>v0.2 – CRM &amp; Katalog</h3><p>Kontakte, Adressen, Aktivitäten, Leistungen, CSV-Import.</p></div><span class="state active">Als Nächstes</span></div></article>
+        <article class="phase"><div class="phase-head"><span class="number">1</span><div><h3>v0.2 – CRM &amp; Katalog</h3><p>Kontakte, Adressen, Aktivitäten, Leistungen, CSV-Import.</p></div><span class="state active">In Arbeit · 30 %</span></div></article>
         <article class="phase"><div class="phase-head"><span class="number">1a</span><div><h3>v0.2.1 – E-Rechnungseingang light</h3><p>Originalannahme, Prüfung, Metadaten und sichere Ablage.</p></div><span class="state planned">Geplant</span></div></article>
         <article class="phase"><div class="phase-head"><span class="number">2</span><div><h3>v0.3 – Projekte</h3><p>Projekte, Arbeitspakete, Budgets, Sätze und Board.</p></div><span class="state planned">Geplant</span></div></article>
         <article class="phase"><div class="phase-head"><span class="number">3</span><div><h3>v0.4 – Zeit &amp; Portal</h3><p>Zeiten, Leistungen, Abwesenheiten und Ist-Controlling.</p></div><span class="state planned">Geplant</span></div></article>
@@ -227,6 +223,7 @@
         <li><strong>Anwendung öffnen:</strong> <a href="http://localhost:8080/">http://localhost:8080/</a>. Mit <code>admin</code> / <code>admin</code> anmelden.</li>
         <li><strong>Passwort sofort ändern.</strong> basicERP sperrt das Dashboard bis ein neues, ausreichend starkes Passwort gespeichert wurde.</li>
         <li><strong>Firmendaten prüfen:</strong> Im Dashboard „Firma“ öffnen, als Administrator Testdaten speichern und optional ein PNG-/JPEG-/WebP-Logo bis 2 MB hochladen.</li>
+        <li><strong>CRM prüfen:</strong> Im Dashboard „CRM“ öffnen, eine Firma oder Person mit Adresse anlegen, danach über Name oder Kundennummer suchen und erneut bearbeiten.</li>
         <li><strong>Systemprüfungen durchführen:</strong> Dashboard sichtbar, Readiness liefert <code>{"status":"ready"}</code>, API-Doku öffnet, alle Container sind healthy/running.</li>
       </ol>
       <div class="test-grid">
@@ -296,6 +293,7 @@ docker compose logs --tail 100</pre>
           <tr><td>06.10.2026</td><td>Phase 0 / Schritt 2</td><td>Rollen Admin/Mitarbeiter, Firmenprofil-API, geschützte Bearbeitung, Logo-Upload und Einstellungsoberfläche umgesetzt. 7 Backend-Tests, OpenAPI, Ruff, Frontend-Build sowie realer Docker-/PostgreSQL-Durchstich erfolgreich.</td></tr>
           <tr><td>06.10.2026</td><td>CI-Härtung</td><td>Nach einem extern abgebrochenen Backend-Runner wurden die Prüfungen zu einem sequenziellen, ressourcenschonenden Quality-Job zusammengeführt. Backend, Frontend und Container-Build liefen anschließend vollständig grün.</td></tr>
           <tr><td>06.10.2026</td><td>Phase 0 / Abschluss</td><td>Einheitlichen API-Fehler-Envelope für Validierung, Auth, Berechtigungen, CSRF und unbekannte Routen ergänzt. OpenAPI versioniert, TypeScript-Typen daraus generiert und Drift-Prüfung in CI verankert. Phase 0 damit vollständig abgeschlossen.</td></tr>
+          <tr><td>06.10.2026</td><td>Phase 1 / CRM-Durchstich</td><td>Kontakte als Firmen oder Personen, transaktionssichere Kundennummern, Adressen, Ansprechpartner, Suche, Pagination, Versionsschutz, Admin-Archivierung, Audit-Verlauf und vollständige React-Oberfläche umgesetzt. 15 Backend-Tests und realer PostgreSQL-/HTTP-Test erfolgreich.</td></tr>
         </tbody>
       </table>
     </section>

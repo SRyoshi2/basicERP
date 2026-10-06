@@ -4,6 +4,19 @@ export type User = components["schemas"]["User"];
 export type CompanyProfile = Required<
   Omit<components["schemas"]["CompanyProfile"], "logo">
 >;
+export type Contact = Required<components["schemas"]["Contact"]>;
+export type ContactAddressInput = Omit<components["schemas"]["Address"], "id">;
+export type ContactPersonInput = Omit<components["schemas"]["ContactPerson"], "id">;
+export type ContactInput = Omit<
+  components["schemas"]["ContactCreate"],
+  "addresses" | "contact_persons"
+> & {
+  addresses: ContactAddressInput[];
+  contact_persons: ContactPersonInput[];
+};
+export type ContactPage = Omit<components["schemas"]["PaginatedContactList"], "results"> & {
+  results: Contact[];
+};
 
 type ErrorBody = {
   error?: components["schemas"]["ApiError"];
@@ -104,5 +117,39 @@ export async function updateCompanyProfile(data: FormData): Promise<CompanyProfi
   return request<CompanyProfile>("/api/v1/company/", {
     method: "PATCH",
     body: data,
+  });
+}
+
+export async function getContacts(options: {
+  search?: string;
+  kind?: "organization" | "person" | "";
+  page?: number;
+} = {}): Promise<ContactPage> {
+  const params = new URLSearchParams();
+  if (options.search) params.set("search", options.search);
+  if (options.kind) params.set("kind", options.kind);
+  if (options.page && options.page > 1) params.set("page", String(options.page));
+  const query = params.size ? `?${params.toString()}` : "";
+  return request<ContactPage>(`/api/v1/crm/contacts/${query}`);
+}
+
+export async function createContact(data: ContactInput): Promise<Contact> {
+  return request<Contact>("/api/v1/crm/contacts/", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function updateContact(contact: Contact, data: ContactInput): Promise<Contact> {
+  return request<Contact>(`/api/v1/crm/contacts/${contact.id}/`, {
+    method: "PATCH",
+    body: JSON.stringify({ ...data, version: contact.version }),
+  });
+}
+
+export async function archiveContact(contact: Contact): Promise<Contact> {
+  return request<Contact>(`/api/v1/crm/contacts/${contact.id}/archive/`, {
+    method: "POST",
+    body: "{}",
   });
 }

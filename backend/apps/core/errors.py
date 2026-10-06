@@ -78,3 +78,9 @@ class InvalidCredentials(APIException):
     status_code = 400
     default_detail = "Anmeldedaten sind ungültig."
     default_code = "invalid_credentials"
+
+
+class VersionConflict(APIException):
+    status_code = 409
+    default_detail = "Der Datensatz wurde zwischenzeitlich geändert. Bitte lade ihn neu."
+    default_code = "version_conflict"

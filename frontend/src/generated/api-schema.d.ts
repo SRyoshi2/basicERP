@@ -4,7 +4,7 @@
  */
 
 export interface paths {
-    "/auth/change-password/": {
+    "/api/v1/auth/change-password/": {
         parameters: {
             query?: never;
             header?: never;
@@ -20,7 +20,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/auth/csrf/": {
+    "/api/v1/auth/csrf/": {
         parameters: {
             query?: never;
             header?: never;
@@ -36,7 +36,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/auth/login/": {
+    "/api/v1/auth/login/": {
         parameters: {
             query?: never;
             header?: never;
@@ -52,7 +52,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/auth/logout/": {
+    "/api/v1/auth/logout/": {
         parameters: {
             query?: never;
             header?: never;
@@ -68,7 +68,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/auth/me/": {
+    "/api/v1/auth/me/": {
         parameters: {
             query?: never;
             header?: never;
@@ -84,7 +84,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/company/": {
+    "/api/v1/company/": {
         parameters: {
             query?: never;
             header?: never;
@@ -100,7 +100,71 @@ export interface paths {
         patch: operations["company_partial_update"];
         trace?: never;
     };
-    "/health/live/": {
+    "/api/v1/crm/contacts/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["crm_contacts_list"];
+        put?: never;
+        post: operations["crm_contacts_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/crm/contacts/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["crm_contacts_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["crm_contacts_partial_update"];
+        trace?: never;
+    };
+    "/api/v1/crm/contacts/{id}/archive/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["crm_contacts_archive_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/crm/contacts/{id}/history/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["crm_contacts_history_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/health/live/": {
         parameters: {
             query?: never;
             header?: never;
@@ -116,7 +180,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/health/ready/": {
+    "/api/v1/health/ready/": {
         parameters: {
             query?: never;
             header?: never;
@@ -136,6 +200,32 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /**
+         * @description * `created` - Erstellt
+         *     * `updated` - Geändert
+         *     * `archived` - Archiviert
+         * @enum {string}
+         */
+        ActionEnum: "created" | "updated" | "archived";
+        Address: {
+            /** Format: uuid */
+            readonly id: string;
+            kind?: components["schemas"]["AddressKindEnum"];
+            label?: string;
+            street: string;
+            postal_code: string;
+            city: string;
+            /** @default DE */
+            country_code: string;
+            is_default?: boolean;
+        };
+        /**
+         * @description * `billing` - Rechnung
+         *     * `shipping` - Lieferung
+         *     * `other` - Sonstige
+         * @enum {string}
+         */
+        AddressKindEnum: "billing" | "shipping" | "other";
         ApiError: {
             code: string;
             message: string;
@@ -168,6 +258,82 @@ export interface components {
             /** Format: date-time */
             readonly updated_at: string;
         };
+        Contact: {
+            /** Format: uuid */
+            readonly id: string;
+            readonly customer_number: string;
+            kind: components["schemas"]["ContactKindEnum"];
+            readonly display_name: string;
+            company_name?: string;
+            salutation?: string;
+            title?: string;
+            first_name?: string;
+            last_name?: string;
+            /** Format: email */
+            email?: string;
+            phone?: string;
+            /** Format: uri */
+            website?: string;
+            vat_id?: string;
+            leitweg_id?: string;
+            /** Format: int64 */
+            version?: number;
+            /** Format: date-time */
+            archived_at?: string | null;
+            /** Format: date-time */
+            readonly created_at: string;
+            /** Format: date-time */
+            readonly updated_at: string;
+            readonly addresses: components["schemas"]["Address"][];
+            readonly contact_persons: components["schemas"]["ContactPerson"][];
+        };
+        ContactAuditEvent: {
+            /** Format: uuid */
+            readonly id: string;
+            action: components["schemas"]["ActionEnum"];
+            /** Format: int64 */
+            version: number;
+            changes?: unknown;
+            readonly actor: string | null;
+            /** Format: date-time */
+            readonly created_at: string;
+        };
+        ContactCreate: {
+            kind: components["schemas"]["ContactKindEnum"];
+            company_name?: string;
+            salutation?: string;
+            title?: string;
+            first_name?: string;
+            last_name?: string;
+            /** Format: email */
+            email?: string;
+            phone?: string;
+            /** Format: uri */
+            website?: string;
+            vat_id?: string;
+            leitweg_id?: string;
+            addresses?: components["schemas"]["Address"][];
+            contact_persons?: components["schemas"]["ContactPerson"][];
+        };
+        /**
+         * @description * `organization` - Firma
+         *     * `person` - Person
+         * @enum {string}
+         */
+        ContactKindEnum: "organization" | "person";
+        ContactPerson: {
+            /** Format: uuid */
+            readonly id: string;
+            salutation?: string;
+            title?: string;
+            first_name: string;
+            last_name: string;
+            role?: string;
+            /** Format: email */
+            email?: string;
+            phone?: string;
+            is_primary?: boolean;
+        };
         CsrfToken: {
             csrfToken: string;
         };
@@ -177,6 +343,21 @@ export interface components {
         Login: {
             identifier: string;
             password: string;
+        };
+        PaginatedContactList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=4
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=2
+             */
+            previous?: string | null;
+            results: components["schemas"]["Contact"][];
         };
         PatchedCompanyProfile: {
             name?: string;
@@ -197,6 +378,24 @@ export interface components {
             readonly logo_url?: string | null;
             /** Format: date-time */
             readonly updated_at?: string;
+        };
+        PatchedContactUpdate: {
+            kind?: components["schemas"]["ContactKindEnum"];
+            company_name?: string;
+            salutation?: string;
+            title?: string;
+            first_name?: string;
+            last_name?: string;
+            /** Format: email */
+            email?: string;
+            phone?: string;
+            /** Format: uri */
+            website?: string;
+            vat_id?: string;
+            leitweg_id?: string;
+            addresses?: components["schemas"]["Address"][];
+            contact_persons?: components["schemas"]["ContactPerson"][];
+            version?: number;
         };
         /**
          * @description * `admin` - admin
@@ -426,6 +625,193 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    crm_contacts_list: {
+        parameters: {
+            query?: {
+                /** @description Aktive, archivierte oder alle Kontakte */
+                archived?: "all" | "false" | "true";
+                /** @description Firma oder Person */
+                kind?: "organization" | "person";
+                /** @description Eine Seitenzahl in der paginierten Ergebnismenge. */
+                page?: number;
+                /** @description Name, E-Mail oder Kundennummer */
+                search?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedContactList"];
+                };
+            };
+        };
+    };
+    crm_contacts_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ContactCreate"];
+                "application/x-www-form-urlencoded": components["schemas"]["ContactCreate"];
+                "multipart/form-data": components["schemas"]["ContactCreate"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Contact"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    crm_contacts_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Ein UUID-String, der contact identifiziert. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Contact"];
+                };
+            };
+        };
+    };
+    crm_contacts_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Ein UUID-String, der contact identifiziert. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedContactUpdate"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedContactUpdate"];
+                "multipart/form-data": components["schemas"]["PatchedContactUpdate"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Contact"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    crm_contacts_archive_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Ein UUID-String, der contact identifiziert. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Contact"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    crm_contacts_history_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Ein UUID-String, der contact identifiziert. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContactAuditEvent"][];
                 };
             };
         };

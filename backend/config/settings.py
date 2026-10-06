@@ -28,6 +28,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "drf_spectacular",
     "apps.core",
+    "apps.crm",
 ]
 
 MIDDLEWARE = [
@@ -106,6 +107,8 @@ REST_FRAMEWORK = {
     ],
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     "EXCEPTION_HANDLER": "apps.core.errors.api_exception_handler",
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+    "PAGE_SIZE": 20,
 }
 
 SPECTACULAR_SETTINGS = {
@@ -114,7 +117,11 @@ SPECTACULAR_SETTINGS = {
     "VERSION": "0.1.0",
     "SERVE_INCLUDE_SCHEMA": False,
     "SCHEMA_PATH_PREFIX": r"/api/v[0-9]+",
-    "SCHEMA_PATH_PREFIX_TRIM": True,
+    "SCHEMA_PATH_PREFIX_TRIM": False,
+    "ENUM_NAME_OVERRIDES": {
+        "AddressKindEnum": (("billing", "Rechnung"), ("shipping", "Lieferung"), ("other", "Sonstige")),
+        "ContactKindEnum": (("organization", "Firma"), ("person", "Person")),
+    },
 }
 
 SESSION_COOKIE_HTTPONLY = True

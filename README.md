@@ -2,7 +2,7 @@
 
 Quelloffenes, API-first Klein-ERP für Freelancer, Einzelunternehmen und kleine
 Unternehmen in Deutschland. Das Fundament **v0.1 / Phase 0** ist abgeschlossen;
-als Nächstes beginnt der CRM-Vertikalschnitt.
+Phase 1 liefert aktuell den ersten CRM-Vertikalschnitt für Kontakte.
 
 Repository: https://github.com/SRyoshi2/basicERP
 
@@ -28,6 +28,10 @@ Die Anwendung erzwingt direkt nach der ersten Anmeldung einen Passwortwechsel.
 Anschließend können Administratoren über **Firma → Firmeneinstellungen** die
 Unternehmensdaten und ein PNG-, JPEG- oder WebP-Logo hinterlegen. Mitarbeiter
 können diese Stammdaten lesen, aber nicht verändern.
+
+Unter **CRM → Kontakte** lassen sich Firmen und Personen mit Kundennummer,
+Adressen und Ansprechpartnern anlegen, suchen und bearbeiten. Archivieren ist
+Administratoren vorbehalten; konkurrierende Bearbeitungen werden erkannt.
 
 ## Schnellstart unter Ubuntu
 
