@@ -2,8 +2,27 @@ export type User = {
   id: string;
   username: string;
   email: string;
+  first_name: string;
+  last_name: string;
+  role: "admin" | "employee";
   is_staff: boolean;
   must_change_password: boolean;
+};
+
+export type CompanyProfile = {
+  name: string;
+  legal_name: string;
+  street: string;
+  postal_code: string;
+  city: string;
+  country_code: string;
+  vat_id: string;
+  tax_number: string;
+  email: string;
+  phone: string;
+  website: string;
+  logo_url: string | null;
+  updated_at: string;
 };
 
 type ErrorBody = {
@@ -20,11 +39,12 @@ function csrfToken(): string {
 }
 
 async function request<T>(url: string, init: RequestInit = {}): Promise<T> {
+  const isFormData = init.body instanceof FormData;
   const response = await fetch(url, {
     ...init,
     credentials: "same-origin",
     headers: {
-      "Content-Type": "application/json",
+      ...(!isFormData ? { "Content-Type": "application/json" } : {}),
       ...(csrfToken() ? { "X-CSRFToken": csrfToken() } : {}),
       ...init.headers,
     },
@@ -76,5 +96,16 @@ export async function changePassword(currentPassword: string, newPassword: strin
   return request<User>("/api/v1/auth/change-password/", {
     method: "POST",
     body: JSON.stringify({ current_password: currentPassword, new_password: newPassword }),
+  });
+}
+
+export async function getCompanyProfile(): Promise<CompanyProfile> {
+  return request<CompanyProfile>("/api/v1/company/");
+}
+
+export async function updateCompanyProfile(data: FormData): Promise<CompanyProfile> {
+  return request<CompanyProfile>("/api/v1/company/", {
+    method: "PATCH",
+    body: data,
   });
 }

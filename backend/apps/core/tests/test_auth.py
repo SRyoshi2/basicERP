@@ -36,6 +36,7 @@ def test_admin_must_change_password(api_client, monkeypatch):
     )
     assert login_response.status_code == 200
     assert login_response.data["must_change_password"] is True
+    assert login_response.data["role"] == "admin"
 
     change_response = api_client.post(
         reverse("auth-change-password"),
@@ -72,10 +73,3 @@ def test_login_requires_csrf_token(monkeypatch):
         HTTP_X_CSRFTOKEN=token,
     )
     assert accepted.status_code == 200
-
-
-@pytest.fixture
-def api_client():
-    from rest_framework.test import APIClient
-
-    return APIClient()

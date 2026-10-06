@@ -20,6 +20,7 @@ class Command(BaseCommand):
             username=username,
             defaults={
                 "email": email,
+                "role": user_model.Role.ADMIN,
                 "is_staff": True,
                 "is_superuser": True,
                 "must_change_password": True,

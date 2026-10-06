@@ -24,6 +24,9 @@ Passwort: admin
 ```
 
 Die Anwendung erzwingt direkt nach der ersten Anmeldung einen Passwortwechsel.
+Anschließend können Administratoren über **Firma → Firmeneinstellungen** die
+Unternehmensdaten und ein PNG-, JPEG- oder WebP-Logo hinterlegen. Mitarbeiter
+können diese Stammdaten lesen, aber nicht verändern.
 
 ## Schnellstart unter Ubuntu
 

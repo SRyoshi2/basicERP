@@ -2,6 +2,7 @@ from django.urls import path
 
 from .views import (
     ChangePasswordView,
+    CompanyProfileView,
     CsrfView,
     LiveHealthView,
     LoginView,
@@ -18,4 +19,5 @@ urlpatterns = [
     path("auth/logout/", LogoutView.as_view(), name="auth-logout"),
     path("auth/me/", MeView.as_view(), name="auth-me"),
     path("auth/change-password/", ChangePasswordView.as_view(), name="auth-change-password"),
+    path("company/", CompanyProfileView.as_view(), name="company-profile"),
 ]

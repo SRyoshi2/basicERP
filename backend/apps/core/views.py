@@ -6,17 +6,21 @@ from django.views.decorators.csrf import ensure_csrf_cookie
 from django.utils.decorators import method_decorator
 from drf_spectacular.utils import extend_schema
 from rest_framework import status
+from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .serializers import (
     ChangePasswordSerializer,
+    CompanyProfileSerializer,
     CsrfTokenSerializer,
     HealthSerializer,
     LoginSerializer,
     UserSerializer,
 )
+from .models import CompanyProfile
+from .permissions import HasCompletedPasswordChange, IsAdministrator
 
 
 def user_payload(user):
@@ -24,6 +28,9 @@ def user_payload(user):
         "id": str(user.pk),
         "username": user.username,
         "email": user.email,
+        "first_name": user.first_name,
+        "last_name": user.last_name,
+        "role": user.role,
         "is_staff": user.is_staff,
         "must_change_password": user.must_change_password,
     }
@@ -112,3 +119,30 @@ class ChangePasswordView(APIView):
         request.user.save(update_fields=["password", "must_change_password"])
         login(request, request.user)
         return Response(user_payload(request.user))
+
+
+class CompanyProfileView(APIView):
+    permission_classes = [IsAuthenticated, HasCompletedPasswordChange]
+    parser_classes = [JSONParser, FormParser, MultiPartParser]
+
+    def get_permissions(self):
+        permissions = list(self.permission_classes)
+        if self.request.method in {"PATCH", "PUT"}:
+            permissions.append(IsAdministrator)
+        return [permission() for permission in permissions]
+
+    def get_object(self):
+        company, _ = CompanyProfile.objects.get_or_create(pk=1)
+        return company
+
+    @extend_schema(responses=CompanyProfileSerializer)
+    def get(self, request):
+        return Response(CompanyProfileSerializer(self.get_object()).data)
+
+    @extend_schema(request=CompanyProfileSerializer, responses=CompanyProfileSerializer)
+    def patch(self, request):
+        company = self.get_object()
+        serializer = CompanyProfileSerializer(company, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save(updated_by=request.user)
+        return Response(serializer.data)

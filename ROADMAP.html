@@ -139,12 +139,12 @@
       <aside class="status-card">
         <p class="eyebrow" style="color:#84caff">Aktueller Stand</p>
         <h2>Phase 0 läuft</h2>
-        <div class="big-number">60%</div>
-        <div class="progress" aria-label="Phase 0 zu 60 Prozent abgeschlossen"><span style="width:60%"></span></div>
+        <div class="big-number">85%</div>
+        <div class="progress" aria-label="Phase 0 zu 85 Prozent abgeschlossen"><span style="width:85%"></span></div>
         <ul class="meta">
-          <li><strong>Gesamtfortschritt:</strong> ca. 7 %</li>
-          <li><strong>Letzte Aktualisierung:</strong> 05.10.2026</li>
-          <li><strong>Nächster Schritt:</strong> Rollen &amp; Firmeneinstellungen</li>
+          <li><strong>Gesamtfortschritt:</strong> ca. 9 %</li>
+          <li><strong>Letzte Aktualisierung:</strong> 06.10.2026</li>
+          <li><strong>Nächster Schritt:</strong> API-Fehlerformat &amp; Frontend-Vertragstest</li>
           <li><strong>Zieltermin:</strong> keiner; Qualität vor Kalender</li>
         </ul>
       </aside>
@@ -190,9 +190,9 @@
         <li class="ok">Lokale Backend-Tests, Ruff, OpenAPI, Frontend-Lint und -Build</li>
         <li class="ok">CI-Workflow für Backend, Frontend und Container-Build angelegt</li>
         <li class="ok">Windows-Installer und vollständiger Docker-Lauftest erfolgreich</li>
-        <li>Rollenmodell Admin/Mitarbeiter</li>
-        <li>Firmeneinstellungen und Logo</li>
-        <li>CI erstmalig auf GitHub ausführen</li>
+        <li class="ok">Rollenmodell Admin/Mitarbeiter mit negativen Berechtigungstests</li>
+        <li class="ok">Firmeneinstellungen und sicher begrenzter Rasterlogo-Upload</li>
+        <li>CI vollständig grün auf GitHub ausführen (Frontend und Container bereits bestätigt)</li>
         <li>OpenAPI-/Frontend-Vertragstest automatisieren</li>
       </ul>
       <div class="notice success">Der reale Windows-Durchstich ist bestätigt: Build, Migration, Admin-Bootstrap, fünf laufende Dienste, Readiness, Startseite, HTML-Fahrplan, API-Dokumentation, Login, erzwungener Passwortwechselstatus und Logout funktionieren.</div>
@@ -202,7 +202,7 @@
       <p class="eyebrow">Lieferfolge</p>
       <h2>Phasen bis 1.0</h2>
       <div class="phase-list">
-        <article class="phase"><div class="phase-head"><span class="number">0</span><div><h3>v0.1 – Fundament</h3><p>Docker, Auth, Firma, API, App-Shell, CI.</p></div><span class="state active">In Arbeit · 60 %</span></div></article>
+        <article class="phase"><div class="phase-head"><span class="number">0</span><div><h3>v0.1 – Fundament</h3><p>Docker, Auth, Firma, API, App-Shell, CI.</p></div><span class="state active">In Arbeit · 85 %</span></div></article>
         <article class="phase"><div class="phase-head"><span class="number">1</span><div><h3>v0.2 – CRM &amp; Katalog</h3><p>Kontakte, Adressen, Aktivitäten, Leistungen, CSV-Import.</p></div><span class="state planned">Geplant</span></div></article>
         <article class="phase"><div class="phase-head"><span class="number">1a</span><div><h3>v0.2.1 – E-Rechnungseingang light</h3><p>Originalannahme, Prüfung, Metadaten und sichere Ablage.</p></div><span class="state planned">Geplant</span></div></article>
         <article class="phase"><div class="phase-head"><span class="number">2</span><div><h3>v0.3 – Projekte</h3><p>Projekte, Arbeitspakete, Budgets, Sätze und Board.</p></div><span class="state planned">Geplant</span></div></article>
@@ -226,7 +226,8 @@
         <li><strong>Fragen beantworten.</strong> Für den lokalen Test sind <code>localhost</code>, Port <code>8080</code>, Projektname <code>basicerp</code> und kein externer HTTPS-Proxy passend.</li>
         <li><strong>Anwendung öffnen:</strong> <a href="http://localhost:8080/">http://localhost:8080/</a>. Mit <code>admin</code> / <code>admin</code> anmelden.</li>
         <li><strong>Passwort sofort ändern.</strong> basicERP sperrt das Dashboard bis ein neues, ausreichend starkes Passwort gespeichert wurde.</li>
-        <li><strong>Vier Prüfungen durchführen:</strong> Dashboard sichtbar, Readiness liefert <code>{"status":"ready"}</code>, API-Doku öffnet, alle Container sind healthy/running.</li>
+        <li><strong>Firmendaten prüfen:</strong> Im Dashboard „Firma“ öffnen, als Administrator Testdaten speichern und optional ein PNG-/JPEG-/WebP-Logo bis 2 MB hochladen.</li>
+        <li><strong>Systemprüfungen durchführen:</strong> Dashboard sichtbar, Readiness liefert <code>{"status":"ready"}</code>, API-Doku öffnet, alle Container sind healthy/running.</li>
       </ol>
       <div class="test-grid">
         <article class="test-card"><h3>1 · Container</h3><pre>docker compose ps</pre><p>db, redis, web, worker und nginx sollen laufen; Healthchecks dürfen kurz „starting“ zeigen.</p></article>
@@ -289,6 +290,8 @@ docker compose logs --tail 100</pre>
           <tr><td>05.10.2026</td><td>Installer-Härtung</td><td>Wiederaufnahme mit vorhandener .env sowie dreistufige Retries für Image-Build und Infrastrukturstart ergänzt.</td></tr>
           <tr><td>05.10.2026</td><td>Windows-Durchstich</td><td>Docker-Installation vollständig erfolgreich; Health, UI, Fahrplan, API-Doku, Login-Session, Passwortwechselpflicht und Logout real geprüft.</td></tr>
           <tr><td>05.10.2026</td><td>GitHub</td><td>Lokales Repository mit github.com/SRyoshi2/basicERP verbunden; Initial-Commit und CI-Ausführung vorbereitet.</td></tr>
+          <tr><td>06.10.2026</td><td>Phase 0 / Schritt 2</td><td>Rollen Admin/Mitarbeiter, Firmenprofil-API, geschützte Bearbeitung, Logo-Upload und Einstellungsoberfläche umgesetzt. 7 Backend-Tests, OpenAPI, Ruff, Frontend-Build sowie realer Docker-/PostgreSQL-Durchstich erfolgreich.</td></tr>
+          <tr><td>06.10.2026</td><td>CI-Härtung</td><td>Nach einem extern abgebrochenen Backend-Runner wurden die Prüfungen zu einem sequenziellen, ressourcenschonenden Quality-Job zusammengeführt.</td></tr>
         </tbody>
       </table>
     </section>
