@@ -4,11 +4,11 @@ info:
   version: 0.1.0
   description: API-first ERP für kleine Unternehmen
 paths:
-  /api/v1/auth/change-password/:
+  /auth/change-password/:
     post:
-      operationId: api_v1_auth_change_password_create
+      operationId: auth_change_password_create
       tags:
-      - api
+      - auth
       requestBody:
         content:
           application/json:
@@ -36,11 +36,11 @@ paths:
               schema:
                 $ref: '#/components/schemas/ApiErrorResponse'
           description: ''
-  /api/v1/auth/csrf/:
+  /auth/csrf/:
     get:
-      operationId: api_v1_auth_csrf_retrieve
+      operationId: auth_csrf_retrieve
       tags:
-      - api
+      - auth
       security:
       - {}
       responses:
@@ -50,11 +50,11 @@ paths:
               schema:
                 $ref: '#/components/schemas/CsrfToken'
           description: ''
-  /api/v1/auth/login/:
+  /auth/login/:
     post:
-      operationId: api_v1_auth_login_create
+      operationId: auth_login_create
       tags:
-      - api
+      - auth
       requestBody:
         content:
           application/json:
@@ -88,21 +88,21 @@ paths:
               schema:
                 $ref: '#/components/schemas/ApiErrorResponse'
           description: ''
-  /api/v1/auth/logout/:
+  /auth/logout/:
     post:
-      operationId: api_v1_auth_logout_create
+      operationId: auth_logout_create
       tags:
-      - api
+      - auth
       security:
       - cookieAuth: []
       responses:
         '204':
           description: No response body
-  /api/v1/auth/me/:
+  /auth/me/:
     get:
-      operationId: api_v1_auth_me_retrieve
+      operationId: auth_me_retrieve
       tags:
-      - api
+      - auth
       security:
       - cookieAuth: []
       responses:
@@ -112,11 +112,11 @@ paths:
               schema:
                 $ref: '#/components/schemas/User'
           description: ''
-  /api/v1/company/:
+  /company/:
     get:
-      operationId: api_v1_company_retrieve
+      operationId: company_retrieve
       tags:
-      - api
+      - company
       security:
       - cookieAuth: []
       responses:
@@ -133,9 +133,9 @@ paths:
                 $ref: '#/components/schemas/ApiErrorResponse'
           description: ''
     patch:
-      operationId: api_v1_company_partial_update
+      operationId: company_partial_update
       tags:
-      - api
+      - company
       requestBody:
         content:
           application/json:
@@ -174,11 +174,11 @@ paths:
               schema:
                 $ref: '#/components/schemas/ApiErrorResponse'
           description: ''
-  /api/v1/health/live/:
+  /health/live/:
     get:
-      operationId: api_v1_health_live_retrieve
+      operationId: health_live_retrieve
       tags:
-      - api
+      - health
       security:
       - {}
       responses:
@@ -188,11 +188,11 @@ paths:
               schema:
                 $ref: '#/components/schemas/Health'
           description: ''
-  /api/v1/health/ready/:
+  /health/ready/:
     get:
-      operationId: api_v1_health_ready_retrieve
+      operationId: health_ready_retrieve
       tags:
-      - api
+      - health
       security:
       - {}
       responses:

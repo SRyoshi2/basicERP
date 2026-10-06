@@ -4,7 +4,7 @@
  */
 
 export interface paths {
-    "/api/v1/auth/change-password/": {
+    "/auth/change-password/": {
         parameters: {
             query?: never;
             header?: never;
@@ -13,21 +13,21 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["api_v1_auth_change_password_create"];
+        post: operations["auth_change_password_create"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/v1/auth/csrf/": {
+    "/auth/csrf/": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get: operations["api_v1_auth_csrf_retrieve"];
+        get: operations["auth_csrf_retrieve"];
         put?: never;
         post?: never;
         delete?: never;
@@ -36,7 +36,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/auth/login/": {
+    "/auth/login/": {
         parameters: {
             query?: never;
             header?: never;
@@ -45,14 +45,14 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["api_v1_auth_login_create"];
+        post: operations["auth_login_create"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/v1/auth/logout/": {
+    "/auth/logout/": {
         parameters: {
             query?: never;
             header?: never;
@@ -61,21 +61,21 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["api_v1_auth_logout_create"];
+        post: operations["auth_logout_create"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/v1/auth/me/": {
+    "/auth/me/": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get: operations["api_v1_auth_me_retrieve"];
+        get: operations["auth_me_retrieve"];
         put?: never;
         post?: never;
         delete?: never;
@@ -84,30 +84,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/company/": {
+    "/company/": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get: operations["api_v1_company_retrieve"];
+        get: operations["company_retrieve"];
         put?: never;
         post?: never;
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["api_v1_company_partial_update"];
+        patch: operations["company_partial_update"];
         trace?: never;
     };
-    "/api/v1/health/live/": {
+    "/health/live/": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get: operations["api_v1_health_live_retrieve"];
+        get: operations["health_live_retrieve"];
         put?: never;
         post?: never;
         delete?: never;
@@ -116,14 +116,14 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/health/ready/": {
+    "/health/ready/": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get: operations["api_v1_health_ready_retrieve"];
+        get: operations["health_ready_retrieve"];
         put?: never;
         post?: never;
         delete?: never;
@@ -224,7 +224,7 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    api_v1_auth_change_password_create: {
+    auth_change_password_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -257,7 +257,7 @@ export interface operations {
             };
         };
     };
-    api_v1_auth_csrf_retrieve: {
+    auth_csrf_retrieve: {
         parameters: {
             query?: never;
             header?: never;
@@ -276,7 +276,7 @@ export interface operations {
             };
         };
     };
-    api_v1_auth_login_create: {
+    auth_login_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -317,7 +317,7 @@ export interface operations {
             };
         };
     };
-    api_v1_auth_logout_create: {
+    auth_logout_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -335,7 +335,7 @@ export interface operations {
             };
         };
     };
-    api_v1_auth_me_retrieve: {
+    auth_me_retrieve: {
         parameters: {
             query?: never;
             header?: never;
@@ -354,7 +354,7 @@ export interface operations {
             };
         };
     };
-    api_v1_company_retrieve: {
+    company_retrieve: {
         parameters: {
             query?: never;
             header?: never;
@@ -381,7 +381,7 @@ export interface operations {
             };
         };
     };
-    api_v1_company_partial_update: {
+    company_partial_update: {
         parameters: {
             query?: never;
             header?: never;
@@ -430,7 +430,7 @@ export interface operations {
             };
         };
     };
-    api_v1_health_live_retrieve: {
+    health_live_retrieve: {
         parameters: {
             query?: never;
             header?: never;
@@ -449,7 +449,7 @@ export interface operations {
             };
         };
     };
-    api_v1_health_ready_retrieve: {
+    health_ready_retrieve: {
         parameters: {
             query?: never;
             header?: never;
