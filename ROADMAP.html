@@ -139,10 +139,10 @@
       <aside class="status-card">
         <p class="eyebrow" style="color:#84caff">Aktueller Stand</p>
         <h2>Phase 0 läuft</h2>
-        <div class="big-number">85%</div>
-        <div class="progress" aria-label="Phase 0 zu 85 Prozent abgeschlossen"><span style="width:85%"></span></div>
+        <div class="big-number">95%</div>
+        <div class="progress" aria-label="Phase 0 zu 95 Prozent abgeschlossen"><span style="width:95%"></span></div>
         <ul class="meta">
-          <li><strong>Gesamtfortschritt:</strong> ca. 9 %</li>
+          <li><strong>Gesamtfortschritt:</strong> ca. 10 %</li>
           <li><strong>Letzte Aktualisierung:</strong> 06.10.2026</li>
           <li><strong>Nächster Schritt:</strong> API-Fehlerformat &amp; Frontend-Vertragstest</li>
           <li><strong>Zieltermin:</strong> keiner; Qualität vor Kalender</li>
@@ -192,7 +192,7 @@
         <li class="ok">Windows-Installer und vollständiger Docker-Lauftest erfolgreich</li>
         <li class="ok">Rollenmodell Admin/Mitarbeiter mit negativen Berechtigungstests</li>
         <li class="ok">Firmeneinstellungen und sicher begrenzter Rasterlogo-Upload</li>
-        <li>CI vollständig grün auf GitHub ausführen (Frontend und Container bereits bestätigt)</li>
+        <li class="ok">GitHub-CI für Backend, Frontend und Container vollständig grün</li>
         <li>OpenAPI-/Frontend-Vertragstest automatisieren</li>
       </ul>
       <div class="notice success">Der reale Windows-Durchstich ist bestätigt: Build, Migration, Admin-Bootstrap, fünf laufende Dienste, Readiness, Startseite, HTML-Fahrplan, API-Dokumentation, Login, erzwungener Passwortwechselstatus und Logout funktionieren.</div>
@@ -202,7 +202,7 @@
       <p class="eyebrow">Lieferfolge</p>
       <h2>Phasen bis 1.0</h2>
       <div class="phase-list">
-        <article class="phase"><div class="phase-head"><span class="number">0</span><div><h3>v0.1 – Fundament</h3><p>Docker, Auth, Firma, API, App-Shell, CI.</p></div><span class="state active">In Arbeit · 85 %</span></div></article>
+        <article class="phase"><div class="phase-head"><span class="number">0</span><div><h3>v0.1 – Fundament</h3><p>Docker, Auth, Firma, API, App-Shell, CI.</p></div><span class="state active">In Arbeit · 95 %</span></div></article>
         <article class="phase"><div class="phase-head"><span class="number">1</span><div><h3>v0.2 – CRM &amp; Katalog</h3><p>Kontakte, Adressen, Aktivitäten, Leistungen, CSV-Import.</p></div><span class="state planned">Geplant</span></div></article>
         <article class="phase"><div class="phase-head"><span class="number">1a</span><div><h3>v0.2.1 – E-Rechnungseingang light</h3><p>Originalannahme, Prüfung, Metadaten und sichere Ablage.</p></div><span class="state planned">Geplant</span></div></article>
         <article class="phase"><div class="phase-head"><span class="number">2</span><div><h3>v0.3 – Projekte</h3><p>Projekte, Arbeitspakete, Budgets, Sätze und Board.</p></div><span class="state planned">Geplant</span></div></article>
@@ -291,7 +291,7 @@ docker compose logs --tail 100</pre>
           <tr><td>05.10.2026</td><td>Windows-Durchstich</td><td>Docker-Installation vollständig erfolgreich; Health, UI, Fahrplan, API-Doku, Login-Session, Passwortwechselpflicht und Logout real geprüft.</td></tr>
           <tr><td>05.10.2026</td><td>GitHub</td><td>Lokales Repository mit github.com/SRyoshi2/basicERP verbunden; Initial-Commit und CI-Ausführung vorbereitet.</td></tr>
           <tr><td>06.10.2026</td><td>Phase 0 / Schritt 2</td><td>Rollen Admin/Mitarbeiter, Firmenprofil-API, geschützte Bearbeitung, Logo-Upload und Einstellungsoberfläche umgesetzt. 7 Backend-Tests, OpenAPI, Ruff, Frontend-Build sowie realer Docker-/PostgreSQL-Durchstich erfolgreich.</td></tr>
-          <tr><td>06.10.2026</td><td>CI-Härtung</td><td>Nach einem extern abgebrochenen Backend-Runner wurden die Prüfungen zu einem sequenziellen, ressourcenschonenden Quality-Job zusammengeführt.</td></tr>
+          <tr><td>06.10.2026</td><td>CI-Härtung</td><td>Nach einem extern abgebrochenen Backend-Runner wurden die Prüfungen zu einem sequenziellen, ressourcenschonenden Quality-Job zusammengeführt. Backend, Frontend und Container-Build liefen anschließend vollständig grün.</td></tr>
         </tbody>
       </table>
     </section>
