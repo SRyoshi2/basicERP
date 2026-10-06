@@ -166,3 +166,31 @@ class ContactAuditEvent(models.Model):
 
     class Meta:
         ordering = ("-created_at",)
+
+
+class ContactImportBatch(models.Model):
+    class Status(models.TextChoices):
+        PREVIEW = "preview", "Geprüft"
+        COMPLETED = "completed", "Übernommen"
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    source_name = models.CharField(max_length=255)
+    source_hash = models.CharField(max_length=64, unique=True, editable=False)
+    status = models.CharField(max_length=16, choices=Status.choices, default=Status.PREVIEW)
+    rows = models.JSONField(default=list)
+    total_count = models.PositiveIntegerField(default=0)
+    valid_count = models.PositiveIntegerField(default=0)
+    error_count = models.PositiveIntegerField(default=0)
+    created_count = models.PositiveIntegerField(default=0)
+    result = models.JSONField(default=dict)
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        on_delete=models.SET_NULL,
+        related_name="contact_import_batches",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ("-created_at",)

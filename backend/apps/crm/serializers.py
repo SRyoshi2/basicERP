@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import Address, Contact, ContactAuditEvent, ContactPerson
+from .models import Address, Contact, ContactAuditEvent, ContactImportBatch, ContactPerson
 from .services import create_contact, update_contact
 
 
@@ -143,3 +143,27 @@ class ContactAuditEventSerializer(serializers.ModelSerializer):
 
     def get_actor(self, obj) -> str | None:
         return obj.actor.username if obj.actor else None
+
+
+class ContactImportUploadSerializer(serializers.Serializer):
+    file = serializers.FileField()
+
+
+class ContactImportBatchSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ContactImportBatch
+        fields = (
+            "id",
+            "source_name",
+            "source_hash",
+            "status",
+            "rows",
+            "total_count",
+            "valid_count",
+            "error_count",
+            "created_count",
+            "result",
+            "created_at",
+            "completed_at",
+        )
+        read_only_fields = fields

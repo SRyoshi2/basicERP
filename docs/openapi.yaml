@@ -565,6 +565,85 @@ paths:
                 items:
                   $ref: '#/components/schemas/ContactAuditEvent'
           description: ''
+  /api/v1/crm/imports/{id}/:
+    get:
+      operationId: crm_imports_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Ein UUID-String, der contact import batch identifiziert.
+        required: true
+      tags:
+      - crm
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContactImportBatch'
+          description: ''
+  /api/v1/crm/imports/{id}/apply/:
+    post:
+      operationId: crm_imports_apply_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Ein UUID-String, der contact import batch identifiziert.
+        required: true
+      tags:
+      - crm
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContactImportBatch'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+          description: ''
+  /api/v1/crm/imports/preview/:
+    post:
+      operationId: crm_imports_preview_create
+      tags:
+      - crm
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ContactImportUpload'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ContactImportUpload'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContactImportBatch'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+          description: ''
   /api/v1/health/live/:
     get:
       operationId: health_live_retrieve
@@ -1060,6 +1139,69 @@ components:
             $ref: '#/components/schemas/ContactPerson'
       required:
       - kind
+    ContactImportBatch:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        source_name:
+          type: string
+          readOnly: true
+        source_hash:
+          type: string
+          readOnly: true
+        status:
+          allOf:
+          - $ref: '#/components/schemas/StatusEnum'
+          readOnly: true
+        rows:
+          readOnly: true
+        total_count:
+          type: integer
+          readOnly: true
+        valid_count:
+          type: integer
+          readOnly: true
+        error_count:
+          type: integer
+          readOnly: true
+        created_count:
+          type: integer
+          readOnly: true
+        result:
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        completed_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+      required:
+      - completed_at
+      - created_at
+      - created_count
+      - error_count
+      - id
+      - result
+      - rows
+      - source_hash
+      - source_name
+      - status
+      - total_count
+      - valid_count
+    ContactImportUpload:
+      type: object
+      properties:
+        file:
+          type: string
+          format: uri
+      required:
+      - file
     ContactKindEnum:
       enum:
       - organization
@@ -1307,6 +1449,14 @@ components:
       description: |-
         * `admin` - admin
         * `employee` - employee
+    StatusEnum:
+      enum:
+      - preview
+      - completed
+      type: string
+      description: |-
+        * `preview` - Geprüft
+        * `completed` - Übernommen
     User:
       type: object
       properties:

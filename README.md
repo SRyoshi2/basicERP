@@ -32,6 +32,10 @@ können diese Stammdaten lesen, aber nicht verändern.
 Unter **CRM → Kontakte** lassen sich Firmen und Personen mit Kundennummer,
 Adressen und Ansprechpartnern anlegen, suchen und bearbeiten. Archivieren ist
 Administratoren vorbehalten; konkurrierende Bearbeitungen werden erkannt.
+Über **CSV importieren** können UTF-8-Dateien zunächst zeilenweise geprüft und
+anschließend idempotent übernommen werden; fehlerhafte Zeilen bleiben sichtbar,
+ohne teilweise Kontakte anzulegen.
+Eine passende Beispieldatei liegt unter `docs/examples/contacts-import.csv`.
 
 Unter **Katalog → Artikel & Leistungen** lassen sich Artikel und Leistungen mit
 Einheit, Steuersatz und zeitlich gültigen Nettopreisen verwalten. Überlappende

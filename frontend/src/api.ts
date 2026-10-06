@@ -17,6 +17,16 @@ export type ContactInput = Omit<
 export type ContactPage = Omit<components["schemas"]["PaginatedContactList"], "results"> & {
   results: Contact[];
 };
+export type ContactImportRow = {
+  row_number: number;
+  display_name: string;
+  data: ContactInput;
+  errors: Record<string, string[]>;
+};
+export type ContactImportBatch = Omit<components["schemas"]["ContactImportBatch"], "rows" | "result"> & {
+  rows: ContactImportRow[];
+  result: { contacts?: Array<{ id: string; customer_number: string }> };
+};
 export type CatalogPriceInput = Omit<components["schemas"]["CatalogPrice"], "id">;
 export type CatalogItem = Required<components["schemas"]["CatalogItem"]> & {
   current_price: components["schemas"]["CatalogPrice"] | null;
@@ -159,6 +169,22 @@ export async function updateContact(contact: Contact, data: ContactInput): Promi
 
 export async function archiveContact(contact: Contact): Promise<Contact> {
   return request<Contact>(`/api/v1/crm/contacts/${contact.id}/archive/`, {
+    method: "POST",
+    body: "{}",
+  });
+}
+
+export async function previewContactImport(file: File): Promise<ContactImportBatch> {
+  const data = new FormData();
+  data.append("file", file);
+  return request<ContactImportBatch>("/api/v1/crm/imports/preview/", {
+    method: "POST",
+    body: data,
+  });
+}
+
+export async function applyContactImport(batch: ContactImportBatch): Promise<ContactImportBatch> {
+  return request<ContactImportBatch>(`/api/v1/crm/imports/${batch.id}/apply/`, {
     method: "POST",
     body: "{}",
   });

@@ -228,6 +228,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/crm/imports/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["crm_imports_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/crm/imports/{id}/apply/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["crm_imports_apply_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/crm/imports/preview/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["crm_imports_preview_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/health/live/": {
         parameters: {
             query?: never;
@@ -451,6 +499,27 @@ export interface components {
             addresses?: components["schemas"]["Address"][];
             contact_persons?: components["schemas"]["ContactPerson"][];
         };
+        ContactImportBatch: {
+            /** Format: uuid */
+            readonly id: string;
+            readonly source_name: string;
+            readonly source_hash: string;
+            readonly status: components["schemas"]["StatusEnum"];
+            readonly rows: unknown;
+            readonly total_count: number;
+            readonly valid_count: number;
+            readonly error_count: number;
+            readonly created_count: number;
+            readonly result: unknown;
+            /** Format: date-time */
+            readonly created_at: string;
+            /** Format: date-time */
+            readonly completed_at: string | null;
+        };
+        ContactImportUpload: {
+            /** Format: uri */
+            file: string;
+        };
         /**
          * @description * `organization` - Firma
          *     * `person` - Person
@@ -564,6 +633,12 @@ export interface components {
          * @enum {string}
          */
         RoleEnum: "admin" | "employee";
+        /**
+         * @description * `preview` - Geprüft
+         *     * `completed` - Übernommen
+         * @enum {string}
+         */
+        StatusEnum: "preview" | "completed";
         User: {
             id: string;
             username: string;
@@ -1143,6 +1218,90 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ContactAuditEvent"][];
+                };
+            };
+        };
+    };
+    crm_imports_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Ein UUID-String, der contact import batch identifiziert. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContactImportBatch"];
+                };
+            };
+        };
+    };
+    crm_imports_apply_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Ein UUID-String, der contact import batch identifiziert. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContactImportBatch"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    crm_imports_preview_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["ContactImportUpload"];
+                "application/x-www-form-urlencoded": components["schemas"]["ContactImportUpload"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContactImportBatch"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };

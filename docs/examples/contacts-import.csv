@@ -1,0 +1,3 @@
+Typ;Firmenname;Vorname;Nachname;E-Mail;Telefon;Straße;PLZ;Ort;Land
+Firma;Beispiel GmbH;;;kontakt@beispiel.example;+49 30 123456;Musterstraße 1;10115;Berlin;DE
+Person;;Erika;Mustermann;erika.mustermann@example.test;;;;;DE

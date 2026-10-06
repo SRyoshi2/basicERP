@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Address, Contact, ContactAuditEvent, ContactPerson
+from .models import Address, Contact, ContactAuditEvent, ContactImportBatch, ContactPerson
 
 
 class AddressInline(admin.TabularInline):
@@ -26,6 +26,34 @@ class ContactAdmin(admin.ModelAdmin):
 class ContactAuditEventAdmin(admin.ModelAdmin):
     list_display = ("contact", "action", "version", "actor", "created_at")
     readonly_fields = ("contact", "action", "version", "changes", "actor", "created_at")
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
+@admin.register(ContactImportBatch)
+class ContactImportBatchAdmin(admin.ModelAdmin):
+    list_display = ("source_name", "status", "total_count", "error_count", "created_count", "created_at")
+    readonly_fields = (
+        "source_name",
+        "source_hash",
+        "status",
+        "rows",
+        "total_count",
+        "valid_count",
+        "error_count",
+        "created_count",
+        "result",
+        "created_by",
+        "created_at",
+        "completed_at",
+    )
 
     def has_add_permission(self, request):
         return False

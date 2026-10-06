@@ -1,17 +1,67 @@
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import {
   archiveContact,
+  applyContactImport,
   createContact,
   getContacts,
+  previewContactImport,
   updateContact,
   type Contact,
   type ContactAddressInput,
   type ContactInput,
+  type ContactImportBatch,
   type ContactPersonInput,
   type User,
 } from "./api";
 
 const inputClass = "mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 font-normal outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-100";
+
+function ContactImport({ onCancel, onImported }: { onCancel: () => void; onImported: () => void }) {
+  const [file, setFile] = useState<File | null>(null);
+  const [batch, setBatch] = useState<ContactImportBatch | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+
+  async function preview(event: FormEvent) {
+    event.preventDefault();
+    if (!file) return;
+    setBusy(true); setError("");
+    try {
+      setBatch(await previewContactImport(file));
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "CSV-Datei konnte nicht geprüft werden.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function applyImport() {
+    if (!batch) return;
+    setBusy(true); setError("");
+    try {
+      const result = await applyContactImport(batch);
+      setBatch(result);
+      if (result.status === "completed") onImported();
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "Kontakte konnten nicht übernommen werden.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+    <div className="flex items-start justify-between gap-4"><div><p className="text-sm font-bold uppercase tracking-[0.18em] text-blue-700">CRM-Import</p><h2 className="mt-2 text-2xl font-bold text-slate-950">Kontakte aus CSV übernehmen</h2><p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">Die Datei wird zunächst nur geprüft. Erst nach einer fehlerfreien Vorschau werden Kontakte angelegt. Eine bereits übernommene Datei erzeugt keine Duplikate.</p></div><button type="button" className="text-sm font-semibold text-slate-600" onClick={onCancel}>Schließen</button></div>
+    <div className="mt-6 rounded-2xl bg-slate-50 p-5 text-sm text-slate-700"><strong>Unterstützte Spalten:</strong> Typ, Firmenname, Vorname, Nachname, E-Mail, Telefon, Straße, PLZ, Ort und Land. Als Typ sind „Firma“ oder „Person“ zulässig. Trennzeichen: Semikolon, Komma oder Tabulator; maximal 5 MB und 5.000 Datenzeilen.</div>
+    <form className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-end" onSubmit={preview}><label className="flex-1 text-sm font-semibold text-slate-800">CSV-Datei<input className="mt-2 block w-full rounded-xl border border-slate-300 bg-white px-4 py-3 font-normal" type="file" accept=".csv,text/csv" onChange={(event) => { setFile(event.target.files?.[0] ?? null); setBatch(null); }} required /></label><button className="rounded-xl bg-slate-950 px-5 py-3 font-semibold text-white disabled:opacity-50" disabled={!file || busy}>{busy ? "Wird geprüft …" : "Vorschau prüfen"}</button></form>
+    {error && <p className="mt-5 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-800">{error}</p>}
+    {batch && <div className="mt-7">
+      <div className="grid gap-3 sm:grid-cols-4"><div className="rounded-xl bg-slate-100 p-4"><small className="text-slate-500">Zeilen</small><strong className="mt-1 block text-2xl">{batch.total_count}</strong></div><div className="rounded-xl bg-emerald-50 p-4"><small className="text-emerald-700">Gültig</small><strong className="mt-1 block text-2xl text-emerald-900">{batch.valid_count}</strong></div><div className="rounded-xl bg-red-50 p-4"><small className="text-red-700">Fehlerhaft</small><strong className="mt-1 block text-2xl text-red-900">{batch.error_count}</strong></div><div className="rounded-xl bg-blue-50 p-4"><small className="text-blue-700">Übernommen</small><strong className="mt-1 block text-2xl text-blue-900">{batch.created_count}</strong></div></div>
+      <div className="mt-4 overflow-x-auto rounded-2xl border border-slate-200"><table className="min-w-full text-left text-sm"><thead className="bg-slate-100 text-slate-600"><tr><th className="px-4 py-3">Zeile</th><th className="px-4 py-3">Kontakt</th><th className="px-4 py-3">Typ</th><th className="px-4 py-3">Ergebnis</th></tr></thead><tbody>{batch.rows.slice(0, 100).map((row) => { const messages = Object.values(row.errors).flat(); return <tr key={row.row_number} className="border-t border-slate-100"><td className="px-4 py-3 font-mono">{row.row_number}</td><td className="px-4 py-3 font-semibold">{row.display_name || "—"}</td><td className="px-4 py-3">{row.data.kind === "organization" ? "Firma" : row.data.kind === "person" ? "Person" : row.data.kind}</td><td className={`px-4 py-3 ${messages.length ? "text-red-700" : "text-emerald-700"}`}>{messages.length ? messages.join(" ") : "Gültig"}</td></tr>; })}</tbody></table></div>
+      {batch.rows.length > 100 && <p className="mt-2 text-xs text-slate-500">In der Vorschau werden die ersten 100 Zeilen angezeigt.</p>}
+      {batch.status === "completed" ? <p className="mt-5 rounded-xl bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800">{batch.created_count} Kontakte wurden übernommen. Eine erneute Übernahme dieser Datei erzeugt keine Duplikate.</p> : <div className="mt-5 flex justify-end"><button type="button" className="rounded-xl bg-blue-700 px-5 py-3 font-semibold text-white disabled:opacity-40" disabled={batch.error_count > 0 || busy} onClick={applyImport}>{busy ? "Wird übernommen …" : `${batch.valid_count} Kontakte übernehmen`}</button></div>}
+    </div>}
+  </section>;
+}
 
 function emptyContact(): ContactInput {
   return {
@@ -222,6 +272,7 @@ export function ContactsPage({ user, onBack }: { user: User; onBack: () => void 
   const [hasNext, setHasNext] = useState(false);
   const [hasPrevious, setHasPrevious] = useState(false);
   const [selected, setSelected] = useState<Contact | null | undefined>(undefined);
+  const [importing, setImporting] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -236,6 +287,10 @@ export function ContactsPage({ user, onBack }: { user: User; onBack: () => void 
 
   useEffect(() => { load(); }, [load]);
 
+  if (importing) {
+    return <main className="mx-auto max-w-6xl px-6 py-10"><ContactImport onCancel={() => { setImporting(false); load(); }} onImported={load} /></main>;
+  }
+
   if (selected !== undefined) {
     return <main className="mx-auto max-w-6xl px-6 py-10"><ContactForm contact={selected} user={user} onCancel={() => setSelected(undefined)} onSaved={() => { setSelected(undefined); load(); }} /></main>;
   }
@@ -243,7 +298,7 @@ export function ContactsPage({ user, onBack }: { user: User; onBack: () => void 
   return (
     <main className="mx-auto max-w-7xl px-6 py-10">
       <button className="text-sm font-semibold text-blue-700 hover:text-blue-900" onClick={onBack}>← Zurück zum Dashboard</button>
-      <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between"><div><p className="text-sm font-bold uppercase tracking-[0.18em] text-blue-700">CRM</p><h1 className="mt-2 text-3xl font-bold tracking-tight text-slate-950">Kontakte</h1><p className="mt-2 text-sm text-slate-600">{count} aktive Kontakte</p></div><button className="rounded-xl bg-blue-700 px-5 py-3 font-semibold text-white hover:bg-blue-800" onClick={() => setSelected(null)}>+ Kontakt anlegen</button></div>
+      <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between"><div><p className="text-sm font-bold uppercase tracking-[0.18em] text-blue-700">CRM</p><h1 className="mt-2 text-3xl font-bold tracking-tight text-slate-950">Kontakte</h1><p className="mt-2 text-sm text-slate-600">{count} aktive Kontakte</p></div><div className="flex flex-wrap gap-3"><button className="rounded-xl border border-blue-200 bg-white px-5 py-3 font-semibold text-blue-700 hover:bg-blue-50" onClick={() => setImporting(true)}>CSV importieren</button><button className="rounded-xl bg-blue-700 px-5 py-3 font-semibold text-white hover:bg-blue-800" onClick={() => setSelected(null)}>+ Kontakt anlegen</button></div></div>
       <form className="mt-7 grid gap-3 rounded-2xl bg-white p-4 shadow-sm sm:grid-cols-[1fr_180px_auto]" onSubmit={(event) => { event.preventDefault(); setPage(1); setSearch(searchInput.trim()); }}><input className="rounded-xl border border-slate-300 px-4 py-3" placeholder="Name, E-Mail oder Kundennummer" value={searchInput} onChange={(event) => setSearchInput(event.target.value)} /><select className="rounded-xl border border-slate-300 px-4 py-3" value={kind} onChange={(event) => { setKind(event.target.value as typeof kind); setPage(1); }}><option value="">Alle Typen</option><option value="organization">Firmen</option><option value="person">Personen</option></select><button className="rounded-xl bg-slate-950 px-5 py-3 font-semibold text-white">Suchen</button></form>
       {error && <p className="mt-5 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-800">{error}</p>}
       <div className="mt-5 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">

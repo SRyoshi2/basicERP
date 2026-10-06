@@ -3,16 +3,20 @@ from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
+from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from apps.core.permissions import HasCompletedPasswordChange, IsAdministrator
 from apps.core.serializers import ApiErrorResponseSerializer
 
-from .models import Contact
+from .imports import apply_contact_import, preview_contact_import
+from .models import Contact, ContactImportBatch
 from .serializers import (
     ContactAuditEventSerializer,
     ContactCreateSerializer,
+    ContactImportBatchSerializer,
+    ContactImportUploadSerializer,
     ContactSerializer,
     ContactUpdateSerializer,
 )
@@ -112,3 +116,30 @@ class ContactViewSet(
     def history(self, request, pk=None):
         contact = self.get_object()
         return Response(ContactAuditEventSerializer(contact.audit_events.all(), many=True).data)
+
+
+class ContactImportViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+    queryset = ContactImportBatch.objects.all()
+    serializer_class = ContactImportBatchSerializer
+    permission_classes = [IsAuthenticated, HasCompletedPasswordChange]
+    http_method_names = ["get", "post", "head", "options"]
+
+    @extend_schema(
+        request=ContactImportUploadSerializer,
+        responses={200: ContactImportBatchSerializer, 400: ApiErrorResponseSerializer},
+    )
+    @action(detail=False, methods=["post"], parser_classes=[MultiPartParser, FormParser])
+    def preview(self, request):
+        serializer = ContactImportUploadSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        batch = preview_contact_import(serializer.validated_data["file"], request.user)
+        return Response(ContactImportBatchSerializer(batch).data)
+
+    @extend_schema(
+        request=None,
+        responses={200: ContactImportBatchSerializer, 400: ApiErrorResponseSerializer},
+    )
+    @action(detail=True, methods=["post"])
+    def apply(self, request, pk=None):
+        batch = apply_contact_import(self.get_object().pk, request.user)
+        return Response(ContactImportBatchSerializer(batch).data)

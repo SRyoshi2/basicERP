@@ -139,12 +139,12 @@
       <aside class="status-card">
         <p class="eyebrow" style="color:#84caff">Aktueller Stand</p>
         <h2>Phase 1 läuft</h2>
-        <div class="big-number">60%</div>
-        <div class="progress" aria-label="Phase 1 zu 60 Prozent abgeschlossen"><span style="width:60%"></span></div>
+        <div class="big-number">80%</div>
+        <div class="progress" aria-label="Phase 1 zu 80 Prozent abgeschlossen"><span style="width:80%"></span></div>
         <ul class="meta">
-          <li><strong>Gesamtfortschritt:</strong> ca. 16 %</li>
+          <li><strong>Gesamtfortschritt:</strong> ca. 18 %</li>
           <li><strong>Letzte Aktualisierung:</strong> 06.10.2026</li>
-          <li><strong>Nächster Schritt:</strong> CSV-Kontaktimport mit Vorschau</li>
+          <li><strong>Nächster Schritt:</strong> Kontaktaktivitäten und Notizen</li>
           <li><strong>Zieltermin:</strong> keiner; Qualität vor Kalender</li>
         </ul>
       </aside>
@@ -189,10 +189,10 @@
         <li class="ok">Katalog für Artikel und Leistungen mit stabiler Artikelnummer</li>
         <li class="ok">Einheiten, Steuersätze und überlappungsfreie Preise mit zeitlicher Gültigkeit</li>
         <li class="ok">Katalogsuche, Filter, Pagination, Versionsschutz, Admin-Archivierung und Audit-Verlauf</li>
-        <li>Robuster CSV-Import mit Vorschau und Fehlerbericht</li>
+        <li class="ok">Idempotenter CSV-Import mit Vorschau, Zeilenvalidierung und Fehlerbericht</li>
         <li>Kontaktaktivitäten und Notizen</li>
       </ul>
-      <div class="notice success">CRM und Katalog sind durch automatisierte API-Tests sowie einen realen PostgreSQL-/HTTP-Durchstich bestätigt. Der Katalog verwaltet Artikel und Leistungen mit zeitlich gültigen Nettopreisen; überlappende Intervalle, negative Preise und veraltete Versionsstände werden abgewiesen. Anlegen, Suche, Änderung, 409-Versionskonflikt und Archivierung liefen erfolgreich; temporäre Testdaten wurden anschließend entfernt.</div>
+      <div class="notice success">CRM und Katalog sind durch automatisierte API-Tests sowie reale PostgreSQL-/HTTP-Durchstiche bestätigt. Der CSV-Import prüft UTF-8-Dateien mit Komma, Semikolon oder Tabulator vor der Übernahme, meldet Fehler je Zeile und verhindert doppelte Kontakte beim erneuten Einspielen derselben Datei.</div>
     </section>
 
     <section id="phasen" class="panel">
@@ -200,7 +200,7 @@
       <h2>Phasen bis 1.0</h2>
       <div class="phase-list">
         <article class="phase"><div class="phase-head"><span class="number">0</span><div><h3>v0.1 – Fundament</h3><p>Docker, Auth, Firma, API, App-Shell, CI.</p></div><span class="state done">Abgeschlossen</span></div></article>
-        <article class="phase"><div class="phase-head"><span class="number">1</span><div><h3>v0.2 – CRM &amp; Katalog</h3><p>Kontakte, Adressen, Aktivitäten, Leistungen, CSV-Import.</p></div><span class="state active">In Arbeit · 60 %</span></div></article>
+        <article class="phase"><div class="phase-head"><span class="number">1</span><div><h3>v0.2 – CRM &amp; Katalog</h3><p>Kontakte, Adressen, Aktivitäten, Leistungen, CSV-Import.</p></div><span class="state active">In Arbeit · 80 %</span></div></article>
         <article class="phase"><div class="phase-head"><span class="number">1a</span><div><h3>v0.2.1 – E-Rechnungseingang light</h3><p>Originalannahme, Prüfung, Metadaten und sichere Ablage.</p></div><span class="state planned">Geplant</span></div></article>
         <article class="phase"><div class="phase-head"><span class="number">2</span><div><h3>v0.3 – Projekte</h3><p>Projekte, Arbeitspakete, Budgets, Sätze und Board.</p></div><span class="state planned">Geplant</span></div></article>
         <article class="phase"><div class="phase-head"><span class="number">3</span><div><h3>v0.4 – Zeit &amp; Portal</h3><p>Zeiten, Leistungen, Abwesenheiten und Ist-Controlling.</p></div><span class="state planned">Geplant</span></div></article>
@@ -225,6 +225,7 @@
         <li><strong>Passwort sofort ändern.</strong> basicERP sperrt das Dashboard bis ein neues, ausreichend starkes Passwort gespeichert wurde.</li>
         <li><strong>Firmendaten prüfen:</strong> Im Dashboard „Firma“ öffnen, als Administrator Testdaten speichern und optional ein PNG-/JPEG-/WebP-Logo bis 2 MB hochladen.</li>
         <li><strong>CRM prüfen:</strong> Im Dashboard „CRM“ öffnen, eine Firma oder Person mit Adresse anlegen, danach über Name oder Kundennummer suchen und erneut bearbeiten.</li>
+        <li><strong>CSV-Import prüfen:</strong> Unter „CRM“ auf „CSV importieren“ klicken. Eine UTF-8-Datei mit den Spalten <code>Typ;Firmenname;Vorname;Nachname;E-Mail;Telefon;Straße;PLZ;Ort;Land</code> auswählen, die Vorschau kontrollieren und erst danach übernehmen.</li>
         <li><strong>Katalog prüfen:</strong> Im Dashboard „Katalog“ öffnen, eine Leistung mit Einheit, Steuersatz und Nettopreis anlegen. Einen Folgepreis mit nicht überlappendem Gültigkeitszeitraum ergänzen und den Eintrag über die Suche wiederfinden.</li>
         <li><strong>Systemprüfungen durchführen:</strong> Dashboard sichtbar, Readiness liefert <code>{"status":"ready"}</code>, API-Doku öffnet, alle Container sind healthy/running.</li>
       </ol>
@@ -297,6 +298,7 @@ docker compose logs --tail 100</pre>
           <tr><td>06.10.2026</td><td>Phase 0 / Abschluss</td><td>Einheitlichen API-Fehler-Envelope für Validierung, Auth, Berechtigungen, CSRF und unbekannte Routen ergänzt. OpenAPI versioniert, TypeScript-Typen daraus generiert und Drift-Prüfung in CI verankert. Phase 0 damit vollständig abgeschlossen.</td></tr>
           <tr><td>06.10.2026</td><td>Phase 1 / CRM-Durchstich</td><td>Kontakte als Firmen oder Personen, transaktionssichere Kundennummern, Adressen, Ansprechpartner, Suche, Pagination, Versionsschutz, Admin-Archivierung, Audit-Verlauf und vollständige React-Oberfläche umgesetzt. 15 Backend-Tests und realer PostgreSQL-/HTTP-Test erfolgreich.</td></tr>
           <tr><td>06.10.2026</td><td>Phase 1 / Katalog-Durchstich</td><td>Artikel und Leistungen mit fortlaufender Nummer, Einheit, Steuersatz, Steuerhinweis und zeitlich gültigen Nettopreisen umgesetzt. Überlappungsschutz, Suche/Filter/Pagination, Versionsschutz, Admin-Archivierung, Audit-Verlauf und React-Oberfläche ergänzt; vollständiger Testsatz auf 21 Backend-Tests erweitert.</td></tr>
+          <tr><td>06.10.2026</td><td>Phase 1 / CSV-Import</td><td>Zweistufigen Kontaktimport mit UTF-8- und Trennzeichenerkennung, deutschen und technischen Spaltennamen, Vorschau, feldgenauem Fehlerbericht, Größenlimits, atomarer Übernahme und SHA-256-basierter Idempotenz umgesetzt. React-Oberfläche und vier Importtests ergänzt; Testsatz auf 25 Backend-Tests erweitert.</td></tr>
         </tbody>
       </table>
     </section>
