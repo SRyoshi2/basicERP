@@ -1,0 +1,410 @@
+openapi: 3.0.3
+info:
+  title: basicERP API
+  version: 0.1.0
+  description: API-first ERP für kleine Unternehmen
+paths:
+  /api/v1/auth/change-password/:
+    post:
+      operationId: api_v1_auth_change_password_create
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangePassword'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ChangePassword'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ChangePassword'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+          description: ''
+  /api/v1/auth/csrf/:
+    get:
+      operationId: api_v1_auth_csrf_retrieve
+      tags:
+      - api
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CsrfToken'
+          description: ''
+  /api/v1/auth/login/:
+    post:
+      operationId: api_v1_auth_login_create
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Login'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Login'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Login'
+        required: true
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+          description: ''
+  /api/v1/auth/logout/:
+    post:
+      operationId: api_v1_auth_logout_create
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/auth/me/:
+    get:
+      operationId: api_v1_auth_me_retrieve
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+  /api/v1/company/:
+    get:
+      operationId: api_v1_company_retrieve
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompanyProfile'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+          description: ''
+    patch:
+      operationId: api_v1_company_partial_update
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedCompanyProfile'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedCompanyProfile'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedCompanyProfile'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompanyProfile'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+          description: ''
+  /api/v1/health/live/:
+    get:
+      operationId: api_v1_health_live_retrieve
+      tags:
+      - api
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Health'
+          description: ''
+  /api/v1/health/ready/:
+    get:
+      operationId: api_v1_health_ready_retrieve
+      tags:
+      - api
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Health'
+          description: ''
+components:
+  schemas:
+    ApiError:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        fields: {}
+      required:
+      - code
+      - message
+    ApiErrorResponse:
+      type: object
+      properties:
+        error:
+          $ref: '#/components/schemas/ApiError'
+      required:
+      - error
+    ChangePassword:
+      type: object
+      properties:
+        current_password:
+          type: string
+          writeOnly: true
+        new_password:
+          type: string
+          writeOnly: true
+      required:
+      - current_password
+      - new_password
+    CompanyProfile:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 200
+        legal_name:
+          type: string
+          maxLength: 200
+        street:
+          type: string
+          maxLength: 200
+        postal_code:
+          type: string
+          maxLength: 20
+        city:
+          type: string
+          maxLength: 120
+        country_code:
+          type: string
+          pattern: ^[A-Za-z]{2}$
+        vat_id:
+          type: string
+          maxLength: 32
+        tax_number:
+          type: string
+          maxLength: 64
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        phone:
+          type: string
+          maxLength: 50
+        website:
+          type: string
+          format: uri
+          maxLength: 200
+        logo:
+          type: string
+          format: uri
+          writeOnly: true
+          pattern: (?:png|jpg|jpeg|webp)$
+        logo_url:
+          type: string
+          nullable: true
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - country_code
+      - logo_url
+      - updated_at
+    CsrfToken:
+      type: object
+      properties:
+        csrfToken:
+          type: string
+      required:
+      - csrfToken
+    Health:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+      - status
+    Login:
+      type: object
+      properties:
+        identifier:
+          type: string
+          maxLength: 254
+        password:
+          type: string
+          writeOnly: true
+      required:
+      - identifier
+      - password
+    PatchedCompanyProfile:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 200
+        legal_name:
+          type: string
+          maxLength: 200
+        street:
+          type: string
+          maxLength: 200
+        postal_code:
+          type: string
+          maxLength: 20
+        city:
+          type: string
+          maxLength: 120
+        country_code:
+          type: string
+          pattern: ^[A-Za-z]{2}$
+        vat_id:
+          type: string
+          maxLength: 32
+        tax_number:
+          type: string
+          maxLength: 64
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        phone:
+          type: string
+          maxLength: 50
+        website:
+          type: string
+          format: uri
+          maxLength: 200
+        logo:
+          type: string
+          format: uri
+          writeOnly: true
+          pattern: (?:png|jpg|jpeg|webp)$
+        logo_url:
+          type: string
+          nullable: true
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+    RoleEnum:
+      enum:
+      - admin
+      - employee
+      type: string
+      description: |-
+        * `admin` - admin
+        * `employee` - employee
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+        username:
+          type: string
+        email:
+          type: string
+          format: email
+        first_name:
+          type: string
+        last_name:
+          type: string
+        role:
+          $ref: '#/components/schemas/RoleEnum'
+        is_staff:
+          type: boolean
+        must_change_password:
+          type: boolean
+      required:
+      - email
+      - first_name
+      - id
+      - is_staff
+      - last_name
+      - must_change_password
+      - role
+      - username
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: sessionid

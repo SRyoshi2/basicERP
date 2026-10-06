@@ -1,7 +1,7 @@
 # basicERP – Projektplan
 
 **Stand:** 05.10.2026
-**Status:** Freigegeben; Phase 0 zu etwa 95 % umgesetzt
+**Status:** Freigegeben; Phase 0 abgeschlossen, Phase 1 als Nächstes
 **Quelle:** [`ROADMAP.md`](../ROADMAP.md)
 
 ## 1. Zielbild

@@ -14,12 +14,14 @@ from rest_framework.views import APIView
 from .serializers import (
     ChangePasswordSerializer,
     CompanyProfileSerializer,
+    ApiErrorResponseSerializer,
     CsrfTokenSerializer,
     HealthSerializer,
     LoginSerializer,
     UserSerializer,
 )
 from .models import CompanyProfile
+from .errors import InvalidCredentials
 from .permissions import HasCompletedPasswordChange, IsAdministrator
 
 
@@ -72,7 +74,10 @@ class LoginView(APIView):
     authentication_classes = []
     permission_classes = [AllowAny]
 
-    @extend_schema(request=LoginSerializer, responses={200: UserSerializer})
+    @extend_schema(
+        request=LoginSerializer,
+        responses={200: UserSerializer, 400: ApiErrorResponseSerializer, 403: ApiErrorResponseSerializer},
+    )
     def post(self, request):
         serializer = LoginSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -82,10 +87,7 @@ class LoginView(APIView):
             password=serializer.validated_data["password"],
         )
         if user is None:
-            return Response(
-                {"detail": "Anmeldedaten sind ungültig."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+            raise InvalidCredentials
         login(request, user)
         return Response(user_payload(user))
 
@@ -110,7 +112,10 @@ class MeView(APIView):
 class ChangePasswordView(APIView):
     permission_classes = [IsAuthenticated]
 
-    @extend_schema(request=ChangePasswordSerializer, responses={200: UserSerializer})
+    @extend_schema(
+        request=ChangePasswordSerializer,
+        responses={200: UserSerializer, 400: ApiErrorResponseSerializer},
+    )
     def post(self, request):
         serializer = ChangePasswordSerializer(data=request.data, context={"request": request})
         serializer.is_valid(raise_exception=True)
@@ -135,11 +140,21 @@ class CompanyProfileView(APIView):
         company, _ = CompanyProfile.objects.get_or_create(pk=1)
         return company
 
-    @extend_schema(responses=CompanyProfileSerializer)
+    @extend_schema(
+        responses={200: CompanyProfileSerializer, 401: ApiErrorResponseSerializer},
+    )
     def get(self, request):
         return Response(CompanyProfileSerializer(self.get_object()).data)
 
-    @extend_schema(request=CompanyProfileSerializer, responses=CompanyProfileSerializer)
+    @extend_schema(
+        request=CompanyProfileSerializer,
+        responses={
+            200: CompanyProfileSerializer,
+            400: ApiErrorResponseSerializer,
+            401: ApiErrorResponseSerializer,
+            403: ApiErrorResponseSerializer,
+        },
+    )
     def patch(self, request):
         company = self.get_object()
         serializer = CompanyProfileSerializer(company, data=request.data, partial=True)

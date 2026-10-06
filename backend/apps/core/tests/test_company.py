@@ -38,6 +38,7 @@ def test_employee_can_read_but_not_change_company(api_client, employee_user):
 
     response = api_client.patch(reverse("company-profile"), {"name": "Nicht erlaubt"}, format="json")
     assert response.status_code == 403
+    assert response.data["error"]["code"] == "permission_denied"
     assert CompanyProfile.objects.get().name == ""
 
 
@@ -88,4 +89,29 @@ def test_svg_logo_is_rejected(api_client, admin_user):
     response = api_client.patch(reverse("company-profile"), {"logo": svg}, format="multipart")
 
     assert response.status_code == 400
-    assert "logo" in response.data
+    assert response.data["error"]["code"] == "validation_error"
+    assert "logo" in response.data["error"]["fields"]
+
+
+@pytest.mark.django_db
+def test_validation_errors_use_field_map(api_client, admin_user):
+    api_client.force_authenticate(admin_user)
+
+    response = api_client.patch(
+        reverse("company-profile"),
+        {"country_code": "Deutschland", "email": "keine-mail"},
+        format="json",
+    )
+
+    assert response.status_code == 400
+    assert response.data["error"]["code"] == "validation_error"
+    assert set(response.data["error"]["fields"]) == {"country_code", "email"}
+
+
+def test_unknown_api_route_uses_error_envelope(client, settings):
+    settings.DEBUG = False
+
+    response = client.get("/api/v1/not-found/")
+
+    assert response.status_code == 404
+    assert response.json()["error"]["code"] == "not_found"

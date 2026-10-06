@@ -334,13 +334,16 @@ Quelle; visuelle Regressionstests erkennen Rendering-Abweichungen.
   z. B. `POST /api/v1/invoices/{id}/finalize`.
 - Listen verwenden einheitliche Filter-, Sortier- und Paginationparameter.
 - Datums-/Zeitwerte sind ISO 8601, Geld/Decimal bleiben JSON-Strings.
-- Fehler folgen einem einheitlichen Problem-JSON mit stabilem Fehlercode,
-  menschenlesbarem Text und feldbezogenen Details.
+- Fehler folgen dem Envelope
+  `{"error":{"code":"…","message":"…","fields":{…}}}`. `code` ist
+  maschinenlesbar und stabil, `message` menschenlesbar; `fields` ist nur bei
+  feldbezogenen Validierungsfehlern vorhanden.
 - Kritische POSTs und Imports unterstützen einen Idempotency-Key.
 - Zustandswechsel prüfen die erwartete Objektversion, um Doppelaktionen und
   verlorene Updates zu verhindern.
 - Swagger dient Entwicklern; fachliche Integrationsbeispiele werden zusätzlich
-  gepflegt. Generierter TypeScript-Client verhindert Frontend-/API-Drift.
+  gepflegt. Aus dem versionierten OpenAPI-Dokument generierte TypeScript-Typen
+  und ein CI-Diff-Check verhindern Frontend-/API-Drift.
 
 ## 12. Authentisierung und Autorisierung
 

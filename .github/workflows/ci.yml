@@ -35,7 +35,7 @@ jobs:
         run: |
           ruff check .
           python manage.py makemigrations --check --dry-run
-          python manage.py spectacular --validate --file /tmp/openapi.yaml
+          python manage.py spectacular --validate --file ../docs/openapi.yaml
           pytest
       - uses: actions/setup-node@v7
         with:
@@ -47,7 +47,7 @@ jobs:
         run: npm ci
       - name: Check and build frontend
         working-directory: frontend
-        run: npm run lint && npm run build
+        run: npm run api:check && npm run lint && npm run build
       - name: Validate and build containers
         run: |
           docker compose --env-file .env.example config --quiet

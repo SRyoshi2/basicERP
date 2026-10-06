@@ -63,6 +63,12 @@ def test_login_requires_csrf_token(monkeypatch):
         content_type="application/json",
     )
     assert rejected.status_code == 403
+    assert rejected.json() == {
+        "error": {
+            "code": "csrf_failed",
+            "message": "Die Sicherheitsprüfung ist fehlgeschlagen. Bitte lade die Seite neu.",
+        }
+    }
 
     csrf_response = client.get(reverse("auth-csrf"))
     token = csrf_response.json()["csrfToken"]
@@ -73,3 +79,17 @@ def test_login_requires_csrf_token(monkeypatch):
         HTTP_X_CSRFTOKEN=token,
     )
     assert accepted.status_code == 200
+
+
+@pytest.mark.django_db
+def test_invalid_credentials_use_error_envelope(api_client):
+    response = api_client.post(
+        reverse("auth-login"),
+        {"identifier": "unknown", "password": "wrong"},
+        format="json",
+    )
+
+    assert response.status_code == 400
+    assert response.data == {
+        "error": {"code": "invalid_credentials", "message": "Anmeldedaten sind ungültig."}
+    }

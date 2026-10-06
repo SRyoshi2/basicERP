@@ -81,3 +81,13 @@ class CompanyProfileSerializer(serializers.ModelSerializer):
             storage = instance.logo.storage
             transaction.on_commit(lambda: storage.delete(old_logo_name))
         return instance
+
+
+class ApiErrorSerializer(serializers.Serializer):
+    code = serializers.CharField()
+    message = serializers.CharField()
+    fields = serializers.JSONField(required=False)
+
+
+class ApiErrorResponseSerializer(serializers.Serializer):
+    error = ApiErrorSerializer()

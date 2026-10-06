@@ -105,6 +105,7 @@ REST_FRAMEWORK = {
         "apps.core.permissions.HasCompletedPasswordChange",
     ],
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+    "EXCEPTION_HANDLER": "apps.core.errors.api_exception_handler",
 }
 
 SPECTACULAR_SETTINGS = {
@@ -117,6 +118,7 @@ SPECTACULAR_SETTINGS = {
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = "Lax"
 CSRF_COOKIE_SAMESITE = "Lax"
+CSRF_FAILURE_VIEW = "apps.core.errors.csrf_failure"
 secure_cookies = os.getenv("APP_PUBLIC_SCHEME", "http") == "https"
 SESSION_COOKIE_SECURE = secure_cookies
 CSRF_COOKIE_SECURE = secure_cookies

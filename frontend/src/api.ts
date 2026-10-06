@@ -1,34 +1,32 @@
-export type User = {
-  id: string;
-  username: string;
-  email: string;
-  first_name: string;
-  last_name: string;
-  role: "admin" | "employee";
-  is_staff: boolean;
-  must_change_password: boolean;
-};
+import type { components } from "./generated/api-schema";
 
-export type CompanyProfile = {
-  name: string;
-  legal_name: string;
-  street: string;
-  postal_code: string;
-  city: string;
-  country_code: string;
-  vat_id: string;
-  tax_number: string;
-  email: string;
-  phone: string;
-  website: string;
-  logo_url: string | null;
-  updated_at: string;
-};
+export type User = components["schemas"]["User"];
+export type CompanyProfile = Required<
+  Omit<components["schemas"]["CompanyProfile"], "logo">
+>;
 
 type ErrorBody = {
+  error?: components["schemas"]["ApiError"];
   detail?: string;
   [key: string]: unknown;
 };
+
+function firstMessage(value: unknown): string | null {
+  if (typeof value === "string") return value;
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      const message = firstMessage(item);
+      if (message) return message;
+    }
+  }
+  if (value && typeof value === "object") {
+    for (const item of Object.values(value)) {
+      const message = firstMessage(item);
+      if (message) return message;
+    }
+  }
+  return null;
+}
 
 function csrfToken(): string {
   const entry = document.cookie
@@ -57,8 +55,7 @@ async function request<T>(url: string, init: RequestInit = {}): Promise<T> {
     } catch {
       // A proxy failure may not return JSON.
     }
-    const fieldMessage = Object.values(body).find((value) => Array.isArray(value));
-    const message = body.detail ?? (Array.isArray(fieldMessage) ? String(fieldMessage[0]) : null);
+    const message = firstMessage(body.error?.fields) ?? body.error?.message ?? body.detail;
     throw new Error(message ?? `Anfrage fehlgeschlagen (${response.status}).`);
   }
 

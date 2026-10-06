@@ -1,7 +1,8 @@
 # basicERP
 
 Quelloffenes, API-first Klein-ERP für Freelancer, Einzelunternehmen und kleine
-Unternehmen in Deutschland. Das Projekt befindet sich in **Phase 0**.
+Unternehmen in Deutschland. Das Fundament **v0.1 / Phase 0** ist abgeschlossen;
+als Nächstes beginnt der CRM-Vertikalschnitt.
 
 Repository: https://github.com/SRyoshi2/basicERP
 
@@ -50,6 +51,15 @@ Nach der Installation bei Standardwerten:
 ```powershell
 docker compose ps
 docker compose logs --tail 100
+```
+
+Der versionierte API-Vertrag liegt in `docs/openapi.yaml`. Mit installiertem
+Node.js prüft folgender Befehl, ob OpenAPI-Dokument und generierte
+Frontend-Typen synchron sind:
+
+```powershell
+cd frontend
+npm run api:check
 ```
 
 Die aktuelle Planung steht in [`ROADMAP.html`](ROADMAP.html), der ausführliche

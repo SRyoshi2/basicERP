@@ -138,13 +138,13 @@
       </div>
       <aside class="status-card">
         <p class="eyebrow" style="color:#84caff">Aktueller Stand</p>
-        <h2>Phase 0 läuft</h2>
-        <div class="big-number">95%</div>
-        <div class="progress" aria-label="Phase 0 zu 95 Prozent abgeschlossen"><span style="width:95%"></span></div>
+        <h2>Phase 0 abgeschlossen</h2>
+        <div class="big-number">100%</div>
+        <div class="progress" aria-label="Phase 0 vollständig abgeschlossen"><span style="width:100%"></span></div>
         <ul class="meta">
           <li><strong>Gesamtfortschritt:</strong> ca. 10 %</li>
           <li><strong>Letzte Aktualisierung:</strong> 06.10.2026</li>
-          <li><strong>Nächster Schritt:</strong> API-Fehlerformat &amp; Frontend-Vertragstest</li>
+          <li><strong>Nächster Schritt:</strong> Phase 1 · CRM-Datenmodell &amp; Berechtigungen</li>
           <li><strong>Zieltermin:</strong> keiner; Qualität vor Kalender</li>
         </ul>
       </aside>
@@ -193,17 +193,17 @@
         <li class="ok">Rollenmodell Admin/Mitarbeiter mit negativen Berechtigungstests</li>
         <li class="ok">Firmeneinstellungen und sicher begrenzter Rasterlogo-Upload</li>
         <li class="ok">GitHub-CI für Backend, Frontend und Container vollständig grün</li>
-        <li>OpenAPI-/Frontend-Vertragstest automatisieren</li>
+        <li class="ok">Einheitliches API-Fehlerformat und automatisierter OpenAPI-/Frontend-Vertragstest</li>
       </ul>
-      <div class="notice success">Der reale Windows-Durchstich ist bestätigt: Build, Migration, Admin-Bootstrap, fünf laufende Dienste, Readiness, Startseite, HTML-Fahrplan, API-Dokumentation, Login, erzwungener Passwortwechselstatus und Logout funktionieren.</div>
+      <div class="notice success">Phase 0 ist abgenommen: Der reale Windows-Durchstich, Rollen und Firmenprofil, ein stabiler Fehler-Envelope, der versionierte OpenAPI-Vertrag, daraus generierte TypeScript-Typen und die vollständige GitHub-CI sind bestätigt.</div>
     </section>
 
     <section id="phasen" class="panel">
       <p class="eyebrow">Lieferfolge</p>
       <h2>Phasen bis 1.0</h2>
       <div class="phase-list">
-        <article class="phase"><div class="phase-head"><span class="number">0</span><div><h3>v0.1 – Fundament</h3><p>Docker, Auth, Firma, API, App-Shell, CI.</p></div><span class="state active">In Arbeit · 95 %</span></div></article>
-        <article class="phase"><div class="phase-head"><span class="number">1</span><div><h3>v0.2 – CRM &amp; Katalog</h3><p>Kontakte, Adressen, Aktivitäten, Leistungen, CSV-Import.</p></div><span class="state planned">Geplant</span></div></article>
+        <article class="phase"><div class="phase-head"><span class="number">0</span><div><h3>v0.1 – Fundament</h3><p>Docker, Auth, Firma, API, App-Shell, CI.</p></div><span class="state done">Abgeschlossen</span></div></article>
+        <article class="phase"><div class="phase-head"><span class="number">1</span><div><h3>v0.2 – CRM &amp; Katalog</h3><p>Kontakte, Adressen, Aktivitäten, Leistungen, CSV-Import.</p></div><span class="state active">Als Nächstes</span></div></article>
         <article class="phase"><div class="phase-head"><span class="number">1a</span><div><h3>v0.2.1 – E-Rechnungseingang light</h3><p>Originalannahme, Prüfung, Metadaten und sichere Ablage.</p></div><span class="state planned">Geplant</span></div></article>
         <article class="phase"><div class="phase-head"><span class="number">2</span><div><h3>v0.3 – Projekte</h3><p>Projekte, Arbeitspakete, Budgets, Sätze und Board.</p></div><span class="state planned">Geplant</span></div></article>
         <article class="phase"><div class="phase-head"><span class="number">3</span><div><h3>v0.4 – Zeit &amp; Portal</h3><p>Zeiten, Leistungen, Abwesenheiten und Ist-Controlling.</p></div><span class="state planned">Geplant</span></div></article>
@@ -233,6 +233,8 @@
         <article class="test-card"><h3>1 · Container</h3><pre>docker compose ps</pre><p>db, redis, web, worker und nginx sollen laufen; Healthchecks dürfen kurz „starting“ zeigen.</p></article>
         <article class="test-card"><h3>2 · Readiness</h3><pre>Invoke-RestMethod http://localhost:8080/api/v1/health/ready/</pre><p>Erwartet: Status <code>ready</code>.</p></article>
         <article class="test-card"><h3>3 · Logs</h3><pre>docker compose logs --tail 100</pre><p>Keine dauerhaften Tracebacks, Neustartschleifen oder Datenbankfehler.</p></article>
+        <article class="test-card"><h3>4 · API-Vertrag</h3><pre>cd frontend
+npm run api:check</pre><p>Mit Node.js installiert: OpenAPI und generierte TypeScript-Typen müssen ohne Diff übereinstimmen.</p></article>
       </div>
       <div class="notice success">Am 05.10.2026 auf dem aktuellen Windows-System erfolgreich getestet. Alle fünf Dienste laufen; db, redis, web und nginx melden healthy, der Celery-Worker ist mit zwei Prozessen verbunden.</div>
     </section>
@@ -268,6 +270,7 @@ docker compose logs --tail 100</pre>
           <tr><td>Starten</td><td><code>docker compose up -d</code></td><td>Startet vorhandene Installation.</td></tr>
           <tr><td>Neubauen</td><td><code>docker compose up -d --build</code></td><td>Nach Quellcodeänderungen.</td></tr>
           <tr><td>Django-Prüfung</td><td><code>docker compose run --rm web python manage.py check</code></td><td>Prüft die installierte Backend-Konfiguration.</td></tr>
+          <tr><td>API-Vertrag</td><td><code>cd frontend &amp;&amp; npm run api:check</code></td><td>Erzeugt Frontend-Typen neu und schlägt bei nicht eingecheckter API-Drift fehl.</td></tr>
         </tbody>
       </table>
       <div class="notice"><strong>Nicht unbedacht ausführen:</strong> <code>docker compose down -v</code> löscht die Docker-Volumes und damit Datenbank sowie Dateien. Für normale Stopps immer <code>docker compose stop</code> verwenden.</div>
@@ -292,6 +295,7 @@ docker compose logs --tail 100</pre>
           <tr><td>05.10.2026</td><td>GitHub</td><td>Lokales Repository mit github.com/SRyoshi2/basicERP verbunden; Initial-Commit und CI-Ausführung vorbereitet.</td></tr>
           <tr><td>06.10.2026</td><td>Phase 0 / Schritt 2</td><td>Rollen Admin/Mitarbeiter, Firmenprofil-API, geschützte Bearbeitung, Logo-Upload und Einstellungsoberfläche umgesetzt. 7 Backend-Tests, OpenAPI, Ruff, Frontend-Build sowie realer Docker-/PostgreSQL-Durchstich erfolgreich.</td></tr>
           <tr><td>06.10.2026</td><td>CI-Härtung</td><td>Nach einem extern abgebrochenen Backend-Runner wurden die Prüfungen zu einem sequenziellen, ressourcenschonenden Quality-Job zusammengeführt. Backend, Frontend und Container-Build liefen anschließend vollständig grün.</td></tr>
+          <tr><td>06.10.2026</td><td>Phase 0 / Abschluss</td><td>Einheitlichen API-Fehler-Envelope für Validierung, Auth, Berechtigungen, CSRF und unbekannte Routen ergänzt. OpenAPI versioniert, TypeScript-Typen daraus generiert und Drift-Prüfung in CI verankert. Phase 0 damit vollständig abgeschlossen.</td></tr>
         </tbody>
       </table>
     </section>
