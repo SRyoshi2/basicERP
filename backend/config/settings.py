@@ -29,6 +29,7 @@ INSTALLED_APPS = [
     "drf_spectacular",
     "apps.core",
     "apps.crm",
+    "apps.catalog",
 ]
 
 MIDDLEWARE = [
@@ -121,6 +122,9 @@ SPECTACULAR_SETTINGS = {
     "ENUM_NAME_OVERRIDES": {
         "AddressKindEnum": (("billing", "Rechnung"), ("shipping", "Lieferung"), ("other", "Sonstige")),
         "ContactKindEnum": (("organization", "Firma"), ("person", "Person")),
+        "CatalogItemKindEnum": (("product", "Artikel"), ("service", "Leistung")),
+        "CatalogUnitEnum": (("hour", "Stunde"), ("day", "Tag"), ("piece", "Stück"), ("flat", "Pauschal")),
+        "CatalogTaxRateEnum": (("19.00", "19 %"), ("7.00", "7 %"), ("0.00", "0 %")),
     },
 }
 

@@ -112,6 +112,199 @@ paths:
               schema:
                 $ref: '#/components/schemas/User'
           description: ''
+  /api/v1/catalog/items/:
+    get:
+      operationId: catalog_items_list
+      parameters:
+      - in: query
+        name: archived
+        schema:
+          type: string
+          enum:
+          - all
+          - 'false'
+          - 'true'
+      - in: query
+        name: kind
+        schema:
+          type: string
+          enum:
+          - product
+          - service
+      - name: page
+        required: false
+        in: query
+        description: Eine Seitenzahl in der paginierten Ergebnismenge.
+        schema:
+          type: integer
+      - in: query
+        name: search
+        schema:
+          type: string
+        description: Name, Beschreibung oder Nummer
+      - in: query
+        name: unit
+        schema:
+          type: string
+          enum:
+          - day
+          - flat
+          - hour
+          - piece
+      tags:
+      - catalog
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedCatalogItemList'
+          description: ''
+    post:
+      operationId: catalog_items_create
+      tags:
+      - catalog
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CatalogItemCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CatalogItemCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CatalogItemCreate'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CatalogItem'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+          description: ''
+  /api/v1/catalog/items/{id}/:
+    get:
+      operationId: catalog_items_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Ein UUID-String, der catalog item identifiziert.
+        required: true
+      tags:
+      - catalog
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CatalogItem'
+          description: ''
+    patch:
+      operationId: catalog_items_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Ein UUID-String, der catalog item identifiziert.
+        required: true
+      tags:
+      - catalog
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedCatalogItemUpdate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedCatalogItemUpdate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedCatalogItemUpdate'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CatalogItem'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+          description: ''
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+          description: ''
+  /api/v1/catalog/items/{id}/archive/:
+    post:
+      operationId: catalog_items_archive_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Ein UUID-String, der catalog item identifiziert.
+        required: true
+      tags:
+      - catalog
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CatalogItem'
+          description: ''
+  /api/v1/catalog/items/{id}/history/:
+    get:
+      operationId: catalog_items_history_list
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Ein UUID-String, der catalog item identifiziert.
+        required: true
+      tags:
+      - catalog
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CatalogAuditEvent'
+          description: ''
   /api/v1/company/:
     get:
       operationId: company_retrieve
@@ -472,6 +665,175 @@ components:
           $ref: '#/components/schemas/ApiError'
       required:
       - error
+    CatalogAuditEvent:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        action:
+          $ref: '#/components/schemas/ActionEnum'
+        version:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        changes: {}
+        actor:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - action
+      - actor
+      - created_at
+      - id
+      - version
+    CatalogItem:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        item_number:
+          type: string
+          readOnly: true
+        kind:
+          $ref: '#/components/schemas/CatalogItemKindEnum'
+        name:
+          type: string
+          maxLength: 200
+        description:
+          type: string
+        unit:
+          $ref: '#/components/schemas/CatalogUnitEnum'
+        tax_rate:
+          $ref: '#/components/schemas/CatalogTaxRateEnum'
+        tax_note:
+          type: string
+          maxLength: 240
+        current_price:
+          allOf:
+          - $ref: '#/components/schemas/CatalogPrice'
+          nullable: true
+          readOnly: true
+        prices:
+          type: array
+          items:
+            $ref: '#/components/schemas/CatalogPrice'
+          readOnly: true
+        version:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        archived_at:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - current_price
+      - id
+      - item_number
+      - kind
+      - name
+      - prices
+      - tax_rate
+      - unit
+      - updated_at
+    CatalogItemCreate:
+      type: object
+      properties:
+        kind:
+          $ref: '#/components/schemas/CatalogItemKindEnum'
+        name:
+          type: string
+          maxLength: 200
+        description:
+          type: string
+        unit:
+          $ref: '#/components/schemas/CatalogUnitEnum'
+        tax_rate:
+          $ref: '#/components/schemas/CatalogTaxRateEnum'
+        tax_note:
+          type: string
+          maxLength: 240
+        prices:
+          type: array
+          items:
+            $ref: '#/components/schemas/CatalogPrice'
+      required:
+      - kind
+      - name
+      - prices
+      - tax_rate
+      - unit
+    CatalogItemKindEnum:
+      enum:
+      - product
+      - service
+      type: string
+      description: |-
+        * `product` - Artikel
+        * `service` - Leistung
+    CatalogPrice:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        net_amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        valid_from:
+          type: string
+          format: date
+        valid_until:
+          type: string
+          format: date
+          nullable: true
+      required:
+      - id
+      - net_amount
+      - valid_from
+    CatalogTaxRateEnum:
+      enum:
+      - '19.00'
+      - '7.00'
+      - '0.00'
+      type: string
+      description: |-
+        * `19.00` - 19 %
+        * `7.00` - 7 %
+        * `0.00` - 0 %
+    CatalogUnitEnum:
+      enum:
+      - hour
+      - day
+      - piece
+      - flat
+      type: string
+      description: |-
+        * `hour` - Stunde
+        * `day` - Tag
+        * `piece` - Stück
+        * `flat` - Pauschal
     ChangePassword:
       type: object
       properties:
@@ -767,6 +1129,29 @@ components:
       required:
       - identifier
       - password
+    PaginatedCatalogItemList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/CatalogItem'
     PaginatedContactList:
       type: object
       required:
@@ -790,6 +1175,31 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Contact'
+    PatchedCatalogItemUpdate:
+      type: object
+      properties:
+        kind:
+          $ref: '#/components/schemas/CatalogItemKindEnum'
+        name:
+          type: string
+          maxLength: 200
+        description:
+          type: string
+        unit:
+          $ref: '#/components/schemas/CatalogUnitEnum'
+        tax_rate:
+          $ref: '#/components/schemas/CatalogTaxRateEnum'
+        tax_note:
+          type: string
+          maxLength: 240
+        prices:
+          type: array
+          items:
+            $ref: '#/components/schemas/CatalogPrice'
+        version:
+          type: integer
+          minimum: 1
+          writeOnly: true
     PatchedCompanyProfile:
       type: object
       properties:

@@ -84,6 +84,70 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/catalog/items/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["catalog_items_list"];
+        put?: never;
+        post: operations["catalog_items_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/catalog/items/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["catalog_items_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["catalog_items_partial_update"];
+        trace?: never;
+    };
+    "/api/v1/catalog/items/{id}/archive/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["catalog_items_archive_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/catalog/items/{id}/history/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["catalog_items_history_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/company/": {
         parameters: {
             query?: never;
@@ -234,6 +298,78 @@ export interface components {
         ApiErrorResponse: {
             error: components["schemas"]["ApiError"];
         };
+        CatalogAuditEvent: {
+            /** Format: uuid */
+            readonly id: string;
+            action: components["schemas"]["ActionEnum"];
+            /** Format: int64 */
+            version: number;
+            changes?: unknown;
+            actor: string | null;
+            /** Format: date-time */
+            readonly created_at: string;
+        };
+        CatalogItem: {
+            /** Format: uuid */
+            readonly id: string;
+            readonly item_number: string;
+            kind: components["schemas"]["CatalogItemKindEnum"];
+            name: string;
+            description?: string;
+            unit: components["schemas"]["CatalogUnitEnum"];
+            tax_rate: components["schemas"]["CatalogTaxRateEnum"];
+            tax_note?: string;
+            readonly current_price: components["schemas"]["CatalogPrice"] | null;
+            readonly prices: components["schemas"]["CatalogPrice"][];
+            /** Format: int64 */
+            version?: number;
+            /** Format: date-time */
+            archived_at?: string | null;
+            /** Format: date-time */
+            readonly created_at: string;
+            /** Format: date-time */
+            readonly updated_at: string;
+        };
+        CatalogItemCreate: {
+            kind: components["schemas"]["CatalogItemKindEnum"];
+            name: string;
+            description?: string;
+            unit: components["schemas"]["CatalogUnitEnum"];
+            tax_rate: components["schemas"]["CatalogTaxRateEnum"];
+            tax_note?: string;
+            prices: components["schemas"]["CatalogPrice"][];
+        };
+        /**
+         * @description * `product` - Artikel
+         *     * `service` - Leistung
+         * @enum {string}
+         */
+        CatalogItemKindEnum: "product" | "service";
+        CatalogPrice: {
+            /** Format: uuid */
+            readonly id: string;
+            /** Format: decimal */
+            net_amount: string;
+            /** Format: date */
+            valid_from: string;
+            /** Format: date */
+            valid_until?: string | null;
+        };
+        /**
+         * @description * `19.00` - 19 %
+         *     * `7.00` - 7 %
+         *     * `0.00` - 0 %
+         * @enum {string}
+         */
+        CatalogTaxRateEnum: "19.00" | "7.00" | "0.00";
+        /**
+         * @description * `hour` - Stunde
+         *     * `day` - Tag
+         *     * `piece` - Stück
+         *     * `flat` - Pauschal
+         * @enum {string}
+         */
+        CatalogUnitEnum: "hour" | "day" | "piece" | "flat";
         ChangePassword: {
             current_password: string;
             new_password: string;
@@ -344,6 +480,21 @@ export interface components {
             identifier: string;
             password: string;
         };
+        PaginatedCatalogItemList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=4
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=2
+             */
+            previous?: string | null;
+            results: components["schemas"]["CatalogItem"][];
+        };
         PaginatedContactList: {
             /** @example 123 */
             count: number;
@@ -358,6 +509,16 @@ export interface components {
              */
             previous?: string | null;
             results: components["schemas"]["Contact"][];
+        };
+        PatchedCatalogItemUpdate: {
+            kind?: components["schemas"]["CatalogItemKindEnum"];
+            name?: string;
+            description?: string;
+            unit?: components["schemas"]["CatalogUnitEnum"];
+            tax_rate?: components["schemas"]["CatalogTaxRateEnum"];
+            tax_note?: string;
+            prices?: components["schemas"]["CatalogPrice"][];
+            version?: number;
         };
         PatchedCompanyProfile: {
             name?: string;
@@ -549,6 +710,176 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["User"];
+                };
+            };
+        };
+    };
+    catalog_items_list: {
+        parameters: {
+            query?: {
+                archived?: "all" | "false" | "true";
+                kind?: "product" | "service";
+                /** @description Eine Seitenzahl in der paginierten Ergebnismenge. */
+                page?: number;
+                /** @description Name, Beschreibung oder Nummer */
+                search?: string;
+                unit?: "day" | "flat" | "hour" | "piece";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedCatalogItemList"];
+                };
+            };
+        };
+    };
+    catalog_items_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CatalogItemCreate"];
+                "application/x-www-form-urlencoded": components["schemas"]["CatalogItemCreate"];
+                "multipart/form-data": components["schemas"]["CatalogItemCreate"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogItem"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    catalog_items_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Ein UUID-String, der catalog item identifiziert. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogItem"];
+                };
+            };
+        };
+    };
+    catalog_items_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Ein UUID-String, der catalog item identifiziert. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedCatalogItemUpdate"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedCatalogItemUpdate"];
+                "multipart/form-data": components["schemas"]["PatchedCatalogItemUpdate"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogItem"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    catalog_items_archive_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Ein UUID-String, der catalog item identifiziert. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogItem"];
+                };
+            };
+        };
+    };
+    catalog_items_history_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Ein UUID-String, der catalog item identifiziert. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogAuditEvent"][];
                 };
             };
         };

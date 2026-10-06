@@ -17,6 +17,16 @@ export type ContactInput = Omit<
 export type ContactPage = Omit<components["schemas"]["PaginatedContactList"], "results"> & {
   results: Contact[];
 };
+export type CatalogPriceInput = Omit<components["schemas"]["CatalogPrice"], "id">;
+export type CatalogItem = Required<components["schemas"]["CatalogItem"]> & {
+  current_price: components["schemas"]["CatalogPrice"] | null;
+};
+export type CatalogItemInput = Omit<components["schemas"]["CatalogItemCreate"], "prices"> & {
+  prices: CatalogPriceInput[];
+};
+export type CatalogPage = Omit<components["schemas"]["PaginatedCatalogItemList"], "results"> & {
+  results: CatalogItem[];
+};
 
 type ErrorBody = {
   error?: components["schemas"]["ApiError"];
@@ -149,6 +159,42 @@ export async function updateContact(contact: Contact, data: ContactInput): Promi
 
 export async function archiveContact(contact: Contact): Promise<Contact> {
   return request<Contact>(`/api/v1/crm/contacts/${contact.id}/archive/`, {
+    method: "POST",
+    body: "{}",
+  });
+}
+
+export async function getCatalogItems(options: {
+  search?: string;
+  kind?: "product" | "service" | "";
+  unit?: "hour" | "day" | "piece" | "flat" | "";
+  page?: number;
+} = {}): Promise<CatalogPage> {
+  const params = new URLSearchParams();
+  if (options.search) params.set("search", options.search);
+  if (options.kind) params.set("kind", options.kind);
+  if (options.unit) params.set("unit", options.unit);
+  if (options.page && options.page > 1) params.set("page", String(options.page));
+  const query = params.size ? `?${params.toString()}` : "";
+  return request<CatalogPage>(`/api/v1/catalog/items/${query}`);
+}
+
+export async function createCatalogItem(data: CatalogItemInput): Promise<CatalogItem> {
+  return request<CatalogItem>("/api/v1/catalog/items/", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function updateCatalogItem(item: CatalogItem, data: CatalogItemInput): Promise<CatalogItem> {
+  return request<CatalogItem>(`/api/v1/catalog/items/${item.id}/`, {
+    method: "PATCH",
+    body: JSON.stringify({ ...data, version: item.version }),
+  });
+}
+
+export async function archiveCatalogItem(item: CatalogItem): Promise<CatalogItem> {
+  return request<CatalogItem>(`/api/v1/catalog/items/${item.id}/archive/`, {
     method: "POST",
     body: "{}",
   });

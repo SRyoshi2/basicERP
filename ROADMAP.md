@@ -1,6 +1,6 @@
 # basicERP — Fahrplan zur Umsetzung
 
-**Stand:** 05.10.2026 · **Status:** Phase 0 in Umsetzung
+**Stand:** 06.10.2026 · **Status:** Phase 0 abgeschlossen, Phase 1 zu etwa 60 % umgesetzt
 
 > Der fortlaufend aktualisierte Fahrplan mit Umsetzungsstand und Testanleitung
 > liegt in [`ROADMAP.html`](ROADMAP.html). Dieses Dokument bleibt die fachliche

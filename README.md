@@ -2,7 +2,7 @@
 
 Quelloffenes, API-first Klein-ERP für Freelancer, Einzelunternehmen und kleine
 Unternehmen in Deutschland. Das Fundament **v0.1 / Phase 0** ist abgeschlossen;
-Phase 1 liefert aktuell den ersten CRM-Vertikalschnitt für Kontakte.
+Phase 1 liefert aktuell CRM-Kontakte sowie den Artikel- und Leistungskatalog.
 
 Repository: https://github.com/SRyoshi2/basicERP
 
@@ -32,6 +32,10 @@ können diese Stammdaten lesen, aber nicht verändern.
 Unter **CRM → Kontakte** lassen sich Firmen und Personen mit Kundennummer,
 Adressen und Ansprechpartnern anlegen, suchen und bearbeiten. Archivieren ist
 Administratoren vorbehalten; konkurrierende Bearbeitungen werden erkannt.
+
+Unter **Katalog → Artikel & Leistungen** lassen sich Artikel und Leistungen mit
+Einheit, Steuersatz und zeitlich gültigen Nettopreisen verwalten. Überlappende
+Preiszeiträume werden abgewiesen; Archivieren ist Administratoren vorbehalten.
 
 ## Schnellstart unter Ubuntu
 

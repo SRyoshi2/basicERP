@@ -1,7 +1,7 @@
 # basicERP – Softwarearchitektur
 
-**Stand:** 05.10.2026
-**Status:** Angenommen; Phase 0 in Umsetzung
+**Stand:** 06.10.2026
+**Status:** Angenommen; Phase 0 abgeschlossen, Phase 1 in Umsetzung
 **Zugehörige Entscheidung:** [`ADR-0001`](adr/0001-modularer-monolith.md), [`ADR-0002`](adr/0002-belegfestschreibung-und-outbox.md)
 
 ## 1. Kurzfassung
