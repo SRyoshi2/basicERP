@@ -699,13 +699,14 @@ export interface components {
             readonly created_at: string;
         };
         /**
-         * @description * `xrechnung_ubl` - XRechnung UBL
+         * @description * `standard_pdf` - Normale PDF-Rechnung
+         *     * `xrechnung_ubl` - XRechnung UBL
          *     * `xrechnung_cii` - XRechnung CII
          *     * `zugferd` - ZUGFeRD
          *     * `unknown` - Unbekannt
          * @enum {string}
          */
-        IncomingInvoiceFormatEnum: "xrechnung_ubl" | "xrechnung_cii" | "zugferd" | "unknown";
+        IncomingInvoiceFormatEnum: "standard_pdf" | "xrechnung_ubl" | "xrechnung_cii" | "zugferd" | "unknown";
         /**
          * @description * `valid` - Basisprüfung bestanden
          *     * `invalid` - Prüfung fehlgeschlagen
@@ -715,11 +716,27 @@ export interface components {
         IncomingInvoiceUpload: {
             /** Format: uri */
             file: string;
+            /** @default automatic */
+            mode: components["schemas"]["ModeEnum"];
+            invoice_number?: string;
+            /** Format: date */
+            issue_date?: string;
+            seller_name?: string;
+            buyer_name?: string;
+            currency?: string;
+            /** Format: decimal */
+            payable_amount?: string;
         };
         Login: {
             identifier: string;
             password: string;
         };
+        /**
+         * @description * `automatic` - Automatische E-Rechnungsprüfung
+         *     * `standard_pdf` - Normale PDF-Rechnung
+         * @enum {string}
+         */
+        ModeEnum: "automatic" | "standard_pdf";
         PaginatedCatalogItemList: {
             /** @example 123 */
             count: number;
@@ -865,7 +882,7 @@ export interface operations {
     archive_incoming_invoices_list: {
         parameters: {
             query?: {
-                format?: "unknown" | "xrechnung_cii" | "xrechnung_ubl" | "zugferd";
+                format?: "standard_pdf" | "unknown" | "xrechnung_cii" | "xrechnung_ubl" | "zugferd";
                 /** @description Eine Seitenzahl in der paginierten Ergebnismenge. */
                 page?: number;
                 /** @description Nummer, Datei, Verkäufer oder Käufer */

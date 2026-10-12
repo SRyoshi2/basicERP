@@ -1,7 +1,7 @@
 # basicERP – Projektplan
 
 **Stand:** 12.10.2026
-**Status:** Freigegeben; Phase 0 und Phase 1 abgeschlossen, Phase 1a zu 75 % umgesetzt
+**Status:** Freigegeben; Phase 0 und Phase 1 abgeschlossen, Phase 1a zu 85 % umgesetzt
 **Quelle:** [`ROADMAP.md`](../ROADMAP.md)
 
 ## 1. Zielbild
@@ -53,7 +53,7 @@ Design-Editor verschieben.
 |---|---|---|---|---:|---|
 | v0.1 – Fundament | Produktionsnahes leeres System | Monorepo, Compose, Django/DRF, React, Auth, Firmenprofil, CI, Observability-Basis | Entscheidungen D1–D3 | 3–5 PW | Login, leeres Dashboard und OpenAPI laufen nach einem dokumentierten Startbefehl |
 | v0.2 – CRM & Katalog | Belastbare Stammdaten | Kontakte, Adressen, Aktivitäten, Katalog, Listenmuster, CSV-Import | v0.1 | 4–6 PW | Stammdaten sind vollständig über UI und API pflegbar; Import ist wiederholbar und protokolliert |
-| v0.2.1 – E-Rechnungseingang light | Empfangene E-Rechnung sicher übernehmen | Upload von XML/ZUGFeRD, Formatprüfung, Original unverändert speichern, Metadaten extrahieren, Download | Archiv-Skelett aus v0.1/v0.2 | 2–3 PW | Original und Prüfergebnis sind reproduzierbar; fehlerhafte Dateien werden verständlich abgewiesen |
+| v0.2.1 – Rechnungseingang light | Empfangene Rechnungen sicher übernehmen | Normale PDF-Rechnung mit manuellen Metadaten; Upload von XML/ZUGFeRD mit Formatprüfung und Extraktion; Original unverändert speichern; Download | Archiv-Skelett aus v0.1/v0.2 | 2–3 PW | Normale PDF- und E-Rechnungen sind reproduzierbar erfasst; fehlerhafte Dateien werden verständlich abgewiesen |
 | v0.3 – Projekte | Projektstruktur steht | Projekte, Arbeitspakete, Budgets, Sätze, Board und Plancontrolling | v0.2 | 3–5 PW | Projekt und Arbeitspakete sind in API, Liste und Board konsistent nutzbar |
 | v0.4 – Zeit & Portal | Täglicher Arbeitsfluss | Zeit/Leistung, Timer, minimales HR-/Abwesenheitsskelett, Genehmigung, Ist-Controlling, Exporte | v0.3 | 6–9 PW | Mitarbeiter kann einen Arbeitstag mobil erfassen; Budget und offene Leistungen stimmen |
 | v0.5 – Dokumentkern | Vollständiger Rechnungsdurchstich | Angebote, Rechnung/Korrektur, Nummernkreise, Steuern, Festschreibung, Standard-PDF, E-Mail, Zahlungen | v0.4 | 8–12 PW | Projektzeiten → festgeschriebene Rechnung → PDF → E-Mail → Zahlung funktioniert mit Audit-Trail |
@@ -120,6 +120,7 @@ Abnahmetests benötigen gemeinsame Entscheidungen und teilweise externe Prüfung
 
 - Unveränderliches Dateiobjekt mit SHA-256 und Storage-Abstraktion. **Erledigt.**
 - E-Rechnungsupload inklusive Basisvalidierung und Metadatenextraktion. **Erledigt.**
+- Normale PDF-Rechnungen mit manuellen Pflichtmetadaten. **Erledigt.**
 - Installations-, Backup- und Restore-Smoke-Test.
 - Retrospektive und Neuschätzung der Folgephasen.
 

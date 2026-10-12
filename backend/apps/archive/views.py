@@ -63,7 +63,23 @@ class IncomingInvoiceViewSet(
     def create(self, request, *args, **kwargs):
         serializer = IncomingInvoiceUploadSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        invoice, created = ingest_invoice(serializer.validated_data["file"], request.user)
+        values = serializer.validated_data
+        manual_metadata = None
+        if values["mode"] == IncomingInvoiceUploadSerializer.Mode.STANDARD_PDF:
+            manual_metadata = {
+                field: values[field]
+                for field in (
+                    "invoice_number",
+                    "issue_date",
+                    "seller_name",
+                    "buyer_name",
+                    "currency",
+                    "payable_amount",
+                )
+            }
+        invoice, created = ingest_invoice(
+            values["file"], request.user, manual_metadata=manual_metadata
+        )
         return Response(
             IncomingInvoiceSerializer(invoice).data,
             status=status.HTTP_201_CREATED if created else status.HTTP_200_OK,

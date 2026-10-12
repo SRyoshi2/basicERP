@@ -212,7 +212,7 @@ def analyze_invoice(content, mime_type):
 
 
 @transaction.atomic
-def ingest_invoice(upload, actor):
+def ingest_invoice(upload, actor, manual_metadata=None):
     if upload.size > MAX_INVOICE_BYTES:
         raise serializers.ValidationError({"file": "Die Datei darf höchstens 20 MB groß sein."})
     original_name = Path(upload.name).name[:255]
@@ -233,7 +233,28 @@ def ingest_invoice(upload, actor):
     if existing:
         return existing, False
 
-    invoice_format, metadata, report, embedded_hash = analyze_invoice(content, mime_type)
+    if manual_metadata is not None:
+        if mime_type != "application/pdf":
+            raise serializers.ValidationError(
+                {"file": "Normale Rechnungen müssen als PDF hochgeladen werden."}
+            )
+        try:
+            PdfReader(io.BytesIO(content))
+        except (PdfReadError, ValueError, TypeError) as error:
+            raise serializers.ValidationError(
+                {"file": f"PDF konnte nicht gelesen werden: {error}"}
+            ) from error
+        invoice_format = IncomingInvoice.Format.STANDARD_PDF
+        metadata = manual_metadata
+        report = {
+            "validator": "basicERP-manuell-v1",
+            "scope": "Manuell erfasste Metadaten und lesbares PDF; keine inhaltliche oder rechtliche Rechnungsprüfung.",
+            "passed": True,
+            "errors": [],
+        }
+        embedded_hash = ""
+    else:
+        invoice_format, metadata, report, embedded_hash = analyze_invoice(content, mime_type)
     archive_object = ArchiveObject(
         sha256=digest,
         original_name=original_name,

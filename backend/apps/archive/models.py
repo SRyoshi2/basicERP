@@ -48,6 +48,7 @@ class ArchiveObject(models.Model):
 
 class IncomingInvoice(models.Model):
     class Format(models.TextChoices):
+        STANDARD_PDF = "standard_pdf", "Normale PDF-Rechnung"
         XRECHNUNG_UBL = "xrechnung_ubl", "XRechnung UBL"
         XRECHNUNG_CII = "xrechnung_cii", "XRechnung CII"
         ZUGFERD = "zugferd", "ZUGFeRD"

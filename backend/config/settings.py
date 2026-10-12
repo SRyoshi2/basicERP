@@ -141,7 +141,13 @@ SPECTACULAR_SETTINGS = {
         "CatalogItemKindEnum": (("product", "Artikel"), ("service", "Leistung")),
         "CatalogUnitEnum": (("hour", "Stunde"), ("day", "Tag"), ("piece", "Stück"), ("flat", "Pauschal")),
         "CatalogTaxRateEnum": (("19.00", "19 %"), ("7.00", "7 %"), ("0.00", "0 %")),
-        "IncomingInvoiceFormatEnum": (("xrechnung_ubl", "XRechnung UBL"), ("xrechnung_cii", "XRechnung CII"), ("zugferd", "ZUGFeRD"), ("unknown", "Unbekannt")),
+        "IncomingInvoiceFormatEnum": (
+            ("standard_pdf", "Normale PDF-Rechnung"),
+            ("xrechnung_ubl", "XRechnung UBL"),
+            ("xrechnung_cii", "XRechnung CII"),
+            ("zugferd", "ZUGFeRD"),
+            ("unknown", "Unbekannt"),
+        ),
         "IncomingInvoiceStatusEnum": (("valid", "Basisprüfung bestanden"), ("invalid", "Prüfung fehlgeschlagen")),
     },
 }

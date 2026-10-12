@@ -43,6 +43,13 @@ def invoice_user():
 @pytest.fixture(autouse=True)
 def isolated_media(settings, tmp_path):
     settings.MEDIA_ROOT = tmp_path / "media"
+    settings.STORAGES = {
+        **settings.STORAGES,
+        "archive": {
+            "BACKEND": "django.core.files.storage.FileSystemStorage",
+            "OPTIONS": {"location": tmp_path / "archive"},
+        },
+    }
 
 
 def upload(content, name, content_type):
@@ -116,6 +123,40 @@ def test_zugferd_pdf_extracts_embedded_xml(api_client, invoice_user):
     assert response.data["format"] == "zugferd"
     assert response.data["invoice_number"] == "CII-42"
     assert response.data["embedded_xml_sha256"] == hashlib.sha256(CII_XML).hexdigest()
+
+
+@pytest.mark.django_db
+def test_standard_pdf_can_be_recorded_with_manual_metadata(api_client, invoice_user):
+    api_client.force_authenticate(invoice_user)
+    output = io.BytesIO()
+    writer = PdfWriter()
+    writer.add_blank_page(width=595, height=842)
+    writer.write(output)
+    content = output.getvalue()
+
+    response = api_client.post(
+        reverse("incoming-invoice-list"),
+        {
+            "file": upload(content, "papier-rechnung.pdf", "application/pdf"),
+            "mode": "standard_pdf",
+            "invoice_number": "NORMAL-2026-7",
+            "issue_date": "2026-10-11",
+            "seller_name": "Papier & Co. KG",
+            "buyer_name": "Kunde AG",
+            "currency": "eur",
+            "payable_amount": "23.80",
+        },
+        format="multipart",
+    )
+
+    assert response.status_code == 201
+    assert response.data["format"] == "standard_pdf"
+    assert response.data["status"] == "valid"
+    assert response.data["invoice_number"] == "NORMAL-2026-7"
+    assert response.data["currency"] == "EUR"
+    assert response.data["validation_report"]["validator"] == "basicERP-manuell-v1"
+    with ArchiveObject.objects.get().file.open("rb") as stored:
+        assert stored.read() == content
 
 
 @pytest.mark.django_db

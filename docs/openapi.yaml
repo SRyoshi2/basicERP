@@ -13,6 +13,7 @@ paths:
         schema:
           type: string
           enum:
+          - standard_pdf
           - unknown
           - xrechnung_cii
           - xrechnung_ubl
@@ -1691,12 +1692,14 @@ components:
       - validation_report
     IncomingInvoiceFormatEnum:
       enum:
+      - standard_pdf
       - xrechnung_ubl
       - xrechnung_cii
       - zugferd
       - unknown
       type: string
       description: |-
+        * `standard_pdf` - Normale PDF-Rechnung
         * `xrechnung_ubl` - XRechnung UBL
         * `xrechnung_cii` - XRechnung CII
         * `zugferd` - ZUGFeRD
@@ -1715,6 +1718,30 @@ components:
         file:
           type: string
           format: uri
+        mode:
+          allOf:
+          - $ref: '#/components/schemas/ModeEnum'
+          default: automatic
+        invoice_number:
+          type: string
+          maxLength: 100
+        issue_date:
+          type: string
+          format: date
+        seller_name:
+          type: string
+          maxLength: 255
+        buyer_name:
+          type: string
+          maxLength: 255
+        currency:
+          type: string
+          maxLength: 3
+          pattern: ^[A-Za-z]{3}$
+        payable_amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
       required:
       - file
     Login:
@@ -1729,6 +1756,14 @@ components:
       required:
       - identifier
       - password
+    ModeEnum:
+      enum:
+      - automatic
+      - standard_pdf
+      type: string
+      description: |-
+        * `automatic` - Automatische E-Rechnungsprüfung
+        * `standard_pdf` - Normale PDF-Rechnung
     PaginatedCatalogItemList:
       type: object
       required:

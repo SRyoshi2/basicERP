@@ -4,7 +4,49 @@ from .models import IncomingInvoice
 
 
 class IncomingInvoiceUploadSerializer(serializers.Serializer):
+    class Mode:
+        AUTOMATIC = "automatic"
+        STANDARD_PDF = "standard_pdf"
+
     file = serializers.FileField()
+    mode = serializers.ChoiceField(
+        choices=(
+            (Mode.AUTOMATIC, "Automatische E-Rechnungsprüfung"),
+            (Mode.STANDARD_PDF, "Normale PDF-Rechnung"),
+        ),
+        default=Mode.AUTOMATIC,
+    )
+    invoice_number = serializers.CharField(max_length=100, required=False)
+    issue_date = serializers.DateField(required=False)
+    seller_name = serializers.CharField(max_length=255, required=False)
+    buyer_name = serializers.CharField(max_length=255, required=False)
+    currency = serializers.RegexField(r"^[A-Za-z]{3}$", max_length=3, required=False)
+    payable_amount = serializers.DecimalField(max_digits=14, decimal_places=2, required=False)
+
+    def validate(self, attrs):
+        if attrs["mode"] != self.Mode.STANDARD_PDF:
+            return attrs
+        if not attrs["file"].name.lower().endswith(".pdf"):
+            raise serializers.ValidationError(
+                {"file": "Normale Rechnungen müssen als PDF hochgeladen werden."}
+            )
+        required = (
+            "invoice_number",
+            "issue_date",
+            "seller_name",
+            "buyer_name",
+            "currency",
+            "payable_amount",
+        )
+        errors = {
+            field: "Dieses Feld ist für normale PDF-Rechnungen erforderlich."
+            for field in required
+            if attrs.get(field) in {None, ""}
+        }
+        if errors:
+            raise serializers.ValidationError(errors)
+        attrs["currency"] = attrs["currency"].upper()
+        return attrs
 
 
 class IncomingInvoiceSerializer(serializers.ModelSerializer):

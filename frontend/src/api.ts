@@ -63,6 +63,14 @@ export type IncomingInvoicePage = Omit<
   components["schemas"]["PaginatedIncomingInvoiceList"],
   "results"
 > & { results: IncomingInvoice[] };
+export type ManualIncomingInvoiceInput = {
+  invoice_number: string;
+  issue_date: string;
+  seller_name: string;
+  buyer_name: string;
+  currency: string;
+  payable_amount: string;
+};
 
 type ErrorBody = {
   error?: components["schemas"]["ApiError"];
@@ -283,7 +291,7 @@ export async function archiveCatalogItem(item: CatalogItem): Promise<CatalogItem
 export async function getIncomingInvoices(options: {
   search?: string;
   status?: "valid" | "invalid" | "";
-  format?: "xrechnung_ubl" | "xrechnung_cii" | "zugferd" | "unknown" | "";
+  format?: "standard_pdf" | "xrechnung_ubl" | "xrechnung_cii" | "zugferd" | "unknown" | "";
   page?: number;
 } = {}): Promise<IncomingInvoicePage> {
   const params = new URLSearchParams();
@@ -295,9 +303,16 @@ export async function getIncomingInvoices(options: {
   return request<IncomingInvoicePage>(`/api/v1/archive/incoming-invoices/${query}`);
 }
 
-export async function uploadIncomingInvoice(file: File): Promise<IncomingInvoice> {
+export async function uploadIncomingInvoice(
+  file: File,
+  manual?: ManualIncomingInvoiceInput,
+): Promise<IncomingInvoice> {
   const data = new FormData();
   data.append("file", file);
+  data.append("mode", manual ? "standard_pdf" : "automatic");
+  if (manual) {
+    for (const [key, value] of Object.entries(manual)) data.append(key, value);
+  }
   return request<IncomingInvoice>("/api/v1/archive/incoming-invoices/", {
     method: "POST",
     body: data,

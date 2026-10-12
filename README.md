@@ -44,12 +44,13 @@ Unter **Katalog → Artikel & Leistungen** lassen sich Artikel und Leistungen mi
 Einheit, Steuersatz und zeitlich gültigen Nettopreisen verwalten. Überlappende
 Preiszeiträume werden abgewiesen; Archivieren ist Administratoren vorbehalten.
 
-Unter **E-Rechnung → Eingangsrechnungen** können XRechnung-XMLs in UBL/CII
-sowie ZUGFeRD-PDFs mit eingebetteter Rechnungs-XML hochgeladen werden. Das
-Original landet unverändert und SHA-256-dedupliziert im separaten Archiv-Volume;
-Metadaten und ein technischer Basisprüfbericht sind durchsuchbar. Der Umfang ist
-keine vollständige KoSIT-/Schematron- oder Rechtsprüfung. Für einen Selbsttest
-steht `docs/examples/incoming-invoice-ubl.xml` bereit.
+Unter **Rechnungseingang** können normale PDF-Rechnungen mit Rechnungsnummer,
+Datum, Verkäufer, Käufer, Betrag und Währung manuell erfasst werden. Zusätzlich
+lassen sich XRechnung-XMLs in UBL/CII sowie ZUGFeRD-PDFs mit eingebetteter
+Rechnungs-XML automatisch auslesen. Das Original landet unverändert und
+SHA-256-dedupliziert im separaten Archiv-Volume. Der Umfang ist keine
+vollständige KoSIT-/Schematron- oder Rechtsprüfung. Für einen Selbsttest steht
+`docs/examples/incoming-invoice-ubl.xml` bereit.
 
 ## Schnellstart unter Ubuntu
 
