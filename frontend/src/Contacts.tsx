@@ -1,12 +1,18 @@
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import {
   archiveContact,
+  archiveContactActivity,
   applyContactImport,
   createContact,
+  createContactActivity,
   getContacts,
+  getContactActivities,
   previewContactImport,
   updateContact,
+  updateContactActivity,
   type Contact,
+  type ContactActivity,
+  type ContactActivityInput,
   type ContactAddressInput,
   type ContactInput,
   type ContactImportBatch,
@@ -15,6 +21,92 @@ import {
 } from "./api";
 
 const inputClass = "mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 font-normal outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-100";
+const activityLabels = { note: "Notiz", call: "Anruf", email: "E-Mail", meeting: "Termin" } as const;
+
+function localDateTime(value?: string): string {
+  const date = value ? new Date(value) : new Date();
+  const local = new Date(date.getTime() - date.getTimezoneOffset() * 60_000);
+  return local.toISOString().slice(0, 16);
+}
+
+function ActivityTimeline({ contact, user }: { contact: Contact; user: User }) {
+  const [activities, setActivities] = useState<ContactActivity[]>([]);
+  const [editing, setEditing] = useState<ContactActivity | null>(null);
+  const [form, setForm] = useState<ContactActivityInput>({
+    contact: contact.id,
+    kind: "note",
+    subject: "",
+    body: "",
+    occurred_at: localDateTime(),
+  });
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  const load = useCallback(() => {
+    getContactActivities(contact.id)
+      .then((result) => setActivities(result.results))
+      .catch((reason) => setError(reason instanceof Error ? reason.message : "Timeline konnte nicht geladen werden."));
+  }, [contact.id]);
+
+  useEffect(() => { load(); }, [load]);
+
+  function startEdit(activity: ContactActivity) {
+    setEditing(activity);
+    setForm({
+      contact: activity.contact,
+      kind: activity.kind,
+      subject: activity.subject,
+      body: activity.body,
+      occurred_at: localDateTime(activity.occurred_at),
+    });
+    setError("");
+  }
+
+  function resetForm() {
+    setEditing(null);
+    setForm({ contact: contact.id, kind: "note", subject: "", body: "", occurred_at: localDateTime() });
+  }
+
+  async function submit(event: FormEvent) {
+    event.preventDefault();
+    setBusy(true); setError("");
+    try {
+      const payload = { ...form, occurred_at: new Date(form.occurred_at).toISOString() };
+      if (editing) await updateContactActivity(editing, payload);
+      else await createContactActivity(payload);
+      resetForm();
+      load();
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "Aktivität konnte nicht gespeichert werden.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function archive(activity: ContactActivity) {
+    if (!window.confirm(`„${activity.subject}“ wirklich archivieren?`)) return;
+    setBusy(true); setError("");
+    try {
+      await archiveContactActivity(activity);
+      if (editing?.id === activity.id) resetForm();
+      load();
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "Aktivität konnte nicht archiviert werden.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return <section className="mt-6 rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+    <div><p className="text-sm font-bold uppercase tracking-[0.18em] text-blue-700">Timeline</p><h2 className="mt-2 text-2xl font-bold text-slate-950">Notizen &amp; Aktivitäten</h2><p className="mt-2 text-sm text-slate-600">Anrufe, E-Mails, Termine und interne Notizen zu {contact.display_name}.</p></div>
+    <form className="mt-6 rounded-2xl bg-slate-50 p-5" onSubmit={submit}>
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4"><label className="text-sm font-semibold text-slate-700">Art<select className={inputClass} value={form.kind} onChange={(event) => setForm((current) => ({ ...current, kind: event.target.value as ContactActivityInput["kind"] }))}>{Object.entries(activityLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label><label className="text-sm font-semibold text-slate-700 lg:col-span-2">Betreff<input className={inputClass} value={form.subject} maxLength={200} onChange={(event) => setForm((current) => ({ ...current, subject: event.target.value }))} required /></label><label className="text-sm font-semibold text-slate-700">Zeitpunkt<input className={inputClass} type="datetime-local" value={form.occurred_at} onChange={(event) => setForm((current) => ({ ...current, occurred_at: event.target.value }))} required /></label><label className="text-sm font-semibold text-slate-700 sm:col-span-2 lg:col-span-4">Text<textarea className={inputClass} rows={3} value={form.body} onChange={(event) => setForm((current) => ({ ...current, body: event.target.value }))} /></label></div>
+      {error && <p className="mt-4 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-800">{error}</p>}
+      <div className="mt-4 flex justify-end gap-3">{editing && <button type="button" className="rounded-xl border border-slate-300 px-4 py-2 font-semibold text-slate-700" onClick={resetForm}>Bearbeitung abbrechen</button>}<button className="rounded-xl bg-blue-700 px-5 py-2 font-semibold text-white disabled:opacity-50" disabled={busy}>{busy ? "Wird gespeichert …" : editing ? "Aktivität aktualisieren" : "Aktivität hinzufügen"}</button></div>
+    </form>
+    <div className="mt-6 space-y-3">{activities.length ? activities.map((activity) => <article key={activity.id} className="rounded-2xl border border-slate-200 p-5"><div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between"><div><div className="flex flex-wrap items-center gap-2"><span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-bold text-blue-700">{activityLabels[activity.kind]}</span><time className="text-xs text-slate-500">{new Intl.DateTimeFormat("de-DE", { dateStyle: "medium", timeStyle: "short" }).format(new Date(activity.occurred_at))}</time></div><h3 className="mt-3 font-bold text-slate-950">{activity.subject}</h3>{activity.body && <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-slate-600">{activity.body}</p>}<p className="mt-3 text-xs text-slate-400">Erfasst von {activity.author ?? "unbekannt"}</p></div><div className="flex gap-3"><button type="button" className="text-sm font-semibold text-blue-700" onClick={() => startEdit(activity)}>Bearbeiten</button>{user.role === "admin" && <button type="button" className="text-sm font-semibold text-red-700" onClick={() => archive(activity)} disabled={busy}>Archivieren</button>}</div></div></article>) : <p className="rounded-xl bg-slate-50 p-5 text-sm text-slate-500">Noch keine Aktivitäten erfasst.</p>}</div>
+  </section>;
+}
 
 function ContactImport({ onCancel, onImported }: { onCancel: () => void; onImported: () => void }) {
   const [file, setFile] = useState<File | null>(null);
@@ -292,7 +384,7 @@ export function ContactsPage({ user, onBack }: { user: User; onBack: () => void 
   }
 
   if (selected !== undefined) {
-    return <main className="mx-auto max-w-6xl px-6 py-10"><ContactForm contact={selected} user={user} onCancel={() => setSelected(undefined)} onSaved={() => { setSelected(undefined); load(); }} /></main>;
+    return <main className="mx-auto max-w-6xl px-6 py-10"><ContactForm contact={selected} user={user} onCancel={() => setSelected(undefined)} onSaved={() => { setSelected(undefined); load(); }} />{selected && <ActivityTimeline contact={selected} user={user} />}</main>;
   }
 
   return (

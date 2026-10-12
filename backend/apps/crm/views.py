@@ -11,8 +11,10 @@ from apps.core.permissions import HasCompletedPasswordChange, IsAdministrator
 from apps.core.serializers import ApiErrorResponseSerializer
 
 from .imports import apply_contact_import, preview_contact_import
-from .models import Contact, ContactImportBatch
+from .models import Contact, ContactActivity, ContactImportBatch
 from .serializers import (
+    ContactActivitySerializer,
+    ContactActivityUpdateSerializer,
     ContactAuditEventSerializer,
     ContactCreateSerializer,
     ContactImportBatchSerializer,
@@ -20,7 +22,7 @@ from .serializers import (
     ContactSerializer,
     ContactUpdateSerializer,
 )
-from .services import archive_contact
+from .services import archive_activity, archive_contact
 
 
 class ContactViewSet(
@@ -143,3 +145,69 @@ class ContactImportViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
     def apply(self, request, pk=None):
         batch = apply_contact_import(self.get_object().pk, request.user)
         return Response(ContactImportBatchSerializer(batch).data)
+
+
+class ContactActivityViewSet(
+    mixins.CreateModelMixin,
+    mixins.ListModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.UpdateModelMixin,
+    viewsets.GenericViewSet,
+):
+    queryset = ContactActivity.objects.select_related("contact", "created_by")
+    permission_classes = [IsAuthenticated, HasCompletedPasswordChange]
+    http_method_names = ["get", "post", "patch", "head", "options"]
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                "contact", OpenApiTypes.UUID, required=True, description="Kontakt-ID für die Timeline"
+            ),
+            OpenApiParameter("archived", OpenApiTypes.STR, enum=("false", "true", "all")),
+        ]
+    )
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
+
+    @extend_schema(
+        request=ContactActivitySerializer,
+        responses={201: ContactActivitySerializer, 400: ApiErrorResponseSerializer},
+    )
+    def create(self, request, *args, **kwargs):
+        return super().create(request, *args, **kwargs)
+
+    @extend_schema(
+        request=ContactActivityUpdateSerializer,
+        responses={200: ContactActivitySerializer, 400: ApiErrorResponseSerializer, 409: ApiErrorResponseSerializer},
+    )
+    def partial_update(self, request, *args, **kwargs):
+        return super().partial_update(request, *args, **kwargs)
+
+    def get_permissions(self):
+        permissions = list(self.permission_classes)
+        if self.action == "archive":
+            permissions.append(IsAdministrator)
+        return [permission() for permission in permissions]
+
+    def get_serializer_class(self):
+        if self.action in {"update", "partial_update"}:
+            return ContactActivityUpdateSerializer
+        return ContactActivitySerializer
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        if self.action == "list":
+            contact_id = self.request.query_params.get("contact")
+            if not contact_id:
+                return queryset.none()
+            queryset = queryset.filter(contact_id=contact_id)
+            archived = self.request.query_params.get("archived", "false").lower()
+            if archived != "all":
+                queryset = queryset.filter(archived_at__isnull=archived != "true")
+        return queryset
+
+    @extend_schema(request=None, responses={200: ContactActivitySerializer})
+    @action(detail=True, methods=["post"])
+    def archive(self, request, pk=None):
+        activity = archive_activity(self.get_object().pk, request.user)
+        return Response(ContactActivitySerializer(activity).data)

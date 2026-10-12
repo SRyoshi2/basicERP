@@ -1,7 +1,14 @@
 from rest_framework import serializers
 
-from .models import Address, Contact, ContactAuditEvent, ContactImportBatch, ContactPerson
-from .services import create_contact, update_contact
+from .models import (
+    Address,
+    Contact,
+    ContactActivity,
+    ContactAuditEvent,
+    ContactImportBatch,
+    ContactPerson,
+)
+from .services import create_contact, update_activity, update_contact
 
 
 class AddressSerializer(serializers.ModelSerializer):
@@ -167,3 +174,55 @@ class ContactImportBatchSerializer(serializers.ModelSerializer):
             "completed_at",
         )
         read_only_fields = fields
+
+
+class ContactActivitySerializer(serializers.ModelSerializer):
+    author = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ContactActivity
+        fields = (
+            "id",
+            "contact",
+            "kind",
+            "subject",
+            "body",
+            "occurred_at",
+            "version",
+            "archived_at",
+            "author",
+            "created_at",
+            "updated_at",
+        )
+        read_only_fields = ("id", "version", "archived_at", "author", "created_at", "updated_at")
+
+    def get_author(self, obj) -> str | None:
+        return obj.created_by.username if obj.created_by else None
+
+    def validate_contact(self, value):
+        if value.archived_at is not None:
+            raise serializers.ValidationError("Für archivierte Kontakte können keine Aktivitäten angelegt werden.")
+        return value
+
+    def create(self, validated_data):
+        actor = self.context["request"].user
+        return ContactActivity.objects.create(created_by=actor, updated_by=actor, **validated_data)
+
+
+class ContactActivityUpdateSerializer(serializers.ModelSerializer):
+    version = serializers.IntegerField(min_value=1, required=True)
+
+    class Meta:
+        model = ContactActivity
+        fields = ("kind", "subject", "body", "occurred_at", "version")
+
+    def to_representation(self, instance):
+        return ContactActivitySerializer(instance, context=self.context).data
+
+    def validate(self, attrs):
+        if self.instance.archived_at is not None:
+            raise serializers.ValidationError({"activity": "Archivierte Aktivitäten sind unveränderbar."})
+        return attrs
+
+    def update(self, instance, validated_data):
+        return update_activity(instance.pk, validated_data, self.context["request"].user)

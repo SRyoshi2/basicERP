@@ -3,7 +3,14 @@ from django.utils import timezone
 
 from apps.core.errors import VersionConflict
 
-from .models import Address, Contact, ContactAuditEvent, ContactNumberSequence, ContactPerson
+from .models import (
+    Address,
+    Contact,
+    ContactActivity,
+    ContactAuditEvent,
+    ContactNumberSequence,
+    ContactPerson,
+)
 
 
 CONTACT_FIELDS = (
@@ -108,3 +115,32 @@ def archive_contact(contact_id, actor):
             changes={},
         )
     return contact
+
+
+@transaction.atomic
+def update_activity(activity_id, validated_data, actor):
+    expected_version = validated_data.pop("version")
+    activity = ContactActivity.objects.select_for_update().get(pk=activity_id)
+    if activity.version != expected_version:
+        raise VersionConflict
+    for field in ("kind", "subject", "body", "occurred_at"):
+        if field in validated_data:
+            setattr(activity, field, validated_data[field])
+    activity.version += 1
+    activity.updated_by = actor
+    activity.full_clean()
+    activity.save(
+        update_fields=("kind", "subject", "body", "occurred_at", "version", "updated_by", "updated_at")
+    )
+    return activity
+
+
+@transaction.atomic
+def archive_activity(activity_id, actor):
+    activity = ContactActivity.objects.select_for_update().get(pk=activity_id)
+    if activity.archived_at is None:
+        activity.archived_at = timezone.now()
+        activity.version += 1
+        activity.updated_by = actor
+        activity.save(update_fields=("archived_at", "version", "updated_by", "updated_at"))
+    return activity

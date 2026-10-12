@@ -27,6 +27,15 @@ export type ContactImportBatch = Omit<components["schemas"]["ContactImportBatch"
   rows: ContactImportRow[];
   result: { contacts?: Array<{ id: string; customer_number: string }> };
 };
+export type ContactActivity = Required<components["schemas"]["ContactActivity"]>;
+export type ContactActivityInput = Pick<
+  ContactActivity,
+  "contact" | "kind" | "subject" | "body" | "occurred_at"
+>;
+export type ContactActivityPage = Omit<
+  components["schemas"]["PaginatedContactActivityList"],
+  "results"
+> & { results: ContactActivity[] };
 export type CatalogPriceInput = Omit<components["schemas"]["CatalogPrice"], "id">;
 export type CatalogItem = Required<components["schemas"]["CatalogItem"]> & {
   current_price: components["schemas"]["CatalogPrice"] | null;
@@ -185,6 +194,34 @@ export async function previewContactImport(file: File): Promise<ContactImportBat
 
 export async function applyContactImport(batch: ContactImportBatch): Promise<ContactImportBatch> {
   return request<ContactImportBatch>(`/api/v1/crm/imports/${batch.id}/apply/`, {
+    method: "POST",
+    body: "{}",
+  });
+}
+
+export async function getContactActivities(contactId: string): Promise<ContactActivityPage> {
+  return request<ContactActivityPage>(`/api/v1/crm/activities/?contact=${encodeURIComponent(contactId)}`);
+}
+
+export async function createContactActivity(data: ContactActivityInput): Promise<ContactActivity> {
+  return request<ContactActivity>("/api/v1/crm/activities/", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function updateContactActivity(
+  activity: ContactActivity,
+  data: ContactActivityInput,
+): Promise<ContactActivity> {
+  return request<ContactActivity>(`/api/v1/crm/activities/${activity.id}/`, {
+    method: "PATCH",
+    body: JSON.stringify({ ...data, version: activity.version }),
+  });
+}
+
+export async function archiveContactActivity(activity: ContactActivity): Promise<ContactActivity> {
+  return request<ContactActivity>(`/api/v1/crm/activities/${activity.id}/archive/`, {
     method: "POST",
     body: "{}",
   });

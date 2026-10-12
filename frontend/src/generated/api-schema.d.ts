@@ -164,6 +164,54 @@ export interface paths {
         patch: operations["company_partial_update"];
         trace?: never;
     };
+    "/api/v1/crm/activities/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["crm_activities_list"];
+        put?: never;
+        post: operations["crm_activities_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/crm/activities/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["crm_activities_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["crm_activities_partial_update"];
+        trace?: never;
+    };
+    "/api/v1/crm/activities/{id}/archive/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["crm_activities_archive_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/crm/contacts/": {
         parameters: {
             query?: never;
@@ -471,6 +519,33 @@ export interface components {
             readonly addresses: components["schemas"]["Address"][];
             readonly contact_persons: components["schemas"]["ContactPerson"][];
         };
+        ContactActivity: {
+            /** Format: uuid */
+            readonly id: string;
+            /** Format: uuid */
+            contact: string;
+            kind?: components["schemas"]["ContactActivityKindEnum"];
+            subject: string;
+            body?: string;
+            /** Format: date-time */
+            occurred_at?: string;
+            readonly version: number;
+            /** Format: date-time */
+            readonly archived_at: string | null;
+            readonly author: string | null;
+            /** Format: date-time */
+            readonly created_at: string;
+            /** Format: date-time */
+            readonly updated_at: string;
+        };
+        /**
+         * @description * `note` - Notiz
+         *     * `call` - Anruf
+         *     * `email` - E-Mail
+         *     * `meeting` - Termin
+         * @enum {string}
+         */
+        ContactActivityKindEnum: "note" | "call" | "email" | "meeting";
         ContactAuditEvent: {
             /** Format: uuid */
             readonly id: string;
@@ -564,6 +639,21 @@ export interface components {
             previous?: string | null;
             results: components["schemas"]["CatalogItem"][];
         };
+        PaginatedContactActivityList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=4
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=2
+             */
+            previous?: string | null;
+            results: components["schemas"]["ContactActivity"][];
+        };
         PaginatedContactList: {
             /** @example 123 */
             count: number;
@@ -608,6 +698,14 @@ export interface components {
             readonly logo_url?: string | null;
             /** Format: date-time */
             readonly updated_at?: string;
+        };
+        PatchedContactActivityUpdate: {
+            kind?: components["schemas"]["ContactActivityKindEnum"];
+            subject?: string;
+            body?: string;
+            /** Format: date-time */
+            occurred_at?: string;
+            version?: number;
         };
         PatchedContactUpdate: {
             kind?: components["schemas"]["ContactKindEnum"];
@@ -1031,6 +1129,152 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    crm_activities_list: {
+        parameters: {
+            query: {
+                archived?: "all" | "false" | "true";
+                /** @description Kontakt-ID für die Timeline */
+                contact: string;
+                /** @description Eine Seitenzahl in der paginierten Ergebnismenge. */
+                page?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedContactActivityList"];
+                };
+            };
+        };
+    };
+    crm_activities_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ContactActivity"];
+                "application/x-www-form-urlencoded": components["schemas"]["ContactActivity"];
+                "multipart/form-data": components["schemas"]["ContactActivity"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContactActivity"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    crm_activities_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Ein UUID-String, der contact activity identifiziert. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContactActivity"];
+                };
+            };
+        };
+    };
+    crm_activities_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Ein UUID-String, der contact activity identifiziert. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedContactActivityUpdate"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedContactActivityUpdate"];
+                "multipart/form-data": components["schemas"]["PatchedContactActivityUpdate"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContactActivity"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    crm_activities_archive_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Ein UUID-String, der contact activity identifiziert. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContactActivity"];
                 };
             };
         };

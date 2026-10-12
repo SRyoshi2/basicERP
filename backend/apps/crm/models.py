@@ -4,6 +4,7 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
 from django.db import models
+from django.utils import timezone
 
 
 country_code_validator = RegexValidator(
@@ -194,3 +195,38 @@ class ContactImportBatch(models.Model):
 
     class Meta:
         ordering = ("-created_at",)
+
+
+class ContactActivity(models.Model):
+    class Kind(models.TextChoices):
+        NOTE = "note", "Notiz"
+        CALL = "call", "Anruf"
+        EMAIL = "email", "E-Mail"
+        MEETING = "meeting", "Termin"
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    contact = models.ForeignKey(Contact, on_delete=models.PROTECT, related_name="activities")
+    kind = models.CharField(max_length=16, choices=Kind.choices, default=Kind.NOTE)
+    subject = models.CharField(max_length=200)
+    body = models.TextField(blank=True)
+    occurred_at = models.DateTimeField(default=timezone.now)
+    version = models.PositiveIntegerField(default=1)
+    archived_at = models.DateTimeField(null=True, blank=True)
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        on_delete=models.SET_NULL,
+        related_name="created_contact_activities",
+    )
+    updated_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        on_delete=models.SET_NULL,
+        related_name="updated_contact_activities",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ("-occurred_at", "-created_at")
+        indexes = [models.Index(fields=("contact", "archived_at", "occurred_at"))]

@@ -1,8 +1,8 @@
 # basicERP
 
 Quelloffenes, API-first Klein-ERP für Freelancer, Einzelunternehmen und kleine
-Unternehmen in Deutschland. Das Fundament **v0.1 / Phase 0** ist abgeschlossen;
-Phase 1 liefert aktuell CRM-Kontakte sowie den Artikel- und Leistungskatalog.
+Unternehmen in Deutschland. **v0.2 / Phase 1** ist abgeschlossen und liefert
+CRM-Kontakte, Kontakt-Timeline sowie den Artikel- und Leistungskatalog.
 
 Repository: https://github.com/SRyoshi2/basicERP
 
@@ -36,6 +36,8 @@ Administratoren vorbehalten; konkurrierende Bearbeitungen werden erkannt.
 anschließend idempotent übernommen werden; fehlerhafte Zeilen bleiben sichtbar,
 ohne teilweise Kontakte anzulegen.
 Eine passende Beispieldatei liegt unter `docs/examples/contacts-import.csv`.
+In der Bearbeitungsansicht eines Kontakts können außerdem Notizen, Anrufe,
+E-Mails und Termine in einer gemeinsamen Timeline dokumentiert werden.
 
 Unter **Katalog → Artikel & Leistungen** lassen sich Artikel und Leistungen mit
 Einheit, Steuersatz und zeitlich gültigen Nettopreisen verwalten. Überlappende

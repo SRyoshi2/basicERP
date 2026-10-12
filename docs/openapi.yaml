@@ -367,6 +367,161 @@ paths:
               schema:
                 $ref: '#/components/schemas/ApiErrorResponse'
           description: ''
+  /api/v1/crm/activities/:
+    get:
+      operationId: crm_activities_list
+      parameters:
+      - in: query
+        name: archived
+        schema:
+          type: string
+          enum:
+          - all
+          - 'false'
+          - 'true'
+      - in: query
+        name: contact
+        schema:
+          type: string
+          format: uuid
+        description: Kontakt-ID für die Timeline
+        required: true
+      - name: page
+        required: false
+        in: query
+        description: Eine Seitenzahl in der paginierten Ergebnismenge.
+        schema:
+          type: integer
+      tags:
+      - crm
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedContactActivityList'
+          description: ''
+    post:
+      operationId: crm_activities_create
+      tags:
+      - crm
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContactActivity'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ContactActivity'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ContactActivity'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContactActivity'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+          description: ''
+  /api/v1/crm/activities/{id}/:
+    get:
+      operationId: crm_activities_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Ein UUID-String, der contact activity identifiziert.
+        required: true
+      tags:
+      - crm
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContactActivity'
+          description: ''
+    patch:
+      operationId: crm_activities_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Ein UUID-String, der contact activity identifiziert.
+        required: true
+      tags:
+      - crm
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedContactActivityUpdate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedContactActivityUpdate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedContactActivityUpdate'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContactActivity'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+          description: ''
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+          description: ''
+  /api/v1/crm/activities/{id}/archive/:
+    post:
+      operationId: crm_activities_archive_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Ein UUID-String, der contact activity identifiziert.
+        required: true
+      tags:
+      - crm
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContactActivity'
+          description: ''
   /api/v1/crm/contacts/:
     get:
       operationId: crm_contacts_list
@@ -1063,6 +1218,67 @@ components:
       - id
       - kind
       - updated_at
+    ContactActivity:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        contact:
+          type: string
+          format: uuid
+        kind:
+          $ref: '#/components/schemas/ContactActivityKindEnum'
+        subject:
+          type: string
+          maxLength: 200
+        body:
+          type: string
+        occurred_at:
+          type: string
+          format: date-time
+        version:
+          type: integer
+          readOnly: true
+        archived_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        author:
+          type: string
+          nullable: true
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - archived_at
+      - author
+      - contact
+      - created_at
+      - id
+      - subject
+      - updated_at
+      - version
+    ContactActivityKindEnum:
+      enum:
+      - note
+      - call
+      - email
+      - meeting
+      type: string
+      description: |-
+        * `note` - Notiz
+        * `call` - Anruf
+        * `email` - E-Mail
+        * `meeting` - Termin
     ContactAuditEvent:
       type: object
       properties:
@@ -1294,6 +1510,29 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/CatalogItem'
+    PaginatedContactActivityList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/ContactActivity'
     PaginatedContactList:
       type: object
       required:
@@ -1393,6 +1632,22 @@ components:
           type: string
           format: date-time
           readOnly: true
+    PatchedContactActivityUpdate:
+      type: object
+      properties:
+        kind:
+          $ref: '#/components/schemas/ContactActivityKindEnum'
+        subject:
+          type: string
+          maxLength: 200
+        body:
+          type: string
+        occurred_at:
+          type: string
+          format: date-time
+        version:
+          type: integer
+          minimum: 1
     PatchedContactUpdate:
       type: object
       properties:

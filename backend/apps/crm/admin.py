@@ -1,6 +1,13 @@
 from django.contrib import admin
 
-from .models import Address, Contact, ContactAuditEvent, ContactImportBatch, ContactPerson
+from .models import (
+    Address,
+    Contact,
+    ContactActivity,
+    ContactAuditEvent,
+    ContactImportBatch,
+    ContactPerson,
+)
 
 
 class AddressInline(admin.TabularInline):
@@ -60,6 +67,17 @@ class ContactImportBatchAdmin(admin.ModelAdmin):
 
     def has_change_permission(self, request, obj=None):
         return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
+@admin.register(ContactActivity)
+class ContactActivityAdmin(admin.ModelAdmin):
+    list_display = ("contact", "kind", "subject", "occurred_at", "created_by", "archived_at")
+    list_filter = ("kind", "archived_at")
+    search_fields = ("contact__customer_number", "subject", "body")
+    readonly_fields = ("version", "created_by", "updated_by", "created_at", "updated_at")
 
     def has_delete_permission(self, request, obj=None):
         return False
