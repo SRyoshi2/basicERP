@@ -4,6 +4,127 @@ info:
   version: 0.1.0
   description: API-first ERP für kleine Unternehmen
 paths:
+  /api/v1/archive/incoming-invoices/:
+    get:
+      operationId: archive_incoming_invoices_list
+      parameters:
+      - in: query
+        name: format
+        schema:
+          type: string
+          enum:
+          - unknown
+          - xrechnung_cii
+          - xrechnung_ubl
+          - zugferd
+      - name: page
+        required: false
+        in: query
+        description: Eine Seitenzahl in der paginierten Ergebnismenge.
+        schema:
+          type: integer
+      - in: query
+        name: search
+        schema:
+          type: string
+        description: Nummer, Datei, Verkäufer oder Käufer
+      - in: query
+        name: status
+        schema:
+          type: string
+          enum:
+          - invalid
+          - valid
+      tags:
+      - archive
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedIncomingInvoiceList'
+          description: ''
+    post:
+      operationId: archive_incoming_invoices_create
+      tags:
+      - archive
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/IncomingInvoiceUpload'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/IncomingInvoiceUpload'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IncomingInvoice'
+          description: ''
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IncomingInvoice'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+          description: ''
+  /api/v1/archive/incoming-invoices/{id}/:
+    get:
+      operationId: archive_incoming_invoices_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Ein UUID-String, der incoming invoice identifiziert.
+        required: true
+      tags:
+      - archive
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IncomingInvoice'
+          description: ''
+  /api/v1/archive/incoming-invoices/{id}/download/:
+    get:
+      operationId: archive_incoming_invoices_download_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Ein UUID-String, der incoming invoice identifiziert.
+        required: true
+      tags:
+      - archive
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+          description: ''
   /api/v1/auth/change-password/:
     post:
       operationId: auth_change_password_create
@@ -1370,7 +1491,7 @@ components:
           readOnly: true
         status:
           allOf:
-          - $ref: '#/components/schemas/StatusEnum'
+          - $ref: '#/components/schemas/ContactImportBatchStatusEnum'
           readOnly: true
         rows:
           readOnly: true
@@ -1410,6 +1531,14 @@ components:
       - status
       - total_count
       - valid_count
+    ContactImportBatchStatusEnum:
+      enum:
+      - preview
+      - completed
+      type: string
+      description: |-
+        * `preview` - Geprüft
+        * `completed` - Übernommen
     ContactImportUpload:
       type: object
       properties:
@@ -1475,6 +1604,119 @@ components:
           type: string
       required:
       - status
+    IncomingInvoice:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        status:
+          allOf:
+          - $ref: '#/components/schemas/IncomingInvoiceStatusEnum'
+          readOnly: true
+        format:
+          allOf:
+          - $ref: '#/components/schemas/IncomingInvoiceFormatEnum'
+          readOnly: true
+        invoice_number:
+          type: string
+          readOnly: true
+        issue_date:
+          type: string
+          format: date
+          readOnly: true
+          nullable: true
+        seller_name:
+          type: string
+          readOnly: true
+        buyer_name:
+          type: string
+          readOnly: true
+        currency:
+          type: string
+          readOnly: true
+        payable_amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+          readOnly: true
+          nullable: true
+        embedded_xml_sha256:
+          type: string
+          readOnly: true
+        validation_report:
+          readOnly: true
+        original_name:
+          type: string
+          readOnly: true
+        sha256:
+          type: string
+          readOnly: true
+        mime_type:
+          type: string
+          readOnly: true
+        size:
+          type: integer
+          readOnly: true
+        uploaded_by:
+          type: string
+          nullable: true
+          readOnly: true
+        download_url:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - buyer_name
+      - created_at
+      - currency
+      - download_url
+      - embedded_xml_sha256
+      - format
+      - id
+      - invoice_number
+      - issue_date
+      - mime_type
+      - original_name
+      - payable_amount
+      - seller_name
+      - sha256
+      - size
+      - status
+      - uploaded_by
+      - validation_report
+    IncomingInvoiceFormatEnum:
+      enum:
+      - xrechnung_ubl
+      - xrechnung_cii
+      - zugferd
+      - unknown
+      type: string
+      description: |-
+        * `xrechnung_ubl` - XRechnung UBL
+        * `xrechnung_cii` - XRechnung CII
+        * `zugferd` - ZUGFeRD
+        * `unknown` - Unbekannt
+    IncomingInvoiceStatusEnum:
+      enum:
+      - valid
+      - invalid
+      type: string
+      description: |-
+        * `valid` - Basisprüfung bestanden
+        * `invalid` - Prüfung fehlgeschlagen
+    IncomingInvoiceUpload:
+      type: object
+      properties:
+        file:
+          type: string
+          format: uri
+      required:
+      - file
     Login:
       type: object
       properties:
@@ -1556,6 +1798,29 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Contact'
+    PaginatedIncomingInvoiceList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/IncomingInvoice'
     PatchedCatalogItemUpdate:
       type: object
       properties:
@@ -1704,14 +1969,6 @@ components:
       description: |-
         * `admin` - admin
         * `employee` - employee
-    StatusEnum:
-      enum:
-      - preview
-      - completed
-      type: string
-      description: |-
-        * `preview` - Geprüft
-        * `completed` - Übernommen
     User:
       type: object
       properties:

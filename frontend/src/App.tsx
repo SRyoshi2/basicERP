@@ -11,6 +11,7 @@ import {
 } from "./api";
 import { ContactsPage } from "./Contacts";
 import { CatalogPage } from "./Catalog";
+import { IncomingInvoicesPage } from "./IncomingInvoices";
 
 function Brand() {
   return (
@@ -239,7 +240,7 @@ function CompanySettings({ user, onBack }: { user: User; onBack: () => void }) {
 }
 
 function Dashboard({ user, onLogout }: { user: User; onLogout: () => void }) {
-  const [view, setView] = useState<"dashboard" | "company" | "contacts" | "catalog">("dashboard");
+  const [view, setView] = useState<"dashboard" | "company" | "contacts" | "catalog" | "incoming-invoices">("dashboard");
 
   return (
     <div className="min-h-screen bg-slate-100">
@@ -252,10 +253,10 @@ function Dashboard({ user, onLogout }: { user: User; onLogout: () => void }) {
           </div>
         </div>
       </header>
-      {view === "company" ? <CompanySettings user={user} onBack={() => setView("dashboard")} /> : view === "contacts" ? <ContactsPage user={user} onBack={() => setView("dashboard")} /> : view === "catalog" ? <CatalogPage user={user} onBack={() => setView("dashboard")} /> : (
+      {view === "company" ? <CompanySettings user={user} onBack={() => setView("dashboard")} /> : view === "contacts" ? <ContactsPage user={user} onBack={() => setView("dashboard")} /> : view === "catalog" ? <CatalogPage user={user} onBack={() => setView("dashboard")} /> : view === "incoming-invoices" ? <IncomingInvoicesPage onBack={() => setView("dashboard")} /> : (
       <main className="mx-auto max-w-7xl px-6 py-10">
         <div className="rounded-[2rem] bg-slate-950 p-8 text-white shadow-xl">
-          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-cyan-300">v0.2 · CRM &amp; Katalog abgeschlossen</p>
+          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-cyan-300">v0.3 · E-Rechnungseingang im Aufbau</p>
           <h1 className="mt-3 text-4xl font-bold tracking-tight">Hallo {user.username}.</h1>
           <p className="mt-4 max-w-2xl leading-7 text-slate-300">Verwalte Kunden, Artikel und Leistungen samt zeitlich gültigen Nettopreisen als Grundlage der späteren Projekte und Belege.</p>
         </div>
@@ -267,6 +268,10 @@ function Dashboard({ user, onLogout }: { user: User; onLogout: () => void }) {
           <button onClick={() => setView("catalog")} className="rounded-2xl border border-cyan-200 bg-cyan-50 p-6 text-left shadow-sm transition hover:-translate-y-1 hover:shadow-lg">
             <p className="text-sm font-bold uppercase tracking-wider text-cyan-800">Katalog</p>
             <p className="mt-3 font-semibold text-slate-900">Artikel &amp; Leistungen verwalten</p>
+          </button>
+          <button onClick={() => setView("incoming-invoices")} className="rounded-2xl border border-emerald-200 bg-emerald-50 p-6 text-left shadow-sm transition hover:-translate-y-1 hover:shadow-lg">
+            <p className="text-sm font-bold uppercase tracking-wider text-emerald-800">E-Rechnung</p>
+            <p className="mt-3 font-semibold text-slate-900">Eingangsrechnungen prüfen &amp; archivieren</p>
           </button>
           <button onClick={() => setView("company")} className="rounded-2xl border border-slate-200 bg-white p-6 text-left shadow-sm transition hover:-translate-y-1 hover:shadow-lg">
             <p className="text-sm font-bold uppercase tracking-wider text-blue-700">Firma</p>

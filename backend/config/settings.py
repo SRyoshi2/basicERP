@@ -30,6 +30,7 @@ INSTALLED_APPS = [
     "apps.core",
     "apps.crm",
     "apps.catalog",
+    "apps.archive",
 ]
 
 MIDDLEWARE = [
@@ -98,6 +99,20 @@ MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 ARCHIVE_ROOT = Path(os.getenv("ARCHIVE_ROOT", BASE_DIR / "archive"))
 
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+        "OPTIONS": {"location": MEDIA_ROOT, "base_url": MEDIA_URL},
+    },
+    "archive": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+        "OPTIONS": {"location": ARCHIVE_ROOT},
+    },
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
+}
+
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 REST_FRAMEWORK = {
@@ -126,6 +141,8 @@ SPECTACULAR_SETTINGS = {
         "CatalogItemKindEnum": (("product", "Artikel"), ("service", "Leistung")),
         "CatalogUnitEnum": (("hour", "Stunde"), ("day", "Tag"), ("piece", "Stück"), ("flat", "Pauschal")),
         "CatalogTaxRateEnum": (("19.00", "19 %"), ("7.00", "7 %"), ("0.00", "0 %")),
+        "IncomingInvoiceFormatEnum": (("xrechnung_ubl", "XRechnung UBL"), ("xrechnung_cii", "XRechnung CII"), ("zugferd", "ZUGFeRD"), ("unknown", "Unbekannt")),
+        "IncomingInvoiceStatusEnum": (("valid", "Basisprüfung bestanden"), ("invalid", "Prüfung fehlgeschlagen")),
     },
 }
 

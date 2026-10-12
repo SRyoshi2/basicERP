@@ -1,8 +1,9 @@
 # basicERP
 
 Quelloffenes, API-first Klein-ERP für Freelancer, Einzelunternehmen und kleine
-Unternehmen in Deutschland. **v0.2 / Phase 1** ist abgeschlossen und liefert
-CRM-Kontakte, Kontakt-Timeline sowie den Artikel- und Leistungskatalog.
+Unternehmen in Deutschland. **v0.2 / Phase 1** ist abgeschlossen; der
+funktionale Kern von **v0.2.1 / Phase 1a** liefert zusätzlich einen sicheren
+E-Rechnungseingang.
 
 Repository: https://github.com/SRyoshi2/basicERP
 
@@ -42,6 +43,13 @@ E-Mails und Termine in einer gemeinsamen Timeline dokumentiert werden.
 Unter **Katalog → Artikel & Leistungen** lassen sich Artikel und Leistungen mit
 Einheit, Steuersatz und zeitlich gültigen Nettopreisen verwalten. Überlappende
 Preiszeiträume werden abgewiesen; Archivieren ist Administratoren vorbehalten.
+
+Unter **E-Rechnung → Eingangsrechnungen** können XRechnung-XMLs in UBL/CII
+sowie ZUGFeRD-PDFs mit eingebetteter Rechnungs-XML hochgeladen werden. Das
+Original landet unverändert und SHA-256-dedupliziert im separaten Archiv-Volume;
+Metadaten und ein technischer Basisprüfbericht sind durchsuchbar. Der Umfang ist
+keine vollständige KoSIT-/Schematron- oder Rechtsprüfung. Für einen Selbsttest
+steht `docs/examples/incoming-invoice-ubl.xml` bereit.
 
 ## Schnellstart unter Ubuntu
 

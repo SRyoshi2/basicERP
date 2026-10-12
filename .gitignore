@@ -10,7 +10,8 @@ htmlcov/
 node_modules/
 frontend/dist/
 media/
-archive/
+/archive/
+/backend/archive/
 *.log
 .idea/
 .vscode/

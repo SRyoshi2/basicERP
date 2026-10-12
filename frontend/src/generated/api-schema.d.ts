@@ -4,6 +4,54 @@
  */
 
 export interface paths {
+    "/api/v1/archive/incoming-invoices/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["archive_incoming_invoices_list"];
+        put?: never;
+        post: operations["archive_incoming_invoices_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/archive/incoming-invoices/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["archive_incoming_invoices_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/archive/incoming-invoices/{id}/download/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["archive_incoming_invoices_download_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/change-password/": {
         parameters: {
             query?: never;
@@ -579,7 +627,7 @@ export interface components {
             readonly id: string;
             readonly source_name: string;
             readonly source_hash: string;
-            readonly status: components["schemas"]["StatusEnum"];
+            readonly status: components["schemas"]["ContactImportBatchStatusEnum"];
             readonly rows: unknown;
             readonly total_count: number;
             readonly valid_count: number;
@@ -591,6 +639,12 @@ export interface components {
             /** Format: date-time */
             readonly completed_at: string | null;
         };
+        /**
+         * @description * `preview` - Geprüft
+         *     * `completed` - Übernommen
+         * @enum {string}
+         */
+        ContactImportBatchStatusEnum: "preview" | "completed";
         ContactImportUpload: {
             /** Format: uri */
             file: string;
@@ -619,6 +673,48 @@ export interface components {
         };
         Health: {
             status: string;
+        };
+        IncomingInvoice: {
+            /** Format: uuid */
+            readonly id: string;
+            readonly status: components["schemas"]["IncomingInvoiceStatusEnum"];
+            readonly format: components["schemas"]["IncomingInvoiceFormatEnum"];
+            readonly invoice_number: string;
+            /** Format: date */
+            readonly issue_date: string | null;
+            readonly seller_name: string;
+            readonly buyer_name: string;
+            readonly currency: string;
+            /** Format: decimal */
+            readonly payable_amount: string | null;
+            readonly embedded_xml_sha256: string;
+            readonly validation_report: unknown;
+            readonly original_name: string;
+            readonly sha256: string;
+            readonly mime_type: string;
+            readonly size: number;
+            readonly uploaded_by: string | null;
+            readonly download_url: string;
+            /** Format: date-time */
+            readonly created_at: string;
+        };
+        /**
+         * @description * `xrechnung_ubl` - XRechnung UBL
+         *     * `xrechnung_cii` - XRechnung CII
+         *     * `zugferd` - ZUGFeRD
+         *     * `unknown` - Unbekannt
+         * @enum {string}
+         */
+        IncomingInvoiceFormatEnum: "xrechnung_ubl" | "xrechnung_cii" | "zugferd" | "unknown";
+        /**
+         * @description * `valid` - Basisprüfung bestanden
+         *     * `invalid` - Prüfung fehlgeschlagen
+         * @enum {string}
+         */
+        IncomingInvoiceStatusEnum: "valid" | "invalid";
+        IncomingInvoiceUpload: {
+            /** Format: uri */
+            file: string;
         };
         Login: {
             identifier: string;
@@ -668,6 +764,21 @@ export interface components {
              */
             previous?: string | null;
             results: components["schemas"]["Contact"][];
+        };
+        PaginatedIncomingInvoiceList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=4
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=2
+             */
+            previous?: string | null;
+            results: components["schemas"]["IncomingInvoice"][];
         };
         PatchedCatalogItemUpdate: {
             kind?: components["schemas"]["CatalogItemKindEnum"];
@@ -731,12 +842,6 @@ export interface components {
          * @enum {string}
          */
         RoleEnum: "admin" | "employee";
-        /**
-         * @description * `preview` - Geprüft
-         *     * `completed` - Übernommen
-         * @enum {string}
-         */
-        StatusEnum: "preview" | "completed";
         User: {
             id: string;
             username: string;
@@ -757,6 +862,116 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    archive_incoming_invoices_list: {
+        parameters: {
+            query?: {
+                format?: "unknown" | "xrechnung_cii" | "xrechnung_ubl" | "zugferd";
+                /** @description Eine Seitenzahl in der paginierten Ergebnismenge. */
+                page?: number;
+                /** @description Nummer, Datei, Verkäufer oder Käufer */
+                search?: string;
+                status?: "invalid" | "valid";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedIncomingInvoiceList"];
+                };
+            };
+        };
+    };
+    archive_incoming_invoices_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["IncomingInvoiceUpload"];
+                "application/x-www-form-urlencoded": components["schemas"]["IncomingInvoiceUpload"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IncomingInvoice"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IncomingInvoice"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    archive_incoming_invoices_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Ein UUID-String, der incoming invoice identifiziert. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IncomingInvoice"];
+                };
+            };
+        };
+    };
+    archive_incoming_invoices_download_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Ein UUID-String, der incoming invoice identifiziert. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/octet-stream": string;
+                };
+            };
+        };
+    };
     auth_change_password_create: {
         parameters: {
             query?: never;

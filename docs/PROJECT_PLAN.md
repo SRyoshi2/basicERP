@@ -1,7 +1,7 @@
 # basicERP – Projektplan
 
-**Stand:** 05.10.2026
-**Status:** Freigegeben; Phase 0 und Phase 1 abgeschlossen, Phase 1a als Nächstes
+**Stand:** 12.10.2026
+**Status:** Freigegeben; Phase 0 und Phase 1 abgeschlossen, Phase 1a zu 75 % umgesetzt
 **Quelle:** [`ROADMAP.md`](../ROADMAP.md)
 
 ## 1. Zielbild
@@ -118,8 +118,8 @@ Abnahmetests benötigen gemeinsame Entscheidungen und teilweise externe Prüfung
 
 ### Iteration 5 – Compliance-Slice und v0.2-Abnahme
 
-- Unveränderliches Dateiobjekt mit SHA-256 und Storage-Abstraktion.
-- E-Rechnungsupload inklusive Basisvalidierung und Metadatenextraktion.
+- Unveränderliches Dateiobjekt mit SHA-256 und Storage-Abstraktion. **Erledigt.**
+- E-Rechnungsupload inklusive Basisvalidierung und Metadatenextraktion. **Erledigt.**
 - Installations-, Backup- und Restore-Smoke-Test.
 - Retrospektive und Neuschätzung der Folgephasen.
 

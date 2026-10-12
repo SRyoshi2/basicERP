@@ -46,6 +46,23 @@ export type CatalogItemInput = Omit<components["schemas"]["CatalogItemCreate"], 
 export type CatalogPage = Omit<components["schemas"]["PaginatedCatalogItemList"], "results"> & {
   results: CatalogItem[];
 };
+export type InvoiceValidationError = { code: string; field?: string; message: string };
+export type InvoiceValidationReport = {
+  validator: string;
+  scope: string;
+  passed: boolean;
+  errors: InvoiceValidationError[];
+  xml_root?: string;
+  detected_xml_format?: string;
+  embedded_xml_sha256?: string;
+};
+export type IncomingInvoice = Omit<components["schemas"]["IncomingInvoice"], "validation_report"> & {
+  validation_report: InvoiceValidationReport;
+};
+export type IncomingInvoicePage = Omit<
+  components["schemas"]["PaginatedIncomingInvoiceList"],
+  "results"
+> & { results: IncomingInvoice[] };
 
 type ErrorBody = {
   error?: components["schemas"]["ApiError"];
@@ -260,5 +277,29 @@ export async function archiveCatalogItem(item: CatalogItem): Promise<CatalogItem
   return request<CatalogItem>(`/api/v1/catalog/items/${item.id}/archive/`, {
     method: "POST",
     body: "{}",
+  });
+}
+
+export async function getIncomingInvoices(options: {
+  search?: string;
+  status?: "valid" | "invalid" | "";
+  format?: "xrechnung_ubl" | "xrechnung_cii" | "zugferd" | "unknown" | "";
+  page?: number;
+} = {}): Promise<IncomingInvoicePage> {
+  const params = new URLSearchParams();
+  if (options.search) params.set("search", options.search);
+  if (options.status) params.set("status", options.status);
+  if (options.format) params.set("format", options.format);
+  if (options.page && options.page > 1) params.set("page", String(options.page));
+  const query = params.size ? `?${params.toString()}` : "";
+  return request<IncomingInvoicePage>(`/api/v1/archive/incoming-invoices/${query}`);
+}
+
+export async function uploadIncomingInvoice(file: File): Promise<IncomingInvoice> {
+  const data = new FormData();
+  data.append("file", file);
+  return request<IncomingInvoice>("/api/v1/archive/incoming-invoices/", {
+    method: "POST",
+    body: data,
   });
 }
