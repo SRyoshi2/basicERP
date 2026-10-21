@@ -1,7 +1,7 @@
 # basicERP – Projektplan
 
 **Stand:** 21.10.2026
-**Status:** Freigegeben; Phase 0, Phase 1 und Phase 1a abgeschlossen; Phase 2 als Nächstes
+**Status:** Freigegeben; Phase 0, Phase 1 und Phase 1a abgeschlossen; Phase 2 in Umsetzung
 **Quelle:** [`ROADMAP.md`](../ROADMAP.md)
 
 ## 1. Zielbild
@@ -123,6 +123,16 @@ Abnahmetests benötigen gemeinsame Entscheidungen und teilweise externe Prüfung
 - Normale PDF-Rechnungen mit manuellen Pflichtmetadaten. **Erledigt.**
 - Installations-, Backup- und Restore-Smoke-Test. **Erledigt.**
 - Retrospektive und Neuschätzung der Folgephasen. **Erledigt; Lieferreihenfolge bleibt bestehen.**
+
+### Iteration 6 – Projektstruktur (in Umsetzung)
+
+- Projektstamm mit Kunde, Status, Zeitraum, Betrags-/Stundenbudget und
+  Standard-Stundensatz. **Erledigt.**
+- Stabile Projektnummer, Audit-Verlauf, Versionsschutz und Admin-Archivierung.
+  **Erledigt.**
+- Arbeitspakete mit Status, Planaufwand, Mitarbeiterzuordnung und optionaler
+  Satzüberschreibung. **Als Nächstes.**
+- Listen-/Boardansicht und Plancontrolling bis zur Phase-2-Abnahme.
 
 ## 6. Arbeitsweise und Qualitätsregeln
 

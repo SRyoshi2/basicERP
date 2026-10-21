@@ -30,6 +30,7 @@ INSTALLED_APPS = [
     "apps.core",
     "apps.crm",
     "apps.catalog",
+    "apps.projects",
     "apps.archive",
 ]
 
@@ -141,6 +142,7 @@ SPECTACULAR_SETTINGS = {
         "CatalogItemKindEnum": (("product", "Artikel"), ("service", "Leistung")),
         "CatalogUnitEnum": (("hour", "Stunde"), ("day", "Tag"), ("piece", "Stück"), ("flat", "Pauschal")),
         "CatalogTaxRateEnum": (("19.00", "19 %"), ("7.00", "7 %"), ("0.00", "0 %")),
+        "ProjectStatusEnum": (("quotation", "Angebot"), ("active", "Aktiv"), ("paused", "Pausiert"), ("completed", "Abgeschlossen")),
         "IncomingInvoiceFormatEnum": (
             ("standard_pdf", "Normale PDF-Rechnung"),
             ("xrechnung_ubl", "XRechnung UBL"),

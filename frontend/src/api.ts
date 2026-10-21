@@ -63,6 +63,11 @@ export type IncomingInvoicePage = Omit<
   components["schemas"]["PaginatedIncomingInvoiceList"],
   "results"
 > & { results: IncomingInvoice[] };
+export type Project = Required<components["schemas"]["Project"]>;
+export type ProjectInput = components["schemas"]["ProjectCreate"];
+export type ProjectPage = Omit<components["schemas"]["PaginatedProjectList"], "results"> & {
+  results: Project[];
+};
 export type ManualIncomingInvoiceInput = {
   invoice_number: string;
   issue_date: string;
@@ -283,6 +288,40 @@ export async function updateCatalogItem(item: CatalogItem, data: CatalogItemInpu
 
 export async function archiveCatalogItem(item: CatalogItem): Promise<CatalogItem> {
   return request<CatalogItem>(`/api/v1/catalog/items/${item.id}/archive/`, {
+    method: "POST",
+    body: "{}",
+  });
+}
+
+export async function getProjects(options: {
+  search?: string;
+  status?: "quotation" | "active" | "paused" | "completed" | "";
+  page?: number;
+} = {}): Promise<ProjectPage> {
+  const params = new URLSearchParams();
+  if (options.search) params.set("search", options.search);
+  if (options.status) params.set("status", options.status);
+  if (options.page && options.page > 1) params.set("page", String(options.page));
+  const query = params.size ? `?${params.toString()}` : "";
+  return request<ProjectPage>(`/api/v1/projects/${query}`);
+}
+
+export async function createProject(data: ProjectInput): Promise<Project> {
+  return request<Project>("/api/v1/projects/", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function updateProject(project: Project, data: ProjectInput): Promise<Project> {
+  return request<Project>(`/api/v1/projects/${project.id}/`, {
+    method: "PATCH",
+    body: JSON.stringify({ ...data, version: project.version }),
+  });
+}
+
+export async function archiveProject(project: Project): Promise<Project> {
+  return request<Project>(`/api/v1/projects/${project.id}/archive/`, {
     method: "POST",
     body: "{}",
   });

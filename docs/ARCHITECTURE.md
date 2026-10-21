@@ -1,7 +1,7 @@
 # basicERP – Softwarearchitektur
 
 **Stand:** 21.10.2026
-**Status:** Angenommen; Phase 0, Phase 1 und Phase 1a abgeschlossen
+**Status:** Angenommen; Phase 0, Phase 1 und Phase 1a abgeschlossen; Phase 2 in Umsetzung
 **Zugehörige Entscheidung:** [`ADR-0001`](adr/0001-modularer-monolith.md), [`ADR-0002`](adr/0002-belegfestschreibung-und-outbox.md)
 
 ## 1. Kurzfassung
@@ -246,6 +246,14 @@ Freigabelogik folgt der Trennung konsequent.
 | Payment | Summe darf fachlich nachvollziehbar zu offen/teil-/bezahlt führen |
 | ArchiveObject | unveränderlicher Dateischlüssel, Hash, Größe, MIME, Ursprung, Aufbewahrung |
 | OutboxEvent | unveränderliches Payload, Status, Versuche, nächster Versuch, eindeutiger Eventschlüssel |
+
+Der Projektstamm ist als eigenes Aggregat im Modul `projects` umgesetzt. Er
+referenziert den Kunden per geschütztem Fremdschlüssel, übernimmt aber keine
+CRM-Schreibverantwortung. Projektbudgets dürfen als Betrag, Stundenwert oder in
+beiden Formen geführt werden. Der optionale Projekt-Stundensatz bildet den
+Fallback; eine spätere Arbeitspaket-Überschreibung hat Vorrang. Geld- und
+Stundenwerte bleiben nichtnegativ, Projektzeiträume konsistent, Änderungen
+versionsgeschützt und auditierbar.
 
 ### Rechnungssnapshot
 
