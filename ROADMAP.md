@@ -1,6 +1,6 @@
 # basicERP — Fahrplan zur Umsetzung
 
-**Stand:** 21.10.2026 · **Status:** Phase 0, Phase 1 und Phase 1a abgeschlossen; Phase 2 begonnen
+**Stand:** 21.10.2026 · **Status:** Phase 0, Phase 1, Phase 1a und Phase 2 abgeschlossen
 
 > Der fortlaufend aktualisierte Fahrplan mit Umsetzungsstand und Testanleitung
 > liegt in [`ROADMAP.html`](ROADMAP.html). Dieses Dokument bleibt die fachliche
@@ -81,10 +81,9 @@ Versionierung: jede Phase endet mit einem lauffähigen, per Docker startbaren Zw
 ### Phase 2 — Projekte & Arbeitspakete (v0.3)
 **Ziel:** Projektstruktur als Rückgrat für Zeiten und spätere Abrechnung.
 
-**Umsetzungsstand:** Projektstamm mit Kundenzuordnung, Status, Zeitraum,
-Betrags-/Stundenbudget und Standard-Stundensatz ist über API und UI nutzbar.
-Arbeitspakete, Satzüberschreibung, Board und Plancontrolling folgen im nächsten
-Schritt.
+**Umsetzungsstand:** Abgeschlossen. Projektstamm und Arbeitspakete sind über API
+und UI nutzbar. Satzvererbung, Mitarbeiterzuordnung, Board-/Listenansicht sowie
+Planstunden, Planwert, Restbudgets und gewichteter Fortschritt sind umgesetzt.
 
 - Projekt: Kunde, Status (Angebot/aktiv/pausiert/abgeschlossen), Zeitraum, Budget (Betrag und/oder Stunden), Stundensatz-Logik (Projekt-Standard, pro Arbeitspaket überschreibbar)
 - Arbeitspakete: Titel, Beschreibung, Status, geplanter Aufwand, Zuordnung Mitarbeiter

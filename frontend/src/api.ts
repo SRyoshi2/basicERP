@@ -68,6 +68,13 @@ export type ProjectInput = components["schemas"]["ProjectCreate"];
 export type ProjectPage = Omit<components["schemas"]["PaginatedProjectList"], "results"> & {
   results: Project[];
 };
+export type AssigneeOption = components["schemas"]["AssigneeOption"];
+export type WorkPackage = Required<components["schemas"]["WorkPackage"]>;
+export type WorkPackageInput = components["schemas"]["WorkPackageCreate"];
+export type WorkPackagePage = Omit<
+  components["schemas"]["PaginatedWorkPackageList"], "results"
+> & { results: WorkPackage[] };
+export type ProjectControlling = components["schemas"]["ProjectControlling"];
 export type ManualIncomingInvoiceInput = {
   invoice_number: string;
   issue_date: string;
@@ -322,6 +329,43 @@ export async function updateProject(project: Project, data: ProjectInput): Promi
 
 export async function archiveProject(project: Project): Promise<Project> {
   return request<Project>(`/api/v1/projects/${project.id}/archive/`, {
+    method: "POST",
+    body: "{}",
+  });
+}
+
+export async function getProjectControlling(projectId: string): Promise<ProjectControlling> {
+  return request<ProjectControlling>(`/api/v1/projects/${projectId}/controlling/`);
+}
+
+export async function getProjectAssignees(): Promise<AssigneeOption[]> {
+  return request<AssigneeOption[]>("/api/v1/projects/assignees/");
+}
+
+export async function getWorkPackages(projectId: string): Promise<WorkPackagePage> {
+  const params = new URLSearchParams({ project: projectId });
+  return request<WorkPackagePage>(`/api/v1/projects/work-packages/?${params.toString()}`);
+}
+
+export async function createWorkPackage(data: WorkPackageInput): Promise<WorkPackage> {
+  return request<WorkPackage>("/api/v1/projects/work-packages/", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function updateWorkPackage(
+  workPackage: WorkPackage,
+  data: WorkPackageInput,
+): Promise<WorkPackage> {
+  return request<WorkPackage>(`/api/v1/projects/work-packages/${workPackage.id}/`, {
+    method: "PATCH",
+    body: JSON.stringify({ ...data, version: workPackage.version }),
+  });
+}
+
+export async function archiveWorkPackage(workPackage: WorkPackage): Promise<WorkPackage> {
+  return request<WorkPackage>(`/api/v1/projects/work-packages/${workPackage.id}/archive/`, {
     method: "POST",
     body: "{}",
   });

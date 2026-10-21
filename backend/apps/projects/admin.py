@@ -1,6 +1,8 @@
 from django.contrib import admin
 
-from .models import Project, ProjectAuditEvent, ProjectNumberSequence
+from .models import (
+    Project, ProjectAuditEvent, ProjectNumberSequence, WorkPackage, WorkPackageAuditEvent,
+)
 
 
 @admin.register(Project)
@@ -12,3 +14,5 @@ class ProjectAdmin(admin.ModelAdmin):
 
 admin.site.register(ProjectNumberSequence)
 admin.site.register(ProjectAuditEvent)
+admin.site.register(WorkPackage)
+admin.site.register(WorkPackageAuditEvent)

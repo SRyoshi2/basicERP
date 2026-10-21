@@ -143,6 +143,7 @@ SPECTACULAR_SETTINGS = {
         "CatalogUnitEnum": (("hour", "Stunde"), ("day", "Tag"), ("piece", "Stück"), ("flat", "Pauschal")),
         "CatalogTaxRateEnum": (("19.00", "19 %"), ("7.00", "7 %"), ("0.00", "0 %")),
         "ProjectStatusEnum": (("quotation", "Angebot"), ("active", "Aktiv"), ("paused", "Pausiert"), ("completed", "Abgeschlossen")),
+        "WorkPackageStatusEnum": (("planned", "Geplant"), ("in_progress", "In Arbeit"), ("blocked", "Blockiert"), ("done", "Erledigt")),
         "IncomingInvoiceFormatEnum": (
             ("standard_pdf", "Normale PDF-Rechnung"),
             ("xrechnung_ubl", "XRechnung UBL"),

@@ -1,7 +1,7 @@
 # basicERP – Softwarearchitektur
 
 **Stand:** 21.10.2026
-**Status:** Angenommen; Phase 0, Phase 1 und Phase 1a abgeschlossen; Phase 2 in Umsetzung
+**Status:** Angenommen; Phase 0, Phase 1, Phase 1a und Phase 2 abgeschlossen
 **Zugehörige Entscheidung:** [`ADR-0001`](adr/0001-modularer-monolith.md), [`ADR-0002`](adr/0002-belegfestschreibung-und-outbox.md)
 
 ## 1. Kurzfassung
@@ -240,6 +240,7 @@ Freigabelogik folgt der Trennung konsequent.
 | Contact | stabile Kundennummer; Firma/Person; mehrere typisierte Adressen |
 | CatalogItem | Preis/Steueränderungen überschreiben keine historischen Belege |
 | Project | Kunde, Status und Budget; Sätze werden zeitlich/sachlich eindeutig aufgelöst |
+| WorkPackage | gehört genau zu einem Projekt; Status, Planstunden, Mitarbeiter und optionaler Satz-Override |
 | TimeEntry | positive Dauer, Mitarbeiter/Projekt, Abrechnungsstatus; abgerechnete Einträge gesperrt |
 | Invoice | Summe der Positionen/Steuern; erlaubter Zustandsübergang; finaler Snapshot unveränderlich |
 | NumberSequence | Eindeutigkeit je Dokumentart/Jahr; Zuweisung unter Datenbanksperre |
@@ -254,6 +255,14 @@ beiden Formen geführt werden. Der optionale Projekt-Stundensatz bildet den
 Fallback; eine spätere Arbeitspaket-Überschreibung hat Vorrang. Geld- und
 Stundenwerte bleiben nichtnegativ, Projektzeiträume konsistent, Änderungen
 versionsgeschützt und auditierbar.
+
+Arbeitspakete sind eigene, innerhalb des Projekt-Aggregats versionierte
+Teilobjekte. Der abrechnungsnahe Satz wird deterministisch aufgelöst:
+`hourly_rate_override` des Arbeitspakets hat Vorrang, andernfalls gilt der
+`default_hourly_rate` des Projekts. Fehlen beide Werte, bleibt das Paket im
+Stundenplan enthalten, wird aber als unbepreist ausgewiesen und nicht mit einem
+erfundenen Nullsatz in den Planwert eingerechnet. Das Plancontrolling berechnet
+Fortschritt gewichtet nach Planstunden; erst Phase 3 ergänzt echte Ist-Werte.
 
 ### Rechnungssnapshot
 

@@ -4,7 +4,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from apps.crm.models import Contact
-from apps.projects.models import ProjectAuditEvent
+from apps.projects.models import ProjectAuditEvent, WorkPackage, WorkPackageAuditEvent
 
 
 @pytest.fixture
@@ -123,3 +123,118 @@ def test_archived_customer_is_rejected(api_client, employee, customer, payload):
 
     assert response.status_code == 400
     assert "Archivierte" in response.data["error"]["fields"]["customer"][0]
+
+
+@pytest.fixture
+def project(api_client, employee, payload):
+    api_client.force_authenticate(employee)
+    response = api_client.post(reverse("project-list"), payload, format="json")
+    return response.data
+
+
+@pytest.mark.django_db
+def test_work_packages_resolve_rates_and_project_controlling(api_client, employee, project):
+    api_client.force_authenticate(employee)
+    first = api_client.post(
+        reverse("work-package-list"),
+        {
+            "project": project["id"], "title": "Konzeption", "status": "in_progress",
+            "planned_hours": "10.00", "assignee": employee.id,
+            "hourly_rate_override": None,
+        },
+        format="json",
+    )
+    second = api_client.post(
+        reverse("work-package-list"),
+        {
+            "project": project["id"], "title": "Umsetzung", "status": "done",
+            "planned_hours": "5.00", "hourly_rate_override": "150.00",
+        },
+        format="json",
+    )
+    controlling = api_client.get(reverse("project-controlling", args=[project["id"]]))
+
+    assert first.status_code == 201
+    assert first.data["resolved_hourly_rate"] == "120.00"
+    assert first.data["planned_value"] == "1200.00"
+    assert second.data["resolved_hourly_rate"] == "150.00"
+    assert controlling.data == {
+        "work_package_count": 2,
+        "planned_hours": "15.00",
+        "planned_value": "1950.00",
+        "unpriced_work_package_count": 0,
+        "remaining_hours": "185.00",
+        "remaining_amount": "22050.00",
+        "progress_percent": "33.33",
+    }
+    assert WorkPackageAuditEvent.objects.filter(action="created").count() == 2
+
+
+@pytest.mark.django_db
+def test_work_package_update_uses_version_and_supports_board_status(api_client, employee, project):
+    api_client.force_authenticate(employee)
+    created = api_client.post(
+        reverse("work-package-list"),
+        {"project": project["id"], "title": "Analyse", "planned_hours": "8.00"},
+        format="json",
+    ).data
+    detail = reverse("work-package-detail", args=[created["id"]])
+
+    updated = api_client.patch(detail, {"status": "blocked", "version": 1}, format="json")
+    conflict = api_client.patch(detail, {"status": "done", "version": 1}, format="json")
+    board_column = api_client.get(
+        reverse("work-package-list"), {"project": project["id"], "status": "blocked"}
+    )
+
+    assert updated.status_code == 200
+    assert updated.data["status_label"] == "Blockiert"
+    assert conflict.status_code == 409
+    assert board_column.data["count"] == 1
+
+
+@pytest.mark.django_db
+def test_only_admin_can_archive_work_package(api_client, employee, project_admin, project):
+    api_client.force_authenticate(employee)
+    created = api_client.post(
+        reverse("work-package-list"),
+        {"project": project["id"], "title": "Dokumentation", "planned_hours": "4.00"},
+        format="json",
+    ).data
+    archive_url = reverse("work-package-archive", args=[created["id"]])
+    assert api_client.post(archive_url).status_code == 403
+
+    api_client.force_authenticate(project_admin)
+    archived = api_client.post(archive_url)
+    active = api_client.get(reverse("work-package-list"), {"project": project["id"]})
+    rejected_update = api_client.patch(
+        reverse("work-package-detail", args=[created["id"]]),
+        {"title": "Nachträglich geändert", "version": archived.data["version"]},
+        format="json",
+    )
+
+    assert archived.status_code == 200
+    assert archived.data["archived_at"] is not None
+    assert active.data["count"] == 0
+    assert rejected_update.status_code == 400
+
+
+@pytest.mark.django_db
+def test_inactive_assignee_and_missing_project_filter_are_safe(api_client, employee, project):
+    inactive = get_user_model().objects.create_user(
+        username="inactive", email="inactive@example.test", password="test-password", is_active=False
+    )
+    api_client.force_authenticate(employee)
+    rejected = api_client.post(
+        reverse("work-package-list"),
+        {
+            "project": project["id"], "title": "Gesperrt", "planned_hours": "1.00",
+            "assignee": inactive.id,
+        },
+        format="json",
+    )
+    unscoped = api_client.get(reverse("work-package-list"))
+
+    assert rejected.status_code == 400
+    assert "aktive Benutzer" in rejected.data["error"]["fields"]["assignee"][0]
+    assert unscoped.data["count"] == 0
+    assert WorkPackage.objects.count() == 0

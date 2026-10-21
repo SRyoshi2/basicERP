@@ -1116,6 +1116,28 @@ paths:
               schema:
                 $ref: '#/components/schemas/Project'
           description: ''
+  /api/v1/projects/{id}/controlling/:
+    get:
+      operationId: projects_controlling_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Ein UUID-String, der project identifiziert.
+        required: true
+      tags:
+      - projects
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectControlling'
+          description: ''
   /api/v1/projects/{id}/history/:
     get:
       operationId: projects_history_list
@@ -1139,6 +1161,209 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/ProjectAuditEvent'
+          description: ''
+  /api/v1/projects/assignees/:
+    get:
+      operationId: projects_assignees_list
+      tags:
+      - projects
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AssigneeOption'
+          description: ''
+  /api/v1/projects/work-packages/:
+    get:
+      operationId: projects_work_packages_list
+      parameters:
+      - in: query
+        name: archived
+        schema:
+          type: string
+          enum:
+          - all
+          - 'false'
+          - 'true'
+      - name: page
+        required: false
+        in: query
+        description: Eine Seitenzahl in der paginierten Ergebnismenge.
+        schema:
+          type: integer
+      - in: query
+        name: project
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: query
+        name: status
+        schema:
+          type: string
+          enum:
+          - blocked
+          - done
+          - in_progress
+          - planned
+      tags:
+      - projects
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedWorkPackageList'
+          description: ''
+    post:
+      operationId: projects_work_packages_create
+      tags:
+      - projects
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkPackageCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/WorkPackageCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/WorkPackageCreate'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkPackage'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+          description: ''
+  /api/v1/projects/work-packages/{id}/:
+    get:
+      operationId: projects_work_packages_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - projects
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkPackage'
+          description: ''
+    patch:
+      operationId: projects_work_packages_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - projects
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedWorkPackageUpdate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedWorkPackageUpdate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedWorkPackageUpdate'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkPackage'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+          description: ''
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+          description: ''
+  /api/v1/projects/work-packages/{id}/archive/:
+    post:
+      operationId: projects_work_packages_archive_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - projects
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkPackage'
+          description: ''
+  /api/v1/projects/work-packages/{id}/history/:
+    get:
+      operationId: projects_work_packages_history_list
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - name: page
+        required: false
+        in: query
+        description: Eine Seitenzahl in der paginierten Ergebnismenge.
+        schema:
+          type: integer
+      tags:
+      - projects
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedWorkPackageAuditEventList'
           description: ''
 components:
   schemas:
@@ -1212,6 +1437,20 @@ components:
           $ref: '#/components/schemas/ApiError'
       required:
       - error
+    AssigneeOption:
+      type: object
+      properties:
+        id:
+          type: string
+        username:
+          type: string
+        display_name:
+          type: string
+          readOnly: true
+      required:
+      - display_name
+      - id
+      - username
     CatalogAuditEvent:
       type: object
       properties:
@@ -2070,6 +2309,52 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Project'
+    PaginatedWorkPackageAuditEventList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/WorkPackageAuditEvent'
+    PaginatedWorkPackageList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/WorkPackage'
     PatchedCatalogItemUpdate:
       type: object
       properties:
@@ -2249,6 +2534,35 @@ components:
         version:
           type: integer
           minimum: 1
+    PatchedWorkPackageUpdate:
+      type: object
+      properties:
+        project:
+          type: string
+          format: uuid
+          readOnly: true
+        title:
+          type: string
+          maxLength: 200
+        description:
+          type: string
+        status:
+          $ref: '#/components/schemas/WorkPackageStatusEnum'
+        planned_hours:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+        assignee:
+          type: integer
+          nullable: true
+        hourly_rate_override:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+          nullable: true
+        version:
+          type: integer
+          minimum: 1
     Project:
       type: object
       properties:
@@ -2357,6 +2671,43 @@ components:
       - created_at
       - id
       - version
+    ProjectControlling:
+      type: object
+      properties:
+        work_package_count:
+          type: integer
+        planned_hours:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        planned_value:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+        unpriced_work_package_count:
+          type: integer
+        remaining_hours:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+          nullable: true
+        remaining_amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+          nullable: true
+        progress_percent:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+      required:
+      - planned_hours
+      - planned_value
+      - progress_percent
+      - remaining_amount
+      - remaining_hours
+      - unpriced_work_package_count
+      - work_package_count
     ProjectCreate:
       type: object
       properties:
@@ -2445,6 +2796,151 @@ components:
       - must_change_password
       - role
       - username
+    WorkPackage:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        project:
+          type: string
+          format: uuid
+        title:
+          type: string
+          maxLength: 200
+        description:
+          type: string
+        status:
+          $ref: '#/components/schemas/WorkPackageStatusEnum'
+        status_label:
+          type: string
+          readOnly: true
+        planned_hours:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+        assignee:
+          type: integer
+          nullable: true
+        assignee_name:
+          type: string
+          nullable: true
+          readOnly: true
+        hourly_rate_override:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+          nullable: true
+        resolved_hourly_rate:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+          readOnly: true
+          nullable: true
+        planned_value:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+          readOnly: true
+          nullable: true
+        version:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        archived_at:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - assignee_name
+      - created_at
+      - id
+      - planned_value
+      - project
+      - resolved_hourly_rate
+      - status_label
+      - title
+      - updated_at
+    WorkPackageAuditEvent:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        action:
+          $ref: '#/components/schemas/ActionEnum'
+        version:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        changes: {}
+        actor:
+          type: string
+          nullable: true
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - action
+      - actor
+      - created_at
+      - id
+      - version
+    WorkPackageCreate:
+      type: object
+      properties:
+        project:
+          type: string
+          format: uuid
+        title:
+          type: string
+          maxLength: 200
+        description:
+          type: string
+        status:
+          $ref: '#/components/schemas/WorkPackageStatusEnum'
+        planned_hours:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+        assignee:
+          type: integer
+          nullable: true
+        hourly_rate_override:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+          nullable: true
+      required:
+      - planned_hours
+      - project
+      - title
+    WorkPackageStatusEnum:
+      enum:
+      - planned
+      - in_progress
+      - blocked
+      - done
+      type: string
+      description: |-
+        * `planned` - Geplant
+        * `in_progress` - In Arbeit
+        * `blocked` - Blockiert
+        * `done` - Erledigt
   securitySchemes:
     cookieAuth:
       type: apiKey

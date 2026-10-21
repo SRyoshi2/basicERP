@@ -2,8 +2,10 @@ from decimal import Decimal
 
 from rest_framework import serializers
 
-from .models import Project, ProjectAuditEvent
-from .services import create_project, update_project
+from .models import Project, ProjectAuditEvent, WorkPackage, WorkPackageAuditEvent
+from .services import (
+    create_project, create_work_package, update_project, update_work_package,
+)
 
 
 class ProjectSerializer(serializers.ModelSerializer):
@@ -72,3 +74,111 @@ class ProjectAuditEventSerializer(serializers.ModelSerializer):
 
     def get_actor(self, obj) -> str | None:
         return obj.actor.username if obj.actor else None
+
+
+class AssigneeOptionSerializer(serializers.Serializer):
+    id = serializers.CharField()
+    username = serializers.CharField()
+    display_name = serializers.SerializerMethodField()
+
+    def get_display_name(self, obj) -> str:
+        return obj.get_full_name().strip() or obj.username
+
+
+class WorkPackageSerializer(serializers.ModelSerializer):
+    status_label = serializers.CharField(source="get_status_display", read_only=True)
+    assignee_name = serializers.SerializerMethodField()
+    resolved_hourly_rate = serializers.DecimalField(
+        max_digits=12, decimal_places=2, read_only=True, allow_null=True
+    )
+    planned_value = serializers.DecimalField(
+        max_digits=14, decimal_places=2, read_only=True, allow_null=True
+    )
+
+    class Meta:
+        model = WorkPackage
+        fields = (
+            "id", "project", "title", "description", "status", "status_label", "planned_hours",
+            "assignee", "assignee_name", "hourly_rate_override", "resolved_hourly_rate",
+            "planned_value", "version", "archived_at", "created_at", "updated_at",
+        )
+
+    def get_assignee_name(self, obj) -> str | None:
+        if not obj.assignee:
+            return None
+        return obj.assignee.get_full_name().strip() or obj.assignee.username
+
+
+class WorkPackageWriteMixin(serializers.ModelSerializer):
+    planned_hours = serializers.DecimalField(
+        max_digits=10, decimal_places=2, min_value=Decimal("0")
+    )
+    hourly_rate_override = serializers.DecimalField(
+        max_digits=12, decimal_places=2, min_value=Decimal("0"), allow_null=True, required=False
+    )
+
+    class Meta:
+        model = WorkPackage
+        fields = (
+            "project", "title", "description", "status", "planned_hours", "assignee",
+            "hourly_rate_override",
+        )
+
+    def to_representation(self, instance):
+        return WorkPackageSerializer(instance, context=self.context).data
+
+    def validate_project(self, value):
+        if value.archived_at is not None:
+            raise serializers.ValidationError(
+                "Für archivierte Projekte können keine Arbeitspakete gepflegt werden."
+            )
+        return value
+
+    def validate_assignee(self, value):
+        if value is not None and not value.is_active:
+            raise serializers.ValidationError("Nur aktive Benutzer können zugeordnet werden.")
+        return value
+
+
+class WorkPackageCreateSerializer(WorkPackageWriteMixin):
+    def create(self, validated_data):
+        return create_work_package(validated_data, self.context["request"].user)
+
+
+class WorkPackageUpdateSerializer(WorkPackageWriteMixin):
+    project = serializers.PrimaryKeyRelatedField(read_only=True)
+    version = serializers.IntegerField(min_value=1, required=True)
+
+    class Meta(WorkPackageWriteMixin.Meta):
+        fields = (*WorkPackageWriteMixin.Meta.fields, "version")
+
+    def validate(self, attrs):
+        if self.instance.archived_at is not None:
+            raise serializers.ValidationError(
+                {"work_package": "Archivierte Arbeitspakete sind unveränderbar."}
+            )
+        return attrs
+
+    def update(self, instance, validated_data):
+        return update_work_package(instance.pk, validated_data, self.context["request"].user)
+
+
+class WorkPackageAuditEventSerializer(serializers.ModelSerializer):
+    actor = serializers.SerializerMethodField()
+
+    class Meta:
+        model = WorkPackageAuditEvent
+        fields = ("id", "action", "version", "changes", "actor", "created_at")
+
+    def get_actor(self, obj) -> str | None:
+        return obj.actor.username if obj.actor else None
+
+
+class ProjectControllingSerializer(serializers.Serializer):
+    work_package_count = serializers.IntegerField()
+    planned_hours = serializers.DecimalField(max_digits=12, decimal_places=2)
+    planned_value = serializers.DecimalField(max_digits=14, decimal_places=2)
+    unpriced_work_package_count = serializers.IntegerField()
+    remaining_hours = serializers.DecimalField(max_digits=12, decimal_places=2, allow_null=True)
+    remaining_amount = serializers.DecimalField(max_digits=14, decimal_places=2, allow_null=True)
+    progress_percent = serializers.DecimalField(max_digits=5, decimal_places=2)

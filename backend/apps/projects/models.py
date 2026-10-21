@@ -87,3 +87,99 @@ class ProjectAuditEvent(models.Model):
 
     class Meta:
         ordering = ("-created_at",)
+
+
+class WorkPackage(models.Model):
+    class Status(models.TextChoices):
+        PLANNED = "planned", "Geplant"
+        IN_PROGRESS = "in_progress", "In Arbeit"
+        BLOCKED = "blocked", "Blockiert"
+        DONE = "done", "Erledigt"
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name="work_packages")
+    title = models.CharField(max_length=200)
+    description = models.TextField(blank=True)
+    status = models.CharField(max_length=16, choices=Status.choices, default=Status.PLANNED)
+    planned_hours = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    assignee = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="assigned_work_packages",
+    )
+    hourly_rate_override = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
+    version = models.PositiveIntegerField(default=1)
+    archived_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        on_delete=models.SET_NULL,
+        related_name="created_work_packages",
+    )
+    updated_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        on_delete=models.SET_NULL,
+        related_name="updated_work_packages",
+    )
+
+    class Meta:
+        ordering = ("status", "created_at", "id")
+        indexes = [
+            models.Index(fields=("project", "status", "archived_at")),
+            models.Index(fields=("assignee", "archived_at")),
+        ]
+        constraints = [
+            models.CheckConstraint(condition=models.Q(planned_hours__gte=0), name="work_package_planned_hours_non_negative"),
+            models.CheckConstraint(
+                condition=models.Q(hourly_rate_override__isnull=True) | models.Q(hourly_rate_override__gte=0),
+                name="work_package_hourly_rate_non_negative",
+            ),
+        ]
+
+    @property
+    def resolved_hourly_rate(self):
+        if self.hourly_rate_override is not None:
+            return self.hourly_rate_override
+        return self.project.default_hourly_rate
+
+    @property
+    def planned_value(self):
+        rate = self.resolved_hourly_rate
+        return self.planned_hours * rate if rate is not None else None
+
+    def clean(self):
+        if self.project_id and self.project.archived_at is not None:
+            raise ValidationError({"project": "Für archivierte Projekte können keine Arbeitspakete gepflegt werden."})
+        if self.assignee_id and not self.assignee.is_active:
+            raise ValidationError({"assignee": "Nur aktive Benutzer können zugeordnet werden."})
+
+    def __str__(self):
+        return f"{self.project.project_number} · {self.title}"
+
+
+class WorkPackageAuditEvent(models.Model):
+    class Action(models.TextChoices):
+        CREATED = "created", "Erstellt"
+        UPDATED = "updated", "Geändert"
+        ARCHIVED = "archived", "Archiviert"
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    work_package = models.ForeignKey(WorkPackage, on_delete=models.PROTECT, related_name="audit_events")
+    action = models.CharField(max_length=16, choices=Action.choices)
+    version = models.PositiveIntegerField()
+    changes = models.JSONField(default=dict)
+    actor = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        on_delete=models.SET_NULL,
+        related_name="work_package_audit_events",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ("-created_at",)

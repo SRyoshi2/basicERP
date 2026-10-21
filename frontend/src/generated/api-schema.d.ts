@@ -452,6 +452,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/projects/{id}/controlling/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["projects_controlling_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/projects/{id}/history/": {
         parameters: {
             query?: never;
@@ -460,6 +476,86 @@ export interface paths {
             cookie?: never;
         };
         get: operations["projects_history_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/assignees/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["projects_assignees_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/work-packages/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["projects_work_packages_list"];
+        put?: never;
+        post: operations["projects_work_packages_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/work-packages/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["projects_work_packages_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["projects_work_packages_partial_update"];
+        trace?: never;
+    };
+    "/api/v1/projects/work-packages/{id}/archive/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["projects_work_packages_archive_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/work-packages/{id}/history/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["projects_work_packages_history_list"];
         put?: never;
         post?: never;
         delete?: never;
@@ -505,6 +601,11 @@ export interface components {
         };
         ApiErrorResponse: {
             error: components["schemas"]["ApiError"];
+        };
+        AssigneeOption: {
+            id: string;
+            username: string;
+            readonly display_name: string;
         };
         CatalogAuditEvent: {
             /** Format: uuid */
@@ -876,6 +977,36 @@ export interface components {
             previous?: string | null;
             results: components["schemas"]["Project"][];
         };
+        PaginatedWorkPackageAuditEventList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=4
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=2
+             */
+            previous?: string | null;
+            results: components["schemas"]["WorkPackageAuditEvent"][];
+        };
+        PaginatedWorkPackageList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=4
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=2
+             */
+            previous?: string | null;
+            results: components["schemas"]["WorkPackage"][];
+        };
         PatchedCatalogItemUpdate: {
             kind?: components["schemas"]["CatalogItemKindEnum"];
             name?: string;
@@ -950,6 +1081,19 @@ export interface components {
             default_hourly_rate?: string | null;
             version?: number;
         };
+        PatchedWorkPackageUpdate: {
+            /** Format: uuid */
+            readonly project?: string;
+            title?: string;
+            description?: string;
+            status?: components["schemas"]["WorkPackageStatusEnum"];
+            /** Format: decimal */
+            planned_hours?: string;
+            assignee?: number | null;
+            /** Format: decimal */
+            hourly_rate_override?: string | null;
+            version?: number;
+        };
         Project: {
             /** Format: uuid */
             readonly id: string;
@@ -991,6 +1135,20 @@ export interface components {
             readonly actor: string | null;
             /** Format: date-time */
             readonly created_at: string;
+        };
+        ProjectControlling: {
+            work_package_count: number;
+            /** Format: decimal */
+            planned_hours: string;
+            /** Format: decimal */
+            planned_value: string;
+            unpriced_work_package_count: number;
+            /** Format: decimal */
+            remaining_hours: string | null;
+            /** Format: decimal */
+            remaining_amount: string | null;
+            /** Format: decimal */
+            progress_percent: string;
         };
         ProjectCreate: {
             /** Format: uuid */
@@ -1034,6 +1192,65 @@ export interface components {
             is_staff: boolean;
             must_change_password: boolean;
         };
+        WorkPackage: {
+            /** Format: uuid */
+            readonly id: string;
+            /** Format: uuid */
+            project: string;
+            title: string;
+            description?: string;
+            status?: components["schemas"]["WorkPackageStatusEnum"];
+            readonly status_label: string;
+            /** Format: decimal */
+            planned_hours?: string;
+            assignee?: number | null;
+            readonly assignee_name: string | null;
+            /** Format: decimal */
+            hourly_rate_override?: string | null;
+            /** Format: decimal */
+            readonly resolved_hourly_rate: string | null;
+            /** Format: decimal */
+            readonly planned_value: string | null;
+            /** Format: int64 */
+            version?: number;
+            /** Format: date-time */
+            archived_at?: string | null;
+            /** Format: date-time */
+            readonly created_at: string;
+            /** Format: date-time */
+            readonly updated_at: string;
+        };
+        WorkPackageAuditEvent: {
+            /** Format: uuid */
+            readonly id: string;
+            action: components["schemas"]["ActionEnum"];
+            /** Format: int64 */
+            version: number;
+            changes?: unknown;
+            readonly actor: string | null;
+            /** Format: date-time */
+            readonly created_at: string;
+        };
+        WorkPackageCreate: {
+            /** Format: uuid */
+            project: string;
+            title: string;
+            description?: string;
+            status?: components["schemas"]["WorkPackageStatusEnum"];
+            /** Format: decimal */
+            planned_hours: string;
+            assignee?: number | null;
+            /** Format: decimal */
+            hourly_rate_override?: string | null;
+        };
+        /**
+         * @description * `planned` - Geplant
+         *     * `in_progress` - In Arbeit
+         *     * `blocked` - Blockiert
+         *     * `done` - Erledigt
+         * @enum {string}
+         */
+        WorkPackageStatusEnum: "planned" | "in_progress" | "blocked" | "done";
     };
     responses: never;
     parameters: never;
@@ -2132,6 +2349,28 @@ export interface operations {
             };
         };
     };
+    projects_controlling_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Ein UUID-String, der project identifiziert. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectControlling"];
+                };
+            };
+        };
+    };
     projects_history_list: {
         parameters: {
             query?: never;
@@ -2150,6 +2389,192 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ProjectAuditEvent"][];
+                };
+            };
+        };
+    };
+    projects_assignees_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AssigneeOption"][];
+                };
+            };
+        };
+    };
+    projects_work_packages_list: {
+        parameters: {
+            query: {
+                archived?: "all" | "false" | "true";
+                /** @description Eine Seitenzahl in der paginierten Ergebnismenge. */
+                page?: number;
+                project: string;
+                status?: "blocked" | "done" | "in_progress" | "planned";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedWorkPackageList"];
+                };
+            };
+        };
+    };
+    projects_work_packages_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WorkPackageCreate"];
+                "application/x-www-form-urlencoded": components["schemas"]["WorkPackageCreate"];
+                "multipart/form-data": components["schemas"]["WorkPackageCreate"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkPackage"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    projects_work_packages_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkPackage"];
+                };
+            };
+        };
+    };
+    projects_work_packages_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedWorkPackageUpdate"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedWorkPackageUpdate"];
+                "multipart/form-data": components["schemas"]["PatchedWorkPackageUpdate"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkPackage"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    projects_work_packages_archive_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkPackage"];
+                };
+            };
+        };
+    };
+    projects_work_packages_history_list: {
+        parameters: {
+            query?: {
+                /** @description Eine Seitenzahl in der paginierten Ergebnismenge. */
+                page?: number;
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedWorkPackageAuditEventList"];
                 };
             };
         };
