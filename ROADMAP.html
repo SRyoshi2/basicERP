@@ -138,13 +138,13 @@
       </div>
       <aside class="status-card">
         <p class="eyebrow" style="color:#84caff">Aktueller Stand</p>
-        <h2>Phase 1a läuft</h2>
-        <div class="big-number">85%</div>
-        <div class="progress" aria-label="Phase 1a zu 85 Prozent abgeschlossen"><span style="width:85%"></span></div>
+        <h2>Phase 1a abgeschlossen</h2>
+        <div class="big-number">100%</div>
+        <div class="progress" aria-label="Phase 1a vollständig abgeschlossen"><span style="width:100%"></span></div>
         <ul class="meta">
-          <li><strong>Gesamtfortschritt:</strong> ca. 23 %</li>
-          <li><strong>Letzte Aktualisierung:</strong> 12.10.2026</li>
-          <li><strong>Nächster Schritt:</strong> Backup-/Restore-Smoke-Test und Abnahme von Phase 1a</li>
+          <li><strong>Gesamtfortschritt:</strong> ca. 25 %</li>
+          <li><strong>Letzte Aktualisierung:</strong> 21.10.2026</li>
+          <li><strong>Nächster Schritt:</strong> Phase 2 · Projekte, Arbeitspakete und Budgets</li>
           <li><strong>Zieltermin:</strong> keiner; Qualität vor Kalender</li>
         </ul>
       </aside>
@@ -187,10 +187,10 @@
         <li class="ok">Technische Basis- und Pflichtfeldprüfung mit verständlichem Bericht</li>
         <li class="ok">API und Oberfläche für Upload, Suche, Filter, Detail und Originaldownload</li>
         <li class="ok">Reproduzierbarer Beispielbeleg für den Selbsttest</li>
-        <li class="wait">Konsistenter Backup-/Restore-Smoke-Test für Datenbank und Archiv</li>
-        <li class="wait">Abnahme und Neuschätzung der Folgephasen</li>
+        <li class="ok">Konsistenter Backup-/Restore-Smoke-Test für Datenbank und Archiv</li>
+        <li class="ok">Abnahme und Neuschätzung der Folgephasen</li>
       </ul>
-      <div class="notice success">Der funktionale Durchstich umfasst jetzt E-Rechnungen und normale PDF-Rechnungen. 36 Backend-Tests sowie reale PostgreSQL-/HTTP-Tests bestätigen Upload, manuelle Erfassung, Extraktion, Deduplizierung, getrennte Archivablage und bytegenauen Download. Die aktuelle Prüfung ersetzt ausdrücklich keine vollständige XSD-/Schematron-, KoSIT- oder Rechtsprüfung; diese folgt beim E-Rechnungsausgang in v0.6.</div>
+      <div class="notice success">Phase 1a ist vollständig abgenommen. 36 Backend-Tests sowie reale PostgreSQL-/HTTP-Tests bestätigen den Rechnungseingang. Ein konsistentes Backup wurde in ein separates Compose-Projekt wiederhergestellt; Objektzahlen und Datei-Hashes von Datenbank, Archiv und Medien stimmen überein. Die E-Rechnungsprüfung ersetzt weiterhin keine vollständige XSD-/Schematron-, KoSIT- oder Rechtsprüfung.</div>
     </section>
 
     <section id="phasen" class="panel">
@@ -199,7 +199,7 @@
       <div class="phase-list">
         <article class="phase"><div class="phase-head"><span class="number">0</span><div><h3>v0.1 – Fundament</h3><p>Docker, Auth, Firma, API, App-Shell, CI.</p></div><span class="state done">Abgeschlossen</span></div></article>
         <article class="phase"><div class="phase-head"><span class="number">1</span><div><h3>v0.2 – CRM &amp; Katalog</h3><p>Kontakte, Adressen, Aktivitäten, Leistungen, CSV-Import.</p></div><span class="state done">Abgeschlossen</span></div></article>
-        <article class="phase"><div class="phase-head"><span class="number">1a</span><div><h3>v0.2.1 – Rechnungseingang light</h3><p>Normale PDF- und E-Rechnungen, Metadaten, Prüfung und sichere Ablage; funktionaler Kern fertig, Betriebsabnahme offen.</p></div><span class="state active">Aktiv · 85 %</span></div></article>
+        <article class="phase"><div class="phase-head"><span class="number">1a</span><div><h3>v0.2.1 – Rechnungseingang light</h3><p>Normale PDF- und E-Rechnungen, Metadaten, Prüfung, sichere Ablage und getesteter Restore.</p></div><span class="state done">Abgeschlossen</span></div></article>
         <article class="phase"><div class="phase-head"><span class="number">2</span><div><h3>v0.3 – Projekte</h3><p>Projekte, Arbeitspakete, Budgets, Sätze und Board.</p></div><span class="state planned">Geplant</span></div></article>
         <article class="phase"><div class="phase-head"><span class="number">3</span><div><h3>v0.4 – Zeit &amp; Portal</h3><p>Zeiten, Leistungen, Abwesenheiten und Ist-Controlling.</p></div><span class="state planned">Geplant</span></div></article>
         <article class="phase"><div class="phase-head"><span class="number">4</span><div><h3>v0.5 – Dokumentkern</h3><p>Angebot, Rechnung, Festschreibung, PDF, Versand und Zahlung.</p></div><span class="state planned">Geplant</span></div></article>
@@ -236,6 +236,7 @@
         <article class="test-card"><h3>3 · Logs</h3><pre>docker compose logs --tail 100</pre><p>Keine dauerhaften Tracebacks, Neustartschleifen oder Datenbankfehler.</p></article>
         <article class="test-card"><h3>4 · API-Vertrag</h3><pre>cd frontend
 npm run api:check</pre><p>Mit Node.js installiert: OpenAPI und generierte TypeScript-Typen müssen ohne Diff übereinstimmen.</p></article>
+        <article class="test-card"><h3>5 · Backup</h3><pre>powershell -ExecutionPolicy Bypass -File .\scripts\backup-windows.ps1</pre><p>Erzeugt Dump, Archiv, Medien, Manifest und SHA-256-Prüfsummen unter <code>backups/</code>.</p></article>
       </div>
       <div class="notice success">Zuletzt am 12.10.2026 auf dem aktuellen Windows-System erfolgreich getestet. Alle fünf Dienste laufen; E-Rechnungsupload, Deduplizierung, getrennte Archivablage und bytegleicher Download wurden real durchgestochen.</div>
     </section>
@@ -257,6 +258,9 @@ npm run api:check</pre><p>Mit Node.js installiert: OpenAPI und generierte TypeSc
       <pre>docker compose ps
 curl --fail http://localhost:8080/api/v1/health/ready/
 docker compose logs --tail 100</pre>
+      <p>Backup und Restore:</p>
+      <pre>./scripts/backup-ubuntu.sh
+./scripts/restore-ubuntu.sh --backup ./backups/basicerp-YYYYMMDD-HHMMSS</pre>
     </section>
 
     <section id="betrieb" class="panel">
@@ -270,6 +274,8 @@ docker compose logs --tail 100</pre>
           <tr><td>Stoppen</td><td><code>docker compose stop</code></td><td>Datenvolumes bleiben erhalten.</td></tr>
           <tr><td>Starten</td><td><code>docker compose up -d</code></td><td>Startet vorhandene Installation.</td></tr>
           <tr><td>Neubauen</td><td><code>docker compose up -d --build</code></td><td>Nach Quellcodeänderungen.</td></tr>
+          <tr><td>Backup (Windows)</td><td><code>powershell -ExecutionPolicy Bypass -File .\scripts\backup-windows.ps1</code></td><td>Sichert DB, Archiv und Medien mit Prüfsummen.</td></tr>
+          <tr><td>Backup (Ubuntu)</td><td><code>./scripts/backup-ubuntu.sh</code></td><td>Kurzes Wartungsfenster während der konsistenten Sicherung.</td></tr>
           <tr><td>Django-Prüfung</td><td><code>docker compose run --rm web python manage.py check</code></td><td>Prüft die installierte Backend-Konfiguration.</td></tr>
           <tr><td>API-Vertrag</td><td><code>cd frontend &amp;&amp; npm run api:check</code></td><td>Erzeugt Frontend-Typen neu und schlägt bei nicht eingecheckter API-Drift fehl.</td></tr>
         </tbody>
@@ -303,6 +309,8 @@ docker compose logs --tail 100</pre>
           <tr><td>12.10.2026</td><td>Phase 1 / Abschluss</td><td>Kontakt-Timeline für Notizen, Anrufe, E-Mails und Termine mit Autor, Zeitpunkt, Bearbeitung, Versionsschutz und Admin-Archivierung umgesetzt. API, React-Oberfläche, PostgreSQL-/HTTP-Durchstich und 29 Backend-Tests erfolgreich; v0.2 damit abgeschlossen.</td></tr>
           <tr><td>12.10.2026</td><td>Phase 1a / Funktionsdurchstich</td><td>E-Rechnungseingang für XRechnung UBL/CII und ZUGFeRD mit sicherer XML-Verarbeitung, Basisprüfung, Metadaten, SHA-256-Deduplizierung, unveränderlicher Originalablage, Download, API und React-Oberfläche umgesetzt. 35 Backend-Tests, Frontend-Build sowie realer PostgreSQL-/HTTP-/Archiv-Volume-Test erfolgreich.</td></tr>
           <tr><td>12.10.2026</td><td>Phase 1a / Normale Rechnungen</td><td>Rechnungseingang um gewöhnliche PDF-Rechnungen ohne eingebettete XML erweitert. Pflichtmetadaten werden manuell erfasst, das Original unverändert archiviert und ausdrücklich nicht als inhaltlich geprüfte E-Rechnung dargestellt; Testsatz auf 36 Backend-Tests erweitert.</td></tr>
+          <tr><td>21.10.2026</td><td>Phase 1a / Abschluss</td><td>Backup- und Restore-Skripte für Windows und Ubuntu mit Wartungsfenster, Prüfsummen, Manifest, Sicherheitsbackup und expliziter Restore-Bestätigung ergänzt. Wiederherstellung in isoliertem Compose-Projekt erfolgreich; Objektzahlen und Datei-Hashes identisch. Phase 1a damit abgeschlossen.</td></tr>
+          <tr><td>21.10.2026</td><td>Dependency-Härtung</td><td>Eine beim Abschlussbuild neu gemeldete Vite-Schwachstelle durch Aktualisierung auf 7.3.7 geschlossen; Dependency-Audit als CI-Release-Gate ergänzt.</td></tr>
         </tbody>
       </table>
     </section>

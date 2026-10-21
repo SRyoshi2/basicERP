@@ -47,8 +47,10 @@ jobs:
         run: npm ci
       - name: Check and build frontend
         working-directory: frontend
-        run: npm run api:check && npm run lint && npm run build
+        run: npm audit --audit-level=high && npm run api:check && npm run lint && npm run build
       - name: Validate and build containers
         run: |
+          bash -n scripts/backup-ubuntu.sh scripts/restore-ubuntu.sh scripts/install-ubuntu.sh
+          pwsh -NoProfile -Command '$failed = $false; Get-ChildItem scripts/*.ps1 | ForEach-Object { $parseErrors = $null; [System.Management.Automation.Language.Parser]::ParseFile($_.FullName, [ref]$null, [ref]$parseErrors) | Out-Null; if ($parseErrors) { $parseErrors | Out-String | Write-Error; $failed = $true } }; if ($failed) { exit 1 }'
           docker compose --env-file .env.example config --quiet
           docker compose --env-file .env.example build

@@ -85,6 +85,26 @@ cd frontend
 npm run api:check
 ```
 
+## Backup und Restore
+
+Unter Windows erstellt folgender Befehl eine konsistente Sicherung von
+PostgreSQL, Archiv und Medien:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\backup-windows.ps1
+```
+
+Unter Ubuntu lautet der entsprechende Aufruf:
+
+```bash
+./scripts/backup-ubuntu.sh
+```
+
+Restore-Befehle, Sicherheitsabfragen, Prüfsummen und der getestete Rückfallweg
+sind in [`docs/BACKUP_RESTORE.md`](docs/BACKUP_RESTORE.md) dokumentiert. Die
+`.env` mit Geheimnissen ist bewusst nicht im Backup enthalten und muss separat
+geschützt gesichert werden.
+
 Die aktuelle Planung steht in [`ROADMAP.html`](ROADMAP.html), der ausführliche
 Projektplan in [`docs/PROJECT_PLAN.md`](docs/PROJECT_PLAN.md) und die technische
 Architektur in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).

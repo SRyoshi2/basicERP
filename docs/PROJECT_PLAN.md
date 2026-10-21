@@ -1,7 +1,7 @@
 # basicERP – Projektplan
 
-**Stand:** 12.10.2026
-**Status:** Freigegeben; Phase 0 und Phase 1 abgeschlossen, Phase 1a zu 85 % umgesetzt
+**Stand:** 21.10.2026
+**Status:** Freigegeben; Phase 0, Phase 1 und Phase 1a abgeschlossen; Phase 2 als Nächstes
 **Quelle:** [`ROADMAP.md`](../ROADMAP.md)
 
 ## 1. Zielbild
@@ -121,8 +121,8 @@ Abnahmetests benötigen gemeinsame Entscheidungen und teilweise externe Prüfung
 - Unveränderliches Dateiobjekt mit SHA-256 und Storage-Abstraktion. **Erledigt.**
 - E-Rechnungsupload inklusive Basisvalidierung und Metadatenextraktion. **Erledigt.**
 - Normale PDF-Rechnungen mit manuellen Pflichtmetadaten. **Erledigt.**
-- Installations-, Backup- und Restore-Smoke-Test.
-- Retrospektive und Neuschätzung der Folgephasen.
+- Installations-, Backup- und Restore-Smoke-Test. **Erledigt.**
+- Retrospektive und Neuschätzung der Folgephasen. **Erledigt; Lieferreihenfolge bleibt bestehen.**
 
 ## 6. Arbeitsweise und Qualitätsregeln
 

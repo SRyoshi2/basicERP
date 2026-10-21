@@ -12,6 +12,7 @@ frontend/dist/
 media/
 /archive/
 /backend/archive/
+/backups/
 *.log
 .idea/
 .vscode/
