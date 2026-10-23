@@ -564,6 +564,86 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/time/entries/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["time_entries_list"];
+        put?: never;
+        post: operations["time_entries_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/time/entries/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["time_entries_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["time_entries_partial_update"];
+        trace?: never;
+    };
+    "/api/v1/time/entries/{id}/archive/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["time_entries_archive_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/time/entries/{id}/history/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["time_entries_history_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/time/project-summary/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["time_project_summary_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -977,6 +1057,21 @@ export interface components {
             previous?: string | null;
             results: components["schemas"]["Project"][];
         };
+        PaginatedTimeEntryList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=4
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=2
+             */
+            previous?: string | null;
+            results: components["schemas"]["TimeEntry"][];
+        };
         PaginatedWorkPackageAuditEventList: {
             /** @example 123 */
             count: number;
@@ -1081,6 +1176,18 @@ export interface components {
             default_hourly_rate?: string | null;
             version?: number;
         };
+        PatchedTimeEntryUpdate: {
+            /** Format: uuid */
+            project?: string;
+            /** Format: uuid */
+            work_package?: string;
+            /** Format: date */
+            work_date?: string;
+            duration_minutes?: number;
+            description?: string;
+            billable?: boolean;
+            version?: number;
+        };
         PatchedWorkPackageUpdate: {
             /** Format: uuid */
             readonly project?: string;
@@ -1175,12 +1282,93 @@ export interface components {
          * @enum {string}
          */
         ProjectStatusEnum: "quotation" | "active" | "paused" | "completed";
+        ProjectTimeSummary: {
+            entry_count: number;
+            /** Format: decimal */
+            actual_hours: string;
+            /** Format: decimal */
+            billable_hours: string;
+            /** Format: decimal */
+            unbilled_hours: string;
+            /** Format: decimal */
+            non_billable_hours: string;
+            /** Format: decimal */
+            actual_value: string;
+            /** Format: decimal */
+            unbilled_value: string;
+            /** Format: decimal */
+            remaining_budget_hours: string | null;
+            /** Format: decimal */
+            remaining_budget_amount: string | null;
+        };
         /**
          * @description * `admin` - admin
          *     * `employee` - employee
          * @enum {string}
          */
         RoleEnum: "admin" | "employee";
+        TimeEntry: {
+            /** Format: uuid */
+            readonly id: string;
+            readonly employee: number;
+            readonly employee_name: string;
+            /** Format: uuid */
+            project: string;
+            readonly project_number: string;
+            readonly project_name: string;
+            /** Format: uuid */
+            work_package: string;
+            readonly work_package_title: string;
+            /** Format: date */
+            work_date: string;
+            /** Format: int64 */
+            duration_minutes: number;
+            /** Format: decimal */
+            readonly duration_hours: string;
+            description: string;
+            billable?: boolean;
+            readonly billing_status: components["schemas"]["TimeEntryBillingStatusEnum"];
+            readonly billing_status_label: string;
+            /** Format: decimal */
+            readonly hourly_rate_snapshot: string | null;
+            /** Format: decimal */
+            readonly billable_value: string | null;
+            readonly version: number;
+            /** Format: date-time */
+            readonly archived_at: string | null;
+            /** Format: date-time */
+            readonly created_at: string;
+            /** Format: date-time */
+            readonly updated_at: string;
+        };
+        TimeEntryAuditEvent: {
+            /** Format: uuid */
+            readonly id: string;
+            action: components["schemas"]["ActionEnum"];
+            /** Format: int64 */
+            version: number;
+            changes?: unknown;
+            readonly actor: string | null;
+            /** Format: date-time */
+            readonly created_at: string;
+        };
+        /**
+         * @description * `unbilled` - Nicht abgerechnet
+         *     * `billed` - Abgerechnet
+         * @enum {string}
+         */
+        TimeEntryBillingStatusEnum: "unbilled" | "billed";
+        TimeEntryCreate: {
+            /** Format: uuid */
+            project: string;
+            /** Format: uuid */
+            work_package: string;
+            /** Format: date */
+            work_date: string;
+            duration_minutes: number;
+            description: string;
+            billable?: boolean;
+        };
         User: {
             id: string;
             username: string;
@@ -2575,6 +2763,215 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PaginatedWorkPackageAuditEventList"];
+                };
+            };
+        };
+    };
+    time_entries_list: {
+        parameters: {
+            query?: {
+                archived?: "all" | "false" | "true";
+                billable?: boolean;
+                date_from?: string;
+                date_to?: string;
+                /** @description Nur für Administratoren */
+                employee?: number;
+                /** @description Eine Seitenzahl in der paginierten Ergebnismenge. */
+                page?: number;
+                project?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedTimeEntryList"];
+                };
+            };
+        };
+    };
+    time_entries_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TimeEntryCreate"];
+                "application/x-www-form-urlencoded": components["schemas"]["TimeEntryCreate"];
+                "multipart/form-data": components["schemas"]["TimeEntryCreate"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TimeEntry"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    time_entries_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Ein UUID-String, der time entry identifiziert. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TimeEntry"];
+                };
+            };
+        };
+    };
+    time_entries_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Ein UUID-String, der time entry identifiziert. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedTimeEntryUpdate"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedTimeEntryUpdate"];
+                "multipart/form-data": components["schemas"]["PatchedTimeEntryUpdate"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TimeEntry"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    time_entries_archive_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Ein UUID-String, der time entry identifiziert. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TimeEntry"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    time_entries_history_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Ein UUID-String, der time entry identifiziert. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TimeEntryAuditEvent"][];
+                };
+            };
+        };
+    };
+    time_project_summary_retrieve: {
+        parameters: {
+            query: {
+                project: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectTimeSummary"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };

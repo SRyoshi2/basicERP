@@ -31,6 +31,7 @@ INSTALLED_APPS = [
     "apps.crm",
     "apps.catalog",
     "apps.projects",
+    "apps.timetracking",
     "apps.archive",
 ]
 
@@ -144,6 +145,7 @@ SPECTACULAR_SETTINGS = {
         "CatalogTaxRateEnum": (("19.00", "19 %"), ("7.00", "7 %"), ("0.00", "0 %")),
         "ProjectStatusEnum": (("quotation", "Angebot"), ("active", "Aktiv"), ("paused", "Pausiert"), ("completed", "Abgeschlossen")),
         "WorkPackageStatusEnum": (("planned", "Geplant"), ("in_progress", "In Arbeit"), ("blocked", "Blockiert"), ("done", "Erledigt")),
+        "TimeEntryBillingStatusEnum": (("unbilled", "Nicht abgerechnet"), ("billed", "Abgerechnet")),
         "IncomingInvoiceFormatEnum": (
             ("standard_pdf", "Normale PDF-Rechnung"),
             ("xrechnung_ubl", "XRechnung UBL"),

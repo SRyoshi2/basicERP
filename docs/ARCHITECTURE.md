@@ -1,7 +1,7 @@
 # basicERP – Softwarearchitektur
 
-**Stand:** 21.10.2026
-**Status:** Angenommen; Phase 0, Phase 1, Phase 1a und Phase 2 abgeschlossen
+**Stand:** 23.10.2026
+**Status:** Angenommen; Phase 0, Phase 1, Phase 1a und Phase 2 abgeschlossen; Phase 3 in Umsetzung
 **Zugehörige Entscheidung:** [`ADR-0001`](adr/0001-modularer-monolith.md), [`ADR-0002`](adr/0002-belegfestschreibung-und-outbox.md)
 
 ## 1. Kurzfassung
@@ -241,7 +241,7 @@ Freigabelogik folgt der Trennung konsequent.
 | CatalogItem | Preis/Steueränderungen überschreiben keine historischen Belege |
 | Project | Kunde, Status und Budget; Sätze werden zeitlich/sachlich eindeutig aufgelöst |
 | WorkPackage | gehört genau zu einem Projekt; Status, Planstunden, Mitarbeiter und optionaler Satz-Override |
-| TimeEntry | positive Dauer, Mitarbeiter/Projekt, Abrechnungsstatus; abgerechnete Einträge gesperrt |
+| TimeEntry | positive Dauer, Mitarbeiter/Projekt/Arbeitspaket; Satz-Snapshot; Abrechnungsstatus; abgerechnete Einträge gesperrt |
 | Invoice | Summe der Positionen/Steuern; erlaubter Zustandsübergang; finaler Snapshot unveränderlich |
 | NumberSequence | Eindeutigkeit je Dokumentart/Jahr; Zuweisung unter Datenbanksperre |
 | Payment | Summe darf fachlich nachvollziehbar zu offen/teil-/bezahlt führen |
@@ -262,7 +262,19 @@ Teilobjekte. Der abrechnungsnahe Satz wird deterministisch aufgelöst:
 `default_hourly_rate` des Projekts. Fehlen beide Werte, bleibt das Paket im
 Stundenplan enthalten, wird aber als unbepreist ausgewiesen und nicht mit einem
 erfundenen Nullsatz in den Planwert eingerechnet. Das Plancontrolling berechnet
-Fortschritt gewichtet nach Planstunden; erst Phase 3 ergänzt echte Ist-Werte.
+Fortschritt gewichtet nach Planstunden.
+
+Das Modul `timetracking` besitzt die Zeiteinträge und die daraus abgeleiteten
+Ist-Kennzahlen. Beim Anlegen wird der vom Arbeitspaket aufgelöste Stundensatz in
+`hourly_rate_snapshot` übernommen. Spätere Satzänderungen verändern bereits
+erfasste Arbeit dadurch nicht rückwirkend. Dauer wird ganzzahlig in Minuten,
+Geld als `Decimal` gespeichert. Ein Arbeitspaket muss zum gewählten Projekt
+gehören; archivierte Projekte oder Pakete nehmen keine neuen Zeiten an.
+Mitarbeiter lesen und ändern ausschließlich eigene Einträge, Administratoren
+können projekt- und mitarbeiterübergreifend auswerten. Abgerechnete Einträge
+sind unveränderlich. Das Projektmodul bleibt Eigentümer von Plan und Budget;
+die Ist-Zusammenfassung wird über einen öffentlichen, read-only
+`timetracking`-Anwendungsservice bereitgestellt.
 
 ### Rechnungssnapshot
 

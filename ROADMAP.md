@@ -1,6 +1,6 @@
 # basicERP — Fahrplan zur Umsetzung
 
-**Stand:** 21.10.2026 · **Status:** Phase 0, Phase 1, Phase 1a und Phase 2 abgeschlossen
+**Stand:** 23.10.2026 · **Status:** Phase 0, Phase 1, Phase 1a und Phase 2 abgeschlossen; Phase 3 in Umsetzung
 
 > Der fortlaufend aktualisierte Fahrplan mit Umsetzungsstand und Testanleitung
 > liegt in [`ROADMAP.html`](ROADMAP.html). Dieses Dokument bleibt die fachliche
@@ -95,11 +95,19 @@ Planstunden, Planwert, Restbudgets und gewichteter Fortschritt sind umgesetzt.
 ### Phase 3 — Zeit- & Leistungserfassung + Mitarbeiterportal (v0.4)
 **Ziel:** Der tägliche Erfassungs-Workflow — bewusst vor der Rechnungserstellung, damit "Zeiten → Rechnung" später durchgängig ist.
 
-- Zeiteintrag: Datum, Dauer (oder Start/Stopp-Timer), Projekt, Arbeitspaket, Tätigkeitsbeschreibung, abrechenbar ja/nein
+**Umsetzungsstand:** In Umsetzung. Der erste vertikale Schnitt ist abgeschlossen:
+Mitarbeiter erfassen eigene Zeiten in einer mobiltauglichen Wochenansicht; Projekt,
+Arbeitspaket, Datum, Dauer, Beschreibung und Abrechenbarkeit werden gespeichert.
+Der beim Erfassen gültige Stundensatz wird als historischer Snapshot gesichert.
+Projektcontrolling zeigt Ist-, abrechenbare und noch nicht abgerechnete Stunden
+sowie Ist-Wert und Restbudget. Mengenleistungen, Abwesenheiten und CSV-Auswertung
+folgen in den nächsten Schritten.
+
+- Zeiteintrag: Datum, Dauer (oder Start/Stopp-Timer), Projekt, Arbeitspaket, Tätigkeitsbeschreibung, abrechenbar ja/nein **(Basiserfassung erledigt; Timer optional später)**
 - Leistungserfassung: mengenbasierte Einträge aus dem Katalog (z. B. 3 × Beratungspauschale) zusätzlich zu Zeiten
-- Mitarbeiterportal als eigener, reduzierter SPA-Bereich (eigene Route/Rolle): eigene Zeiten erfassen, Wochenansicht, Abwesenheiten beantragen — mobiltauglich zuerst
+- Mitarbeiterportal als eigener, reduzierter SPA-Bereich (eigene Route/Rolle): eigene Zeiten erfassen, Wochenansicht, Abwesenheiten beantragen — mobiltauglich zuerst **(Zeit-Wochenansicht erledigt)**
 - Abwesenheiten: Urlaub, Krankheit, Sonstiges; Genehmigungs-Workflow (beantragt → genehmigt/abgelehnt), Urlaubskonto mit Jahresanspruch
-- Projektcontrolling wird echt: Ist-Stunden vs. Budget, abrechenbar/nicht abrechenbar, noch nicht abgerechnete Zeiten pro Projekt
+- Projektcontrolling wird echt: Ist-Stunden vs. Budget, abrechenbar/nicht abrechenbar, noch nicht abgerechnete Zeiten pro Projekt **(für Zeiten erledigt)**
 - Auswertungen: Zeiten pro Projekt/Mitarbeiter/Zeitraum, CSV-Export
 
 **Fertig wenn:** Ein Mitarbeiter kann seinen Arbeitstag komplett im Portal erfassen; das Projekt zeigt live Budget vs. Ist.

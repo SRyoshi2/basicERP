@@ -75,6 +75,12 @@ export type WorkPackagePage = Omit<
   components["schemas"]["PaginatedWorkPackageList"], "results"
 > & { results: WorkPackage[] };
 export type ProjectControlling = components["schemas"]["ProjectControlling"];
+export type TimeEntry = Required<components["schemas"]["TimeEntry"]>;
+export type TimeEntryInput = components["schemas"]["TimeEntryCreate"];
+export type TimeEntryPage = Omit<components["schemas"]["PaginatedTimeEntryList"], "results"> & {
+  results: TimeEntry[];
+};
+export type ProjectTimeSummary = components["schemas"]["ProjectTimeSummary"];
 export type ManualIncomingInvoiceInput = {
   invoice_number: string;
   issue_date: string;
@@ -369,6 +375,49 @@ export async function archiveWorkPackage(workPackage: WorkPackage): Promise<Work
     method: "POST",
     body: "{}",
   });
+}
+
+export async function getTimeEntries(options: {
+  dateFrom?: string;
+  dateTo?: string;
+  project?: string;
+  employee?: string;
+  page?: number;
+} = {}): Promise<TimeEntryPage> {
+  const params = new URLSearchParams();
+  if (options.dateFrom) params.set("date_from", options.dateFrom);
+  if (options.dateTo) params.set("date_to", options.dateTo);
+  if (options.project) params.set("project", options.project);
+  if (options.employee) params.set("employee", options.employee);
+  if (options.page && options.page > 1) params.set("page", String(options.page));
+  const query = params.size ? `?${params.toString()}` : "";
+  return request<TimeEntryPage>(`/api/v1/time/entries/${query}`);
+}
+
+export async function createTimeEntry(data: TimeEntryInput): Promise<TimeEntry> {
+  return request<TimeEntry>("/api/v1/time/entries/", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function updateTimeEntry(entry: TimeEntry, data: TimeEntryInput): Promise<TimeEntry> {
+  return request<TimeEntry>(`/api/v1/time/entries/${entry.id}/`, {
+    method: "PATCH",
+    body: JSON.stringify({ ...data, version: entry.version }),
+  });
+}
+
+export async function archiveTimeEntry(entry: TimeEntry): Promise<TimeEntry> {
+  return request<TimeEntry>(`/api/v1/time/entries/${entry.id}/archive/`, {
+    method: "POST",
+    body: "{}",
+  });
+}
+
+export async function getProjectTimeSummary(projectId: string): Promise<ProjectTimeSummary> {
+  const params = new URLSearchParams({ project: projectId });
+  return request<ProjectTimeSummary>(`/api/v1/time/project-summary/?${params.toString()}`);
 }
 
 export async function getIncomingInvoices(options: {

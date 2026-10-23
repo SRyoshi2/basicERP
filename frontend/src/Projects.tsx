@@ -1,9 +1,9 @@
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import {
   archiveProject, archiveWorkPackage, createProject, createWorkPackage, getContacts,
-  getProjectAssignees, getProjectControlling, getProjects, getWorkPackages, updateProject,
+  getProjectAssignees, getProjectControlling, getProjects, getProjectTimeSummary, getWorkPackages, updateProject,
   updateWorkPackage, type AssigneeOption, type Contact, type Project, type ProjectControlling,
-  type ProjectInput, type User, type WorkPackage, type WorkPackageInput,
+  type ProjectInput, type ProjectTimeSummary, type User, type WorkPackage, type WorkPackageInput,
 } from "./api";
 
 const inputClass = "mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 font-normal outline-none transition focus:border-violet-600 focus:ring-4 focus:ring-violet-100";
@@ -116,6 +116,7 @@ function Metric({ label, value, warning = false }: { label: string; value: strin
 function WorkPackagesPanel({ project, user }: { project: Project; user: User }) {
   const [items, setItems] = useState<WorkPackage[]>([]);
   const [controlling, setControlling] = useState<ProjectControlling | null>(null);
+  const [actual, setActual] = useState<ProjectTimeSummary | null>(null);
   const [assignees, setAssignees] = useState<AssigneeOption[]>([]);
   const [editing, setEditing] = useState<WorkPackage | null | undefined>(undefined);
   const [mode, setMode] = useState<"board" | "list">("board");
@@ -123,8 +124,8 @@ function WorkPackagesPanel({ project, user }: { project: Project; user: User }) 
 
   const load = useCallback(() => {
     setError("");
-    Promise.all([getWorkPackages(project.id), getProjectControlling(project.id), getProjectAssignees()])
-      .then(([packages, plan, people]) => { setItems(packages.results); setControlling(plan); setAssignees(people); })
+    Promise.all([getWorkPackages(project.id), getProjectControlling(project.id), getProjectTimeSummary(project.id), getProjectAssignees()])
+      .then(([packages, plan, actuals, people]) => { setItems(packages.results); setControlling(plan); setActual(actuals); setAssignees(people); })
       .catch((reason) => setError(reason instanceof Error ? reason.message : "Arbeitspakete konnten nicht geladen werden."));
   }, [project.id]);
   useEffect(() => { load(); }, [load]);
@@ -143,6 +144,7 @@ function WorkPackagesPanel({ project, user }: { project: Project; user: User }) 
   return <section className="mt-7 rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
     <div className="flex flex-wrap items-end justify-between gap-4"><div><p className="text-sm font-bold uppercase tracking-[0.18em] text-violet-700">Planung</p><h2 className="mt-2 text-2xl font-bold text-slate-950">Arbeitspakete &amp; Controlling</h2></div><div className="flex gap-2"><button className={`rounded-lg px-4 py-2 text-sm font-semibold ${mode === "board" ? "bg-slate-950 text-white" : "bg-slate-100 text-slate-700"}`} onClick={() => setMode("board")}>Board</button><button className={`rounded-lg px-4 py-2 text-sm font-semibold ${mode === "list" ? "bg-slate-950 text-white" : "bg-slate-100 text-slate-700"}`} onClick={() => setMode("list")}>Liste</button><button className="rounded-lg bg-violet-700 px-4 py-2 text-sm font-semibold text-white" onClick={() => setEditing(null)}>+ Arbeitspaket</button></div></div>
     {controlling && <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-5"><Metric label="Fortschritt" value={`${controlling.progress_percent} %`} /><Metric label="Planstunden" value={`${controlling.planned_hours} / ${project.budget_hours ?? "—"}`} warning={controlling.remaining_hours !== null && Number(controlling.remaining_hours) < 0} /><Metric label="Planwert" value={`${controlling.planned_value} €`} /><Metric label="Rest Stunden" value={controlling.remaining_hours === null ? "Kein Budget" : `${controlling.remaining_hours} Std.`} warning={controlling.remaining_hours !== null && Number(controlling.remaining_hours) < 0} /><Metric label="Rest Betrag" value={controlling.remaining_amount === null ? "Kein Budget" : `${controlling.remaining_amount} €`} warning={controlling.remaining_amount !== null && Number(controlling.remaining_amount) < 0} /></div>}
+    {actual && <><h3 className="mt-6 text-sm font-bold uppercase tracking-[0.18em] text-violet-700">Ist aus Zeiterfassung</h3><div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-5"><Metric label="Ist-Stunden" value={`${actual.actual_hours} Std.`} /><Metric label="Abrechenbar" value={`${actual.billable_hours} Std.`} /><Metric label="Noch offen" value={`${actual.unbilled_hours} Std.`} /><Metric label="Ist-Wert" value={`${actual.actual_value} €`} /><Metric label="Rest Ist-Budget" value={actual.remaining_budget_amount === null ? "Kein Budget" : `${actual.remaining_budget_amount} €`} warning={actual.remaining_budget_amount !== null && Number(actual.remaining_budget_amount) < 0} /></div></>}
     {controlling && controlling.unpriced_work_package_count > 0 && <p className="mt-4 rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-900">{controlling.unpriced_work_package_count} Arbeitspaket(e) haben weder einen eigenen noch einen Projekt-Stundensatz und fehlen deshalb im Planwert.</p>}
     {error && <p className="mt-4 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-800">{error}</p>}
     {editing !== undefined && <WorkPackageForm project={project} item={editing} assignees={assignees} user={user} onCancel={() => setEditing(undefined)} onSaved={() => { setEditing(undefined); load(); }} />}

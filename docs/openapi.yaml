@@ -1365,6 +1365,235 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedWorkPackageAuditEventList'
           description: ''
+  /api/v1/time/entries/:
+    get:
+      operationId: time_entries_list
+      parameters:
+      - in: query
+        name: archived
+        schema:
+          type: string
+          enum:
+          - all
+          - 'false'
+          - 'true'
+      - in: query
+        name: billable
+        schema:
+          type: boolean
+      - in: query
+        name: date_from
+        schema:
+          type: string
+          format: date
+      - in: query
+        name: date_to
+        schema:
+          type: string
+          format: date
+      - in: query
+        name: employee
+        schema:
+          type: integer
+        description: Nur für Administratoren
+      - name: page
+        required: false
+        in: query
+        description: Eine Seitenzahl in der paginierten Ergebnismenge.
+        schema:
+          type: integer
+      - in: query
+        name: project
+        schema:
+          type: string
+          format: uuid
+      tags:
+      - time
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedTimeEntryList'
+          description: ''
+    post:
+      operationId: time_entries_create
+      tags:
+      - time
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TimeEntryCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TimeEntryCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TimeEntryCreate'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TimeEntry'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+          description: ''
+  /api/v1/time/entries/{id}/:
+    get:
+      operationId: time_entries_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Ein UUID-String, der time entry identifiziert.
+        required: true
+      tags:
+      - time
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TimeEntry'
+          description: ''
+    patch:
+      operationId: time_entries_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Ein UUID-String, der time entry identifiziert.
+        required: true
+      tags:
+      - time
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedTimeEntryUpdate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedTimeEntryUpdate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedTimeEntryUpdate'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TimeEntry'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+          description: ''
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+          description: ''
+  /api/v1/time/entries/{id}/archive/:
+    post:
+      operationId: time_entries_archive_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Ein UUID-String, der time entry identifiziert.
+        required: true
+      tags:
+      - time
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TimeEntry'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+          description: ''
+  /api/v1/time/entries/{id}/history/:
+    get:
+      operationId: time_entries_history_list
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Ein UUID-String, der time entry identifiziert.
+        required: true
+      tags:
+      - time
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TimeEntryAuditEvent'
+          description: ''
+  /api/v1/time/project-summary/:
+    get:
+      operationId: time_project_summary_retrieve
+      parameters:
+      - in: query
+        name: project
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - time
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectTimeSummary'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+          description: ''
 components:
   schemas:
     ActionEnum:
@@ -2309,6 +2538,29 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Project'
+    PaginatedTimeEntryList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/TimeEntry'
     PaginatedWorkPackageAuditEventList:
       type: object
       required:
@@ -2531,6 +2783,29 @@ components:
           format: decimal
           pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
           nullable: true
+        version:
+          type: integer
+          minimum: 1
+    PatchedTimeEntryUpdate:
+      type: object
+      properties:
+        project:
+          type: string
+          format: uuid
+        work_package:
+          type: string
+          format: uuid
+        work_date:
+          type: string
+          format: date
+        duration_minutes:
+          type: integer
+          maximum: 1440
+          minimum: 1
+        description:
+          type: string
+        billable:
+          type: boolean
         version:
           type: integer
           minimum: 1
@@ -2759,6 +3034,55 @@ components:
         * `active` - Aktiv
         * `paused` - Pausiert
         * `completed` - Abgeschlossen
+    ProjectTimeSummary:
+      type: object
+      properties:
+        entry_count:
+          type: integer
+        actual_hours:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        billable_hours:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        unbilled_hours:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        non_billable_hours:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        actual_value:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+        unbilled_value:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+        remaining_budget_hours:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+          nullable: true
+        remaining_budget_amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+          nullable: true
+      required:
+      - actual_hours
+      - actual_value
+      - billable_hours
+      - entry_count
+      - non_billable_hours
+      - remaining_budget_amount
+      - remaining_budget_hours
+      - unbilled_hours
+      - unbilled_value
     RoleEnum:
       enum:
       - admin
@@ -2767,6 +3091,170 @@ components:
       description: |-
         * `admin` - admin
         * `employee` - employee
+    TimeEntry:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        employee:
+          type: integer
+          readOnly: true
+        employee_name:
+          type: string
+          readOnly: true
+        project:
+          type: string
+          format: uuid
+        project_number:
+          type: string
+          readOnly: true
+        project_name:
+          type: string
+          readOnly: true
+        work_package:
+          type: string
+          format: uuid
+        work_package_title:
+          type: string
+          readOnly: true
+        work_date:
+          type: string
+          format: date
+        duration_minutes:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        duration_hours:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,4}(?:\.\d{0,2})?$
+          readOnly: true
+        description:
+          type: string
+        billable:
+          type: boolean
+        billing_status:
+          allOf:
+          - $ref: '#/components/schemas/TimeEntryBillingStatusEnum'
+          readOnly: true
+        billing_status_label:
+          type: string
+          readOnly: true
+        hourly_rate_snapshot:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+          readOnly: true
+          nullable: true
+        billable_value:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+          readOnly: true
+          nullable: true
+        version:
+          type: integer
+          readOnly: true
+        archived_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - archived_at
+      - billable_value
+      - billing_status
+      - billing_status_label
+      - created_at
+      - description
+      - duration_hours
+      - duration_minutes
+      - employee
+      - employee_name
+      - hourly_rate_snapshot
+      - id
+      - project
+      - project_name
+      - project_number
+      - updated_at
+      - version
+      - work_date
+      - work_package
+      - work_package_title
+    TimeEntryAuditEvent:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        action:
+          $ref: '#/components/schemas/ActionEnum'
+        version:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        changes: {}
+        actor:
+          type: string
+          nullable: true
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - action
+      - actor
+      - created_at
+      - id
+      - version
+    TimeEntryBillingStatusEnum:
+      enum:
+      - unbilled
+      - billed
+      type: string
+      description: |-
+        * `unbilled` - Nicht abgerechnet
+        * `billed` - Abgerechnet
+    TimeEntryCreate:
+      type: object
+      properties:
+        project:
+          type: string
+          format: uuid
+        work_package:
+          type: string
+          format: uuid
+        work_date:
+          type: string
+          format: date
+        duration_minutes:
+          type: integer
+          maximum: 1440
+          minimum: 1
+        description:
+          type: string
+        billable:
+          type: boolean
+      required:
+      - description
+      - duration_minutes
+      - project
+      - work_date
+      - work_package
     User:
       type: object
       properties:
