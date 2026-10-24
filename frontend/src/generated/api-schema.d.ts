@@ -911,6 +911,7 @@ export interface components {
             /** Format: uuid */
             readonly id: string;
             action: components["schemas"]["AbsenceActionEnum"];
+            /** Format: int64 */
             version: number;
             changes?: unknown;
             readonly actor: string | null;
@@ -972,6 +973,7 @@ export interface components {
             /** Format: uuid */
             readonly id: string;
             action: components["schemas"]["AuditActionEnum"];
+            /** Format: int64 */
             version: number;
             changes?: unknown;
             actor: string | null;
@@ -990,6 +992,7 @@ export interface components {
             tax_note?: string;
             readonly current_price: components["schemas"]["CatalogPrice"] | null;
             readonly prices: components["schemas"]["CatalogPrice"][];
+            /** Format: int64 */
             version?: number;
             /** Format: date-time */
             archived_at?: string | null;
@@ -1080,6 +1083,7 @@ export interface components {
             website?: string;
             vat_id?: string;
             leitweg_id?: string;
+            /** Format: int64 */
             version?: number;
             /** Format: date-time */
             archived_at?: string | null;
@@ -1121,6 +1125,7 @@ export interface components {
             /** Format: uuid */
             readonly id: string;
             action: components["schemas"]["AuditActionEnum"];
+            /** Format: int64 */
             version: number;
             changes?: unknown;
             readonly actor: string | null;
@@ -1279,11 +1284,13 @@ export interface components {
         LeaveEntitlement: {
             employee: number;
             readonly employee_name: string;
+            /** Format: int64 */
             year: number;
             /** Format: decimal */
             entitlement_days?: string;
             /** Format: decimal */
             carryover_days?: string;
+            /** Format: int64 */
             version?: number;
             /** Format: date-time */
             readonly updated_at: string;
@@ -1605,6 +1612,7 @@ export interface components {
             budget_hours?: string | null;
             /** Format: decimal */
             default_hourly_rate?: string | null;
+            /** Format: int64 */
             version?: number;
             /** Format: date-time */
             archived_at?: string | null;
@@ -1617,6 +1625,7 @@ export interface components {
             /** Format: uuid */
             readonly id: string;
             action: components["schemas"]["AuditActionEnum"];
+            /** Format: int64 */
             version: number;
             changes?: unknown;
             readonly actor: string | null;
@@ -1736,6 +1745,7 @@ export interface components {
             /** Format: uuid */
             readonly id: string;
             action: components["schemas"]["AuditActionEnum"];
+            /** Format: int64 */
             version: number;
             changes?: unknown;
             readonly actor: string | null;
@@ -1770,6 +1780,7 @@ export interface components {
             readonly work_package_title: string;
             /** Format: date */
             work_date: string;
+            /** Format: int64 */
             duration_minutes: number;
             /** Format: decimal */
             readonly duration_hours: string;
@@ -1793,6 +1804,7 @@ export interface components {
             /** Format: uuid */
             readonly id: string;
             action: components["schemas"]["AuditActionEnum"];
+            /** Format: int64 */
             version: number;
             changes?: unknown;
             readonly actor: string | null;
@@ -1889,6 +1901,7 @@ export interface components {
             readonly resolved_hourly_rate: string | null;
             /** Format: decimal */
             readonly planned_value: string | null;
+            /** Format: int64 */
             version?: number;
             /** Format: date-time */
             archived_at?: string | null;
@@ -1901,6 +1914,7 @@ export interface components {
             /** Format: uuid */
             readonly id: string;
             action: components["schemas"]["AuditActionEnum"];
+            /** Format: int64 */
             version: number;
             changes?: unknown;
             readonly actor: string | null;
