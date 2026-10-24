@@ -32,6 +32,7 @@ INSTALLED_APPS = [
     "apps.catalog",
     "apps.projects",
     "apps.timetracking",
+    "apps.hr",
     "apps.archive",
 ]
 
@@ -146,6 +147,10 @@ SPECTACULAR_SETTINGS = {
         "ProjectStatusEnum": (("quotation", "Angebot"), ("active", "Aktiv"), ("paused", "Pausiert"), ("completed", "Abgeschlossen")),
         "WorkPackageStatusEnum": (("planned", "Geplant"), ("in_progress", "In Arbeit"), ("blocked", "Blockiert"), ("done", "Erledigt")),
         "TimeEntryBillingStatusEnum": (("unbilled", "Nicht abgerechnet"), ("billed", "Abgerechnet")),
+        "AbsenceKindEnum": (("vacation", "Urlaub"), ("sickness", "Krankheit"), ("other", "Sonstiges")),
+        "AbsenceStatusEnum": (("requested", "Beantragt"), ("approved", "Genehmigt"), ("rejected", "Abgelehnt"), ("cancelled", "Storniert")),
+        "AbsenceActionEnum": (("created", "Erstellt"), ("updated", "Geändert"), ("approved", "Genehmigt"), ("rejected", "Abgelehnt"), ("cancelled", "Storniert")),
+        "AuditActionEnum": (("created", "Erstellt"), ("updated", "Geändert"), ("archived", "Archiviert")),
         "IncomingInvoiceFormatEnum": (
             ("standard_pdf", "Normale PDF-Rechnung"),
             ("xrechnung_ubl", "XRechnung UBL"),

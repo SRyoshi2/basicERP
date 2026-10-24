@@ -404,6 +404,118 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/hr/absences/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["hr_absences_list"];
+        put?: never;
+        post: operations["hr_absences_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/hr/absences/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["hr_absences_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["hr_absences_partial_update"];
+        trace?: never;
+    };
+    "/api/v1/hr/absences/{id}/cancel/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["hr_absences_cancel_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/hr/absences/{id}/history/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["hr_absences_history_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/hr/absences/{id}/review/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["hr_absences_review_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/hr/leave-balance/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["hr_leave_balance_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/hr/leave-entitlements/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["hr_leave_entitlements_list"];
+        put?: never;
+        post: operations["hr_leave_entitlements_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/projects/": {
         parameters: {
             query?: never;
@@ -715,10 +827,77 @@ export interface components {
         /**
          * @description * `created` - Erstellt
          *     * `updated` - Geändert
-         *     * `archived` - Archiviert
+         *     * `approved` - Genehmigt
+         *     * `rejected` - Abgelehnt
+         *     * `cancelled` - Storniert
          * @enum {string}
          */
-        ActionEnum: "created" | "updated" | "archived";
+        AbsenceActionEnum: "created" | "updated" | "approved" | "rejected" | "cancelled";
+        AbsenceCreate: {
+            kind: components["schemas"]["AbsenceKindEnum"];
+            /** Format: date */
+            start_date: string;
+            /** Format: date */
+            end_date: string;
+            note?: string;
+        };
+        /**
+         * @description * `vacation` - Urlaub
+         *     * `sickness` - Krankheit
+         *     * `other` - Sonstiges
+         * @enum {string}
+         */
+        AbsenceKindEnum: "vacation" | "sickness" | "other";
+        AbsenceRequest: {
+            /** Format: uuid */
+            readonly id: string;
+            readonly employee: number;
+            readonly employee_name: string;
+            kind: components["schemas"]["AbsenceKindEnum"];
+            readonly kind_label: string;
+            /** Format: date */
+            start_date: string;
+            /** Format: date */
+            end_date: string;
+            /** Format: decimal */
+            readonly working_days: string;
+            note?: string;
+            readonly status: components["schemas"]["AbsenceStatusEnum"];
+            readonly status_label: string;
+            readonly decision_note: string;
+            readonly reviewed_by: number | null;
+            readonly reviewed_by_name: string | null;
+            /** Format: date-time */
+            readonly reviewed_at: string | null;
+            readonly version: number;
+            /** Format: date-time */
+            readonly created_at: string;
+            /** Format: date-time */
+            readonly updated_at: string;
+        };
+        AbsenceRequestAuditEvent: {
+            /** Format: uuid */
+            readonly id: string;
+            action: components["schemas"]["AbsenceActionEnum"];
+            /** Format: int64 */
+            version: number;
+            changes?: unknown;
+            readonly actor: string | null;
+            /** Format: date-time */
+            readonly created_at: string;
+        };
+        AbsenceReview: {
+            decision: components["schemas"]["DecisionEnum"];
+            decision_note?: string;
+        };
+        /**
+         * @description * `requested` - Beantragt
+         *     * `approved` - Genehmigt
+         *     * `rejected` - Abgelehnt
+         *     * `cancelled` - Storniert
+         * @enum {string}
+         */
+        AbsenceStatusEnum: "requested" | "approved" | "rejected" | "cancelled";
         Address: {
             /** Format: uuid */
             readonly id: string;
@@ -751,10 +930,17 @@ export interface components {
             username: string;
             readonly display_name: string;
         };
+        /**
+         * @description * `created` - Erstellt
+         *     * `updated` - Geändert
+         *     * `archived` - Archiviert
+         * @enum {string}
+         */
+        AuditActionEnum: "created" | "updated" | "archived";
         CatalogAuditEvent: {
             /** Format: uuid */
             readonly id: string;
-            action: components["schemas"]["ActionEnum"];
+            action: components["schemas"]["AuditActionEnum"];
             /** Format: int64 */
             version: number;
             changes?: unknown;
@@ -906,7 +1092,7 @@ export interface components {
         ContactAuditEvent: {
             /** Format: uuid */
             readonly id: string;
-            action: components["schemas"]["ActionEnum"];
+            action: components["schemas"]["AuditActionEnum"];
             /** Format: int64 */
             version: number;
             changes?: unknown;
@@ -980,6 +1166,12 @@ export interface components {
         CsrfToken: {
             csrfToken: string;
         };
+        /**
+         * @description * `approved` - approved
+         *     * `rejected` - rejected
+         * @enum {string}
+         */
+        DecisionEnum: "approved" | "rejected";
         Health: {
             status: string;
         };
@@ -1036,6 +1228,47 @@ export interface components {
             /** Format: decimal */
             payable_amount?: string;
         };
+        LeaveBalance: {
+            employee: number;
+            year: number;
+            /** Format: decimal */
+            entitlement_days: string;
+            /** Format: decimal */
+            carryover_days: string;
+            /** Format: decimal */
+            approved_days: string;
+            /** Format: decimal */
+            pending_days: string;
+            /** Format: decimal */
+            remaining_days: string;
+            version: number | null;
+        };
+        LeaveEntitlement: {
+            employee: number;
+            readonly employee_name: string;
+            /** Format: int64 */
+            year: number;
+            /** Format: decimal */
+            entitlement_days?: string;
+            /** Format: decimal */
+            carryover_days?: string;
+            /** Format: int64 */
+            version?: number;
+            /** Format: date-time */
+            readonly updated_at: string;
+        };
+        LeaveEntitlementWrite: {
+            employee: number;
+            year: number;
+            /** Format: decimal */
+            entitlement_days: string;
+            /**
+             * Format: decimal
+             * @default 0.00
+             */
+            carryover_days: string;
+            version?: number | null;
+        };
         Login: {
             identifier: string;
             password: string;
@@ -1046,6 +1279,21 @@ export interface components {
          * @enum {string}
          */
         ModeEnum: "automatic" | "standard_pdf";
+        PaginatedAbsenceRequestList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=4
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=2
+             */
+            previous?: string | null;
+            results: components["schemas"]["AbsenceRequest"][];
+        };
         PaginatedCatalogItemList: {
             /** @example 123 */
             count: number;
@@ -1180,6 +1428,15 @@ export interface components {
              */
             previous?: string | null;
             results: components["schemas"]["WorkPackage"][];
+        };
+        PatchedAbsenceUpdate: {
+            kind?: components["schemas"]["AbsenceKindEnum"];
+            /** Format: date */
+            start_date?: string;
+            /** Format: date */
+            end_date?: string;
+            note?: string;
+            version?: number;
         };
         PatchedCatalogItemUpdate: {
             kind?: components["schemas"]["CatalogItemKindEnum"];
@@ -1329,7 +1586,7 @@ export interface components {
         ProjectAuditEvent: {
             /** Format: uuid */
             readonly id: string;
-            action: components["schemas"]["ActionEnum"];
+            action: components["schemas"]["AuditActionEnum"];
             /** Format: int64 */
             version: number;
             changes?: unknown;
@@ -1449,7 +1706,7 @@ export interface components {
         ServiceEntryAuditEvent: {
             /** Format: uuid */
             readonly id: string;
-            action: components["schemas"]["ActionEnum"];
+            action: components["schemas"]["AuditActionEnum"];
             /** Format: int64 */
             version: number;
             changes?: unknown;
@@ -1508,7 +1765,7 @@ export interface components {
         TimeEntryAuditEvent: {
             /** Format: uuid */
             readonly id: string;
-            action: components["schemas"]["ActionEnum"];
+            action: components["schemas"]["AuditActionEnum"];
             /** Format: int64 */
             version: number;
             changes?: unknown;
@@ -1575,7 +1832,7 @@ export interface components {
         WorkPackageAuditEvent: {
             /** Format: uuid */
             readonly id: string;
-            action: components["schemas"]["ActionEnum"];
+            action: components["schemas"]["AuditActionEnum"];
             /** Format: int64 */
             version: number;
             changes?: unknown;
@@ -2549,6 +2806,297 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Health"];
+                };
+            };
+        };
+    };
+    hr_absences_list: {
+        parameters: {
+            query?: {
+                /** @description Nur für Administratoren */
+                employee?: number;
+                kind?: "other" | "sickness" | "vacation";
+                /** @description Eine Seitenzahl in der paginierten Ergebnismenge. */
+                page?: number;
+                status?: "approved" | "cancelled" | "rejected" | "requested";
+                year?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedAbsenceRequestList"];
+                };
+            };
+        };
+    };
+    hr_absences_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AbsenceCreate"];
+                "application/x-www-form-urlencoded": components["schemas"]["AbsenceCreate"];
+                "multipart/form-data": components["schemas"]["AbsenceCreate"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AbsenceRequest"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    hr_absences_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Ein UUID-String, der absence request identifiziert. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AbsenceRequest"];
+                };
+            };
+        };
+    };
+    hr_absences_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Ein UUID-String, der absence request identifiziert. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedAbsenceUpdate"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedAbsenceUpdate"];
+                "multipart/form-data": components["schemas"]["PatchedAbsenceUpdate"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AbsenceRequest"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    hr_absences_cancel_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Ein UUID-String, der absence request identifiziert. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AbsenceRequest"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    hr_absences_history_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Ein UUID-String, der absence request identifiziert. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AbsenceRequestAuditEvent"][];
+                };
+            };
+        };
+    };
+    hr_absences_review_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Ein UUID-String, der absence request identifiziert. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AbsenceReview"];
+                "application/x-www-form-urlencoded": components["schemas"]["AbsenceReview"];
+                "multipart/form-data": components["schemas"]["AbsenceReview"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AbsenceRequest"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    hr_leave_balance_retrieve: {
+        parameters: {
+            query?: {
+                /** @description Nur für Administratoren */
+                employee?: number;
+                year?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LeaveBalance"];
+                };
+            };
+        };
+    };
+    hr_leave_entitlements_list: {
+        parameters: {
+            query?: {
+                year?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LeaveEntitlement"][];
+                };
+            };
+        };
+    };
+    hr_leave_entitlements_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LeaveEntitlementWrite"];
+                "application/x-www-form-urlencoded": components["schemas"]["LeaveEntitlementWrite"];
+                "multipart/form-data": components["schemas"]["LeaveEntitlementWrite"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LeaveEntitlement"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LeaveEntitlement"];
                 };
             };
         };

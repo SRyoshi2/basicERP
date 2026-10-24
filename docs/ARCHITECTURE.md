@@ -1,6 +1,6 @@
 # basicERP – Softwarearchitektur
 
-**Stand:** 23.10.2026
+**Stand:** 24.10.2026
 **Status:** Angenommen; Phase 0, Phase 1, Phase 1a und Phase 2 abgeschlossen; Phase 3 in Umsetzung
 **Zugehörige Entscheidung:** [`ADR-0001`](adr/0001-modularer-monolith.md), [`ADR-0002`](adr/0002-belegfestschreibung-und-outbox.md)
 
@@ -243,6 +243,8 @@ Freigabelogik folgt der Trennung konsequent.
 | WorkPackage | gehört genau zu einem Projekt; Status, Planstunden, Mitarbeiter und optionaler Satz-Override |
 | TimeEntry | positive Dauer, Mitarbeiter/Projekt/Arbeitspaket; Satz-Snapshot; Abrechnungsstatus; abgerechnete Einträge gesperrt |
 | ServiceEntry | positive Menge; Projekt/Arbeitspaket/Katalogleistung; Preis-/Steuer-/Text-Snapshot; abgerechnete Einträge gesperrt |
+| AbsenceRequest | Mitarbeiter, Typ und konsistenter Zeitraum; eindeutiger Statusfluss; keine offenen/genehmigten Überschneidungen |
+| LeaveEntitlement | genau ein Jahresanspruch je Mitarbeiter/Jahr; nichtnegative Anspruchs- und Übertragstage |
 | Invoice | Summe der Positionen/Steuern; erlaubter Zustandsübergang; finaler Snapshot unveränderlich |
 | NumberSequence | Eindeutigkeit je Dokumentart/Jahr; Zuweisung unter Datenbanksperre |
 | Payment | Summe darf fachlich nachvollziehbar zu offen/teil-/bezahlt führen |
@@ -285,6 +287,14 @@ Katalogänderungen reproduzierbar. Nur Katalogeinträge vom Typ `service` und mi
 einem am Leistungsdatum gültigen Preis dürfen erfasst werden. Das gemeinsame
 Projektcontrolling summiert abrechenbare Zeit- und Leistungswerte, weist
 Leistungswerte aber zusätzlich separat aus.
+
+Das minimale `hr`-Modul besitzt Abwesenheitsanträge und Jahresansprüche. Ein
+Mitarbeiter sieht und pflegt ausschließlich eigene Anträge; nur Administratoren
+dürfen genehmigen, ablehnen und Ansprüche setzen. Genehmigter Urlaub reduziert
+das Urlaubskonto, Krankheit und sonstige Abwesenheit nicht. Arbeitstage werden
+in dieser Ausbaustufe als Montag bis Freitag berechnet; ein regionaler
+Feiertagskalender bleibt eine explizite spätere Erweiterung. Statusübergänge
+und Änderungen sind auditierbar und versionsgeschützt.
 
 ### Rechnungssnapshot
 

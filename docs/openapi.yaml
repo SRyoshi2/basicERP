@@ -949,6 +949,318 @@ paths:
               schema:
                 $ref: '#/components/schemas/Health'
           description: ''
+  /api/v1/hr/absences/:
+    get:
+      operationId: hr_absences_list
+      parameters:
+      - in: query
+        name: employee
+        schema:
+          type: integer
+        description: Nur für Administratoren
+      - in: query
+        name: kind
+        schema:
+          type: string
+          enum:
+          - other
+          - sickness
+          - vacation
+      - name: page
+        required: false
+        in: query
+        description: Eine Seitenzahl in der paginierten Ergebnismenge.
+        schema:
+          type: integer
+      - in: query
+        name: status
+        schema:
+          type: string
+          enum:
+          - approved
+          - cancelled
+          - rejected
+          - requested
+      - in: query
+        name: year
+        schema:
+          type: integer
+      tags:
+      - hr
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedAbsenceRequestList'
+          description: ''
+    post:
+      operationId: hr_absences_create
+      tags:
+      - hr
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AbsenceCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AbsenceCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AbsenceCreate'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AbsenceRequest'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+          description: ''
+  /api/v1/hr/absences/{id}/:
+    get:
+      operationId: hr_absences_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Ein UUID-String, der absence request identifiziert.
+        required: true
+      tags:
+      - hr
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AbsenceRequest'
+          description: ''
+    patch:
+      operationId: hr_absences_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Ein UUID-String, der absence request identifiziert.
+        required: true
+      tags:
+      - hr
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedAbsenceUpdate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedAbsenceUpdate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedAbsenceUpdate'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AbsenceRequest'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+          description: ''
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+          description: ''
+  /api/v1/hr/absences/{id}/cancel/:
+    post:
+      operationId: hr_absences_cancel_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Ein UUID-String, der absence request identifiziert.
+        required: true
+      tags:
+      - hr
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AbsenceRequest'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+          description: ''
+  /api/v1/hr/absences/{id}/history/:
+    get:
+      operationId: hr_absences_history_list
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Ein UUID-String, der absence request identifiziert.
+        required: true
+      tags:
+      - hr
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AbsenceRequestAuditEvent'
+          description: ''
+  /api/v1/hr/absences/{id}/review/:
+    post:
+      operationId: hr_absences_review_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Ein UUID-String, der absence request identifiziert.
+        required: true
+      tags:
+      - hr
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AbsenceReview'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AbsenceReview'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AbsenceReview'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AbsenceRequest'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+          description: ''
+  /api/v1/hr/leave-balance/:
+    get:
+      operationId: hr_leave_balance_retrieve
+      parameters:
+      - in: query
+        name: employee
+        schema:
+          type: integer
+        description: Nur für Administratoren
+      - in: query
+        name: year
+        schema:
+          type: integer
+      tags:
+      - hr
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LeaveBalance'
+          description: ''
+  /api/v1/hr/leave-entitlements/:
+    get:
+      operationId: hr_leave_entitlements_list
+      parameters:
+      - in: query
+        name: year
+        schema:
+          type: integer
+      tags:
+      - hr
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/LeaveEntitlement'
+          description: ''
+    post:
+      operationId: hr_leave_entitlements_create
+      tags:
+      - hr
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LeaveEntitlementWrite'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/LeaveEntitlementWrite'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/LeaveEntitlementWrite'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LeaveEntitlement'
+          description: ''
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LeaveEntitlement'
+          description: ''
   /api/v1/projects/:
     get:
       operationId: projects_list
@@ -1798,16 +2110,181 @@ paths:
           description: ''
 components:
   schemas:
-    ActionEnum:
+    AbsenceActionEnum:
       enum:
       - created
       - updated
-      - archived
+      - approved
+      - rejected
+      - cancelled
       type: string
       description: |-
         * `created` - Erstellt
         * `updated` - Geändert
-        * `archived` - Archiviert
+        * `approved` - Genehmigt
+        * `rejected` - Abgelehnt
+        * `cancelled` - Storniert
+    AbsenceCreate:
+      type: object
+      properties:
+        kind:
+          $ref: '#/components/schemas/AbsenceKindEnum'
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+        note:
+          type: string
+      required:
+      - end_date
+      - kind
+      - start_date
+    AbsenceKindEnum:
+      enum:
+      - vacation
+      - sickness
+      - other
+      type: string
+      description: |-
+        * `vacation` - Urlaub
+        * `sickness` - Krankheit
+        * `other` - Sonstiges
+    AbsenceRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        employee:
+          type: integer
+          readOnly: true
+        employee_name:
+          type: string
+          readOnly: true
+        kind:
+          $ref: '#/components/schemas/AbsenceKindEnum'
+        kind_label:
+          type: string
+          readOnly: true
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+        working_days:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,4}(?:\.\d{0,2})?$
+          readOnly: true
+        note:
+          type: string
+        status:
+          allOf:
+          - $ref: '#/components/schemas/AbsenceStatusEnum'
+          readOnly: true
+        status_label:
+          type: string
+          readOnly: true
+        decision_note:
+          type: string
+          readOnly: true
+        reviewed_by:
+          type: integer
+          readOnly: true
+          nullable: true
+        reviewed_by_name:
+          type: string
+          nullable: true
+          readOnly: true
+        reviewed_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        version:
+          type: integer
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - decision_note
+      - employee
+      - employee_name
+      - end_date
+      - id
+      - kind
+      - kind_label
+      - reviewed_at
+      - reviewed_by
+      - reviewed_by_name
+      - start_date
+      - status
+      - status_label
+      - updated_at
+      - version
+      - working_days
+    AbsenceRequestAuditEvent:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        action:
+          $ref: '#/components/schemas/AbsenceActionEnum'
+        version:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        changes: {}
+        actor:
+          type: string
+          nullable: true
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - action
+      - actor
+      - created_at
+      - id
+      - version
+    AbsenceReview:
+      type: object
+      properties:
+        decision:
+          $ref: '#/components/schemas/DecisionEnum'
+        decision_note:
+          type: string
+          maxLength: 2000
+      required:
+      - decision
+    AbsenceStatusEnum:
+      enum:
+      - requested
+      - approved
+      - rejected
+      - cancelled
+      type: string
+      description: |-
+        * `requested` - Beantragt
+        * `approved` - Genehmigt
+        * `rejected` - Abgelehnt
+        * `cancelled` - Storniert
     Address:
       type: object
       properties:
@@ -1882,6 +2359,16 @@ components:
       - display_name
       - id
       - username
+    AuditActionEnum:
+      enum:
+      - created
+      - updated
+      - archived
+      type: string
+      description: |-
+        * `created` - Erstellt
+        * `updated` - Geändert
+        * `archived` - Archiviert
     CatalogAuditEvent:
       type: object
       properties:
@@ -1890,7 +2377,7 @@ components:
           format: uuid
           readOnly: true
         action:
-          $ref: '#/components/schemas/ActionEnum'
+          $ref: '#/components/schemas/AuditActionEnum'
         version:
           type: integer
           maximum: 9223372036854775807
@@ -2270,7 +2757,7 @@ components:
           format: uuid
           readOnly: true
         action:
-          $ref: '#/components/schemas/ActionEnum'
+          $ref: '#/components/schemas/AuditActionEnum'
         version:
           type: integer
           maximum: 9223372036854775807
@@ -2459,6 +2946,14 @@ components:
           type: string
       required:
       - csrfToken
+    DecisionEnum:
+      enum:
+      - approved
+      - rejected
+      type: string
+      description: |-
+        * `approved` - approved
+        * `rejected` - rejected
     Health:
       type: object
       properties:
@@ -2605,6 +3100,106 @@ components:
           pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
       required:
       - file
+    LeaveBalance:
+      type: object
+      properties:
+        employee:
+          type: integer
+        year:
+          type: integer
+        entitlement_days:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+        carryover_days:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+        approved_days:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,4}(?:\.\d{0,2})?$
+        pending_days:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,4}(?:\.\d{0,2})?$
+        remaining_days:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,4}(?:\.\d{0,2})?$
+        version:
+          type: integer
+          nullable: true
+      required:
+      - approved_days
+      - carryover_days
+      - employee
+      - entitlement_days
+      - pending_days
+      - remaining_days
+      - version
+      - year
+    LeaveEntitlement:
+      type: object
+      properties:
+        employee:
+          type: integer
+        employee_name:
+          type: string
+          readOnly: true
+        year:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        entitlement_days:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+        carryover_days:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+        version:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - employee
+      - employee_name
+      - updated_at
+      - year
+    LeaveEntitlementWrite:
+      type: object
+      properties:
+        employee:
+          type: integer
+        year:
+          type: integer
+          maximum: 2200
+          minimum: 2000
+        entitlement_days:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+        carryover_days:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+          default: '0.00'
+        version:
+          type: integer
+          minimum: 1
+          nullable: true
+      required:
+      - employee
+      - entitlement_days
+      - year
     Login:
       type: object
       properties:
@@ -2625,6 +3220,29 @@ components:
       description: |-
         * `automatic` - Automatische E-Rechnungsprüfung
         * `standard_pdf` - Normale PDF-Rechnung
+    PaginatedAbsenceRequestList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/AbsenceRequest'
     PaginatedCatalogItemList:
       type: object
       required:
@@ -2832,6 +3450,22 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/WorkPackage'
+    PatchedAbsenceUpdate:
+      type: object
+      properties:
+        kind:
+          $ref: '#/components/schemas/AbsenceKindEnum'
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+        note:
+          type: string
+        version:
+          type: integer
+          minimum: 1
     PatchedCatalogItemUpdate:
       type: object
       properties:
@@ -3176,7 +3810,7 @@ components:
           format: uuid
           readOnly: true
         action:
-          $ref: '#/components/schemas/ActionEnum'
+          $ref: '#/components/schemas/AuditActionEnum'
         version:
           type: integer
           maximum: 9223372036854775807
@@ -3480,7 +4114,7 @@ components:
           format: uuid
           readOnly: true
         action:
-          $ref: '#/components/schemas/ActionEnum'
+          $ref: '#/components/schemas/AuditActionEnum'
         version:
           type: integer
           maximum: 9223372036854775807
@@ -3639,7 +4273,7 @@ components:
           format: uuid
           readOnly: true
         action:
-          $ref: '#/components/schemas/ActionEnum'
+          $ref: '#/components/schemas/AuditActionEnum'
         version:
           type: integer
           maximum: 9223372036854775807
@@ -3806,7 +4440,7 @@ components:
           format: uuid
           readOnly: true
         action:
-          $ref: '#/components/schemas/ActionEnum'
+          $ref: '#/components/schemas/AuditActionEnum'
         version:
           type: integer
           maximum: 9223372036854775807

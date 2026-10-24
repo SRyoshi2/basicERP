@@ -1,6 +1,6 @@
 # basicERP – Projektplan
 
-**Stand:** 23.10.2026
+**Stand:** 24.10.2026
 **Status:** Freigegeben; Phase 0, Phase 1, Phase 1a und Phase 2 abgeschlossen; Phase 3 in Umsetzung
 **Quelle:** [`ROADMAP.md`](../ROADMAP.md)
 
@@ -142,7 +142,7 @@ Abnahmetests benötigen gemeinsame Entscheidungen und teilweise externe Prüfung
 - Wochenansicht und mobiltauglicher Erfassungsablauf. **Für Zeiten erledigt.**
 - Ist-Stunden und noch nicht abgerechnete Leistungen im Projektcontrolling.
   **Für Zeiten und Mengenleistungen erledigt.**
-- Abwesenheitsanträge, Freigabe und einfaches Urlaubskonto.
+- Abwesenheitsanträge, Freigabe und einfaches Urlaubskonto. **Erledigt; Arbeitstage derzeit Montag bis Freitag ohne Feiertagskalender.**
 - Zeit-/Leistungsauswertung mit CSV-Export.
 
 ## 6. Arbeitsweise und Qualitätsregeln

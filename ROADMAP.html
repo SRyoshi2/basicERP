@@ -139,12 +139,12 @@
       <aside class="status-card">
         <p class="eyebrow" style="color:#84caff">Aktueller Stand</p>
         <h2>Phase 3 in Umsetzung</h2>
-        <div class="big-number">55%</div>
-        <div class="progress" aria-label="Phase 3 zu 55 Prozent umgesetzt"><span style="width:55%"></span></div>
+        <div class="big-number">80%</div>
+        <div class="progress" aria-label="Phase 3 zu 80 Prozent umgesetzt"><span style="width:80%"></span></div>
         <ul class="meta">
-          <li><strong>Gesamtfortschritt:</strong> ca. 37 %</li>
-          <li><strong>Letzte Aktualisierung:</strong> 23.10.2026</li>
-          <li><strong>Nächster Schritt:</strong> Phase 3 · Abwesenheiten und Genehmigung</li>
+          <li><strong>Gesamtfortschritt:</strong> ca. 40 %</li>
+          <li><strong>Letzte Aktualisierung:</strong> 24.10.2026</li>
+          <li><strong>Nächster Schritt:</strong> Phase 3 · Auswertung und CSV-Export</li>
           <li><strong>Zieltermin:</strong> keiner; Qualität vor Kalender</li>
         </ul>
       </aside>
@@ -185,10 +185,10 @@
         <li class="ok">Versionsschutz, Audit-Verlauf und Archivierung</li>
         <li class="ok">Ist-Stunden, offene Stunden, Ist-Wert und Restbudget im Projekt</li>
         <li class="ok">Mengenbasierte Leistungen mit historischem Katalog-Snapshot</li>
-        <li class="wait">Abwesenheitsworkflow und Urlaubskonto</li>
+        <li class="ok">Abwesenheitsworkflow und Urlaubskonto</li>
         <li class="wait">Zeit-/Leistungsauswertung mit CSV-Export</li>
       </ul>
-      <div class="notice success">Zeit- und mengenbasierte Leistungserfassung sind umgesetzt. Beide besitzen eine eigene responsive Wochenansicht und speisen dasselbe Projektcontrolling. Stundensätze sowie Katalogpreis, Artikelnummer, Bezeichnung, Einheit und Steuer werden historisch gesichert. Der nächste Schritt ergänzt Abwesenheitsanträge und Genehmigung.</div>
+      <div class="notice success">Zeit- und mengenbasierte Leistungserfassung sowie der Abwesenheitsworkflow sind umgesetzt. Mitarbeiter beantragen Urlaub, Krankheit oder sonstige Abwesenheit; Administratoren entscheiden Anträge und pflegen Jahresanspruch sowie Übertrag. Das Urlaubskonto zeigt beantragte, genehmigte und verbleibende Tage. Als letzter Phase-3-Schritt folgt die Auswertung mit CSV-Export.</div>
     </section>
 
     <section id="phasen" class="panel">
@@ -229,6 +229,7 @@
         <li><strong>Zeiterfassung prüfen:</strong> Im Dashboard „Zeiterfassung“ öffnen, Projekt und Arbeitspaket wählen, Datum, Stunden und Beschreibung eintragen und speichern. Zwischen Vorwoche, aktueller Woche und Folgewoche wechseln; die Tagessumme, Wochenstunden und abrechenbaren Stunden müssen stimmen. Den Eintrag öffnen, ändern und wieder speichern.</li>
         <li><strong>Leistungserfassung prüfen:</strong> Im Dashboard „Leistungen“ öffnen, eine Katalogleistung, Projekt, Arbeitspaket, Leistungsdatum und Menge wählen. Nach dem Speichern müssen Menge × Preis und der abrechenbare Wochenwert erscheinen. Für das gewählte Datum muss ein gültiger Katalogpreis vorhanden sein.</li>
         <li><strong>Ist-Controlling prüfen:</strong> Das verwendete Projekt erneut öffnen. Unter „Ist aus Zeit &amp; Leistung“ müssen Ist-Stunden, abrechenbare und noch offene Stunden, Leistungswert, gesamter Ist-Wert und das verbleibende Betragsbudget unmittelbar zur Erfassung passen.</li>
+        <li><strong>Abwesenheiten prüfen:</strong> Im Dashboard „Abwesenheiten“ öffnen, den Jahresanspruch als Administrator setzen und einen Urlaubsantrag anlegen. Unter „Offene Genehmigungen“ genehmigen oder ablehnen. Das Urlaubskonto muss beantragte, genehmigte und verbleibende Tage korrekt zeigen; Krankheit darf den Resturlaub nicht reduzieren.</li>
         <li><strong>E-Rechnungseingang prüfen:</strong> Im Dashboard „Rechnungseingang“ öffnen und <code>docs/examples/incoming-invoice-ubl.xml</code> hochladen. Erwartet werden „Basisprüfung bestanden“, Rechnungsnummer <code>BEISPIEL-2026-001</code>, Verkäufer und Zahlbetrag. Das heruntergeladene Original muss bytegleich sein. Derselbe erneute Upload erzeugt keinen zweiten Eintrag.</li>
         <li><strong>Normale Rechnung prüfen:</strong> Im Rechnungseingang „Normale PDF-Rechnung“ wählen, eine PDF auswählen und Rechnungsnummer, Datum, Verkäufer, Käufer, Betrag und Währung eintragen. Nach dem Speichern erscheint der Beleg als „Vollständig erfasst“; der Hinweis grenzt die manuelle Erfassung klar von einer inhaltlichen Prüfung ab.</li>
         <li><strong>Systemprüfungen durchführen:</strong> Dashboard sichtbar, Readiness liefert <code>{"status":"ready"}</code>, API-Doku öffnet, alle Container sind healthy/running.</li>
@@ -241,7 +242,7 @@
 npm run api:check</pre><p>Mit Node.js installiert: OpenAPI und generierte TypeScript-Typen müssen ohne Diff übereinstimmen.</p></article>
         <article class="test-card"><h3>5 · Backup</h3><pre>powershell -ExecutionPolicy Bypass -File .\scripts\backup-windows.ps1</pre><p>Erzeugt Dump, Archiv, Medien, Manifest und SHA-256-Prüfsummen unter <code>backups/</code>.</p></article>
       </div>
-      <div class="notice success">Zuletzt am 23.10.2026 auf dem aktuellen Windows-System erfolgreich getestet. Vor der jüngsten additiven Migration wurde das konsistente Backup <code>basicerp-20261023-184535</code> erstellt. Alle fünf Dienste laufen gesund; Zeit- und Mengeneinträge, historische Preis-/Satz-Snapshots und das kombinierte Ist-Controlling wurden gegen PostgreSQL geprüft. Beide Testtransaktionen wurden vollständig zurückgerollt, der reale Bestand blieb unverändert.</div>
+      <div class="notice success">Zuletzt am 24.10.2026 auf dem aktuellen Windows-System erfolgreich getestet. Vor der jüngsten additiven Migration wurde das konsistente Backup <code>basicerp-20261024-083336</code> erstellt. Alle fünf Dienste laufen gesund; Zeit-, Mengen- und Abwesenheitseinträge, historische Preis-/Satz-Snapshots, Genehmigung und Urlaubskonto wurden gegen PostgreSQL geprüft. Alle Testtransaktionen wurden vollständig zurückgerollt, der reale Bestand blieb unverändert.</div>
     </section>
 
     <section id="ubuntu" class="panel">
@@ -295,6 +296,7 @@ docker compose logs --tail 100</pre>
       <table>
         <thead><tr><th>Datum</th><th>Schritt</th><th>Ergebnis</th></tr></thead>
         <tbody>
+          <tr><td>24.10.2026</td><td>Phase 3 / Abwesenheiten</td><td>Urlaub, Krankheit und sonstige Abwesenheiten mit Mitarbeiterisolation, Überschneidungsschutz, Versionsschutz, Audit und Genehmigung umgesetzt. Administratoren pflegen Jahresanspruch und Übertrag; das Urlaubskonto trennt beantragte, genehmigte und verbleibende Tage. 63 Backend-Tests sowie ein zurückgerollter PostgreSQL-Durchstich von 30 Tagen Anspruch über fünf Tage Genehmigung zu 25 Tagen Rest erfolgreich.</td></tr>
           <tr><td>23.10.2026</td><td>Phase 3 / Leistungserfassung</td><td>Mengenbasierte Katalogleistungen mit Projekt, Arbeitspaket, Datum und Abrechenbarkeit ergänzt. Preis, Nummer, Name, Einheit und Steuersatz werden als Snapshot gespeichert; eine eigene Wochenansicht und das kombinierte Ist-Controlling zeigen Mengen- und Zeitwerte nachvollziehbar getrennt. 56 Backend-Tests sowie ein zurückgerollter PostgreSQL-/API-Durchstich mit 3 × 250,00 € erfolgreich.</td></tr>
           <tr><td>23.10.2026</td><td>Phase 3 / Docker-Abnahme</td><td>Konsistentes Backup erstellt, additive Migration eingespielt und alle fünf Dienste gesund gestartet. Ein transaktionaler PostgreSQL-/API-Durchstich bestätigte 1,5 Stunden, Satz-Snapshot 120,00 € und Ist-Wert 180,00 €; Objektzahlen vor und nach Rollback waren identisch.</td></tr>
           <tr><td>23.10.2026</td><td>Phase 3 / Zeiterfassung</td><td>Eigene Zeiteinträge mit Projekt, Arbeitspaket, Datum, Dauer, Beschreibung und Abrechenbarkeit umgesetzt. Wochenansicht, Rollenfilter, Versionsschutz, Audit und Archivierung ergänzt; der beim Erfassen gültige Stundensatz bleibt als Snapshot erhalten. Das Projektcontrolling zeigt reale Ist-/offene Stunden, Ist-Wert und Restbudget.</td></tr>

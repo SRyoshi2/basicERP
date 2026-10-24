@@ -86,6 +86,13 @@ export type ServiceEntryPage = Omit<
   components["schemas"]["PaginatedServiceEntryList"], "results"
 > & { results: ServiceEntry[] };
 export type ProjectTimeSummary = components["schemas"]["ProjectTimeSummary"];
+export type AbsenceRequest = Required<components["schemas"]["AbsenceRequest"]>;
+export type AbsenceInput = components["schemas"]["AbsenceCreate"];
+export type AbsencePage = Omit<
+  components["schemas"]["PaginatedAbsenceRequestList"], "results"
+> & { results: AbsenceRequest[] };
+export type LeaveBalance = components["schemas"]["LeaveBalance"];
+export type LeaveEntitlement = components["schemas"]["LeaveEntitlement"];
 export type ManualIncomingInvoiceInput = {
   invoice_number: string;
   issue_date: string;
@@ -464,6 +471,67 @@ export async function archiveServiceEntry(entry: ServiceEntry): Promise<ServiceE
 export async function getProjectTimeSummary(projectId: string): Promise<ProjectTimeSummary> {
   const params = new URLSearchParams({ project: projectId });
   return request<ProjectTimeSummary>(`/api/v1/time/project-summary/?${params.toString()}`);
+}
+
+export async function getAbsences(options: {
+  year?: number;
+  status?: "requested" | "approved" | "rejected" | "cancelled" | "";
+  employee?: string;
+} = {}): Promise<AbsencePage> {
+  const params = new URLSearchParams();
+  if (options.year) params.set("year", String(options.year));
+  if (options.status) params.set("status", options.status);
+  if (options.employee) params.set("employee", options.employee);
+  const query = params.size ? `?${params.toString()}` : "";
+  return request<AbsencePage>(`/api/v1/hr/absences/${query}`);
+}
+
+export async function createAbsence(data: AbsenceInput): Promise<AbsenceRequest> {
+  return request<AbsenceRequest>("/api/v1/hr/absences/", {
+    method: "POST", body: JSON.stringify(data),
+  });
+}
+
+export async function updateAbsence(
+  absence: AbsenceRequest, data: AbsenceInput,
+): Promise<AbsenceRequest> {
+  return request<AbsenceRequest>(`/api/v1/hr/absences/${absence.id}/`, {
+    method: "PATCH", body: JSON.stringify({ ...data, version: absence.version }),
+  });
+}
+
+export async function cancelAbsence(absence: AbsenceRequest): Promise<AbsenceRequest> {
+  return request<AbsenceRequest>(`/api/v1/hr/absences/${absence.id}/cancel/`, {
+    method: "POST", body: "{}",
+  });
+}
+
+export async function reviewAbsence(
+  absence: AbsenceRequest, decision: "approved" | "rejected", decisionNote = "",
+): Promise<AbsenceRequest> {
+  return request<AbsenceRequest>(`/api/v1/hr/absences/${absence.id}/review/`, {
+    method: "POST", body: JSON.stringify({ decision, decision_note: decisionNote }),
+  });
+}
+
+export async function getLeaveBalance(
+  year: number, employee?: string,
+): Promise<LeaveBalance> {
+  const params = new URLSearchParams({ year: String(year) });
+  if (employee) params.set("employee", employee);
+  return request<LeaveBalance>(`/api/v1/hr/leave-balance/?${params.toString()}`);
+}
+
+export async function setLeaveEntitlement(data: {
+  employee: string;
+  year: number;
+  entitlement_days: string;
+  carryover_days: string;
+  version?: number | null;
+}): Promise<LeaveEntitlement> {
+  return request<LeaveEntitlement>("/api/v1/hr/leave-entitlements/", {
+    method: "POST", body: JSON.stringify(data),
+  });
 }
 
 export async function getIncomingInvoices(options: {
