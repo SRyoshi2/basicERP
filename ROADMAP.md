@@ -100,11 +100,13 @@ Mitarbeiter erfassen eigene Zeiten in einer mobiltauglichen Wochenansicht; Proje
 Arbeitspaket, Datum, Dauer, Beschreibung und Abrechenbarkeit werden gespeichert.
 Der beim Erfassen gültige Stundensatz wird als historischer Snapshot gesichert.
 Projektcontrolling zeigt Ist-, abrechenbare und noch nicht abgerechnete Stunden
-sowie Ist-Wert und Restbudget. Mengenleistungen, Abwesenheiten und CSV-Auswertung
-folgen in den nächsten Schritten.
+sowie Ist-Wert und Restbudget. Mengenbasierte Katalogleistungen sind ebenfalls
+über eine eigene Wochenansicht erfassbar; Preis, Einheit, Bezeichnung und Steuer
+werden historisch gesichert und im Ist-Wert berücksichtigt. Abwesenheiten und
+CSV-Auswertung folgen in den nächsten Schritten.
 
 - Zeiteintrag: Datum, Dauer (oder Start/Stopp-Timer), Projekt, Arbeitspaket, Tätigkeitsbeschreibung, abrechenbar ja/nein **(Basiserfassung erledigt; Timer optional später)**
-- Leistungserfassung: mengenbasierte Einträge aus dem Katalog (z. B. 3 × Beratungspauschale) zusätzlich zu Zeiten
+- Leistungserfassung: mengenbasierte Einträge aus dem Katalog (z. B. 3 × Beratungspauschale) zusätzlich zu Zeiten **(erledigt)**
 - Mitarbeiterportal als eigener, reduzierter SPA-Bereich (eigene Route/Rolle): eigene Zeiten erfassen, Wochenansicht, Abwesenheiten beantragen — mobiltauglich zuerst **(Zeit-Wochenansicht erledigt)**
 - Abwesenheiten: Urlaub, Krankheit, Sonstiges; Genehmigungs-Workflow (beantragt → genehmigt/abgelehnt), Urlaubskonto mit Jahresanspruch
 - Projektcontrolling wird echt: Ist-Stunden vs. Budget, abrechenbar/nicht abrechenbar, noch nicht abgerechnete Zeiten pro Projekt **(für Zeiten erledigt)**

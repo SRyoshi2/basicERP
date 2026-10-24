@@ -138,10 +138,10 @@ Abnahmetests benötigen gemeinsame Entscheidungen und teilweise externe Prüfung
 
 - Zeiteinträge mit Projekt, Arbeitspaket, Mitarbeiter, Datum, Dauer,
   Beschreibung und Abrechenbarkeit. **Erledigt.**
-- Mengenbasierte Leistungen aus dem Katalog.
+- Mengenbasierte Leistungen aus dem Katalog. **Erledigt.**
 - Wochenansicht und mobiltauglicher Erfassungsablauf. **Für Zeiten erledigt.**
 - Ist-Stunden und noch nicht abgerechnete Leistungen im Projektcontrolling.
-  **Für Zeiten erledigt; Mengenleistungen folgen.**
+  **Für Zeiten und Mengenleistungen erledigt.**
 - Abwesenheitsanträge, Freigabe und einfaches Urlaubskonto.
 - Zeit-/Leistungsauswertung mit CSV-Export.
 

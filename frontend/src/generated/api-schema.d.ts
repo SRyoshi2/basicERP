@@ -644,6 +644,70 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/time/service-entries/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["time_service_entries_list"];
+        put?: never;
+        post: operations["time_service_entries_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/time/service-entries/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["time_service_entries_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["time_service_entries_partial_update"];
+        trace?: never;
+    };
+    "/api/v1/time/service-entries/{id}/archive/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["time_service_entries_archive_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/time/service-entries/{id}/history/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["time_service_entries_history_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1057,6 +1121,21 @@ export interface components {
             previous?: string | null;
             results: components["schemas"]["Project"][];
         };
+        PaginatedServiceEntryList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=4
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=2
+             */
+            previous?: string | null;
+            results: components["schemas"]["ServiceEntry"][];
+        };
         PaginatedTimeEntryList: {
             /** @example 123 */
             count: number;
@@ -1176,6 +1255,21 @@ export interface components {
             default_hourly_rate?: string | null;
             version?: number;
         };
+        PatchedServiceEntryUpdate: {
+            /** Format: uuid */
+            project?: string;
+            /** Format: uuid */
+            work_package?: string;
+            /** Format: uuid */
+            catalog_item?: string;
+            /** Format: date */
+            service_date?: string;
+            /** Format: decimal */
+            quantity?: string;
+            description?: string;
+            billable?: boolean;
+            version?: number;
+        };
         PatchedTimeEntryUpdate: {
             /** Format: uuid */
             project?: string;
@@ -1292,6 +1386,11 @@ export interface components {
             unbilled_hours: string;
             /** Format: decimal */
             non_billable_hours: string;
+            service_entry_count: number;
+            /** Format: decimal */
+            service_value: string;
+            /** Format: decimal */
+            unbilled_service_value: string;
             /** Format: decimal */
             actual_value: string;
             /** Format: decimal */
@@ -1307,6 +1406,71 @@ export interface components {
          * @enum {string}
          */
         RoleEnum: "admin" | "employee";
+        ServiceEntry: {
+            /** Format: uuid */
+            readonly id: string;
+            readonly employee: number;
+            readonly employee_name: string;
+            /** Format: uuid */
+            project: string;
+            readonly project_number: string;
+            readonly project_name: string;
+            /** Format: uuid */
+            work_package: string;
+            readonly work_package_title: string;
+            /** Format: uuid */
+            catalog_item: string;
+            /** Format: date */
+            service_date: string;
+            /** Format: decimal */
+            quantity: string;
+            description?: string;
+            billable?: boolean;
+            readonly billing_status: components["schemas"]["TimeEntryBillingStatusEnum"];
+            readonly billing_status_label: string;
+            readonly catalog_item_number_snapshot: string;
+            readonly catalog_item_name_snapshot: string;
+            readonly unit_snapshot: string;
+            readonly unit_label: string;
+            /** Format: decimal */
+            readonly unit_price_snapshot: string;
+            /** Format: decimal */
+            readonly tax_rate_snapshot: string;
+            /** Format: decimal */
+            readonly total_net: string;
+            readonly version: number;
+            /** Format: date-time */
+            readonly archived_at: string | null;
+            /** Format: date-time */
+            readonly created_at: string;
+            /** Format: date-time */
+            readonly updated_at: string;
+        };
+        ServiceEntryAuditEvent: {
+            /** Format: uuid */
+            readonly id: string;
+            action: components["schemas"]["ActionEnum"];
+            /** Format: int64 */
+            version: number;
+            changes?: unknown;
+            readonly actor: string | null;
+            /** Format: date-time */
+            readonly created_at: string;
+        };
+        ServiceEntryCreate: {
+            /** Format: uuid */
+            project: string;
+            /** Format: uuid */
+            work_package: string;
+            /** Format: uuid */
+            catalog_item: string;
+            /** Format: date */
+            service_date: string;
+            /** Format: decimal */
+            quantity: string;
+            description?: string;
+            billable?: boolean;
+        };
         TimeEntry: {
             /** Format: uuid */
             readonly id: string;
@@ -2972,6 +3136,186 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    time_service_entries_list: {
+        parameters: {
+            query?: {
+                archived?: "all" | "false" | "true";
+                billable?: boolean;
+                date_from?: string;
+                date_to?: string;
+                /** @description Nur für Administratoren */
+                employee?: number;
+                /** @description Eine Seitenzahl in der paginierten Ergebnismenge. */
+                page?: number;
+                project?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedServiceEntryList"];
+                };
+            };
+        };
+    };
+    time_service_entries_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ServiceEntryCreate"];
+                "application/x-www-form-urlencoded": components["schemas"]["ServiceEntryCreate"];
+                "multipart/form-data": components["schemas"]["ServiceEntryCreate"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceEntry"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    time_service_entries_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Ein UUID-String, der service entry identifiziert. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceEntry"];
+                };
+            };
+        };
+    };
+    time_service_entries_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Ein UUID-String, der service entry identifiziert. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedServiceEntryUpdate"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedServiceEntryUpdate"];
+                "multipart/form-data": components["schemas"]["PatchedServiceEntryUpdate"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceEntry"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    time_service_entries_archive_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Ein UUID-String, der service entry identifiziert. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceEntry"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    time_service_entries_history_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Ein UUID-String, der service entry identifiziert. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceEntryAuditEvent"][];
                 };
             };
         };

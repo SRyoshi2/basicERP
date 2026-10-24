@@ -1594,6 +1594,208 @@ paths:
               schema:
                 $ref: '#/components/schemas/ApiErrorResponse'
           description: ''
+  /api/v1/time/service-entries/:
+    get:
+      operationId: time_service_entries_list
+      parameters:
+      - in: query
+        name: archived
+        schema:
+          type: string
+          enum:
+          - all
+          - 'false'
+          - 'true'
+      - in: query
+        name: billable
+        schema:
+          type: boolean
+      - in: query
+        name: date_from
+        schema:
+          type: string
+          format: date
+      - in: query
+        name: date_to
+        schema:
+          type: string
+          format: date
+      - in: query
+        name: employee
+        schema:
+          type: integer
+        description: Nur für Administratoren
+      - name: page
+        required: false
+        in: query
+        description: Eine Seitenzahl in der paginierten Ergebnismenge.
+        schema:
+          type: integer
+      - in: query
+        name: project
+        schema:
+          type: string
+          format: uuid
+      tags:
+      - time
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedServiceEntryList'
+          description: ''
+    post:
+      operationId: time_service_entries_create
+      tags:
+      - time
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServiceEntryCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ServiceEntryCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ServiceEntryCreate'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceEntry'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+          description: ''
+  /api/v1/time/service-entries/{id}/:
+    get:
+      operationId: time_service_entries_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Ein UUID-String, der service entry identifiziert.
+        required: true
+      tags:
+      - time
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceEntry'
+          description: ''
+    patch:
+      operationId: time_service_entries_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Ein UUID-String, der service entry identifiziert.
+        required: true
+      tags:
+      - time
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedServiceEntryUpdate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedServiceEntryUpdate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedServiceEntryUpdate'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceEntry'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+          description: ''
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+          description: ''
+  /api/v1/time/service-entries/{id}/archive/:
+    post:
+      operationId: time_service_entries_archive_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Ein UUID-String, der service entry identifiziert.
+        required: true
+      tags:
+      - time
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceEntry'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+          description: ''
+  /api/v1/time/service-entries/{id}/history/:
+    get:
+      operationId: time_service_entries_history_list
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Ein UUID-String, der service entry identifiziert.
+        required: true
+      tags:
+      - time
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ServiceEntryAuditEvent'
+          description: ''
 components:
   schemas:
     ActionEnum:
@@ -2538,6 +2740,29 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Project'
+    PaginatedServiceEntryList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/ServiceEntry'
     PaginatedTimeEntryList:
       type: object
       required:
@@ -2783,6 +3008,32 @@ components:
           format: decimal
           pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
           nullable: true
+        version:
+          type: integer
+          minimum: 1
+    PatchedServiceEntryUpdate:
+      type: object
+      properties:
+        project:
+          type: string
+          format: uuid
+        work_package:
+          type: string
+          format: uuid
+        catalog_item:
+          type: string
+          format: uuid
+        service_date:
+          type: string
+          format: date
+        quantity:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,9}(?:\.\d{0,3})?$
+        description:
+          type: string
+        billable:
+          type: boolean
         version:
           type: integer
           minimum: 1
@@ -3055,6 +3306,16 @@ components:
           type: string
           format: decimal
           pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        service_entry_count:
+          type: integer
+        service_value:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+        unbilled_service_value:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
         actual_value:
           type: string
           format: decimal
@@ -3081,7 +3342,10 @@ components:
       - non_billable_hours
       - remaining_budget_amount
       - remaining_budget_hours
+      - service_entry_count
+      - service_value
       - unbilled_hours
+      - unbilled_service_value
       - unbilled_value
     RoleEnum:
       enum:
@@ -3091,6 +3355,181 @@ components:
       description: |-
         * `admin` - admin
         * `employee` - employee
+    ServiceEntry:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        employee:
+          type: integer
+          readOnly: true
+        employee_name:
+          type: string
+          readOnly: true
+        project:
+          type: string
+          format: uuid
+        project_number:
+          type: string
+          readOnly: true
+        project_name:
+          type: string
+          readOnly: true
+        work_package:
+          type: string
+          format: uuid
+        work_package_title:
+          type: string
+          readOnly: true
+        catalog_item:
+          type: string
+          format: uuid
+        service_date:
+          type: string
+          format: date
+        quantity:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,9}(?:\.\d{0,3})?$
+        description:
+          type: string
+        billable:
+          type: boolean
+        billing_status:
+          allOf:
+          - $ref: '#/components/schemas/TimeEntryBillingStatusEnum'
+          readOnly: true
+        billing_status_label:
+          type: string
+          readOnly: true
+        catalog_item_number_snapshot:
+          type: string
+          readOnly: true
+        catalog_item_name_snapshot:
+          type: string
+          readOnly: true
+        unit_snapshot:
+          type: string
+          readOnly: true
+        unit_label:
+          type: string
+          readOnly: true
+        unit_price_snapshot:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+          readOnly: true
+        tax_rate_snapshot:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+          readOnly: true
+        total_net:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+          readOnly: true
+        version:
+          type: integer
+          readOnly: true
+        archived_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - archived_at
+      - billing_status
+      - billing_status_label
+      - catalog_item
+      - catalog_item_name_snapshot
+      - catalog_item_number_snapshot
+      - created_at
+      - employee
+      - employee_name
+      - id
+      - project
+      - project_name
+      - project_number
+      - quantity
+      - service_date
+      - tax_rate_snapshot
+      - total_net
+      - unit_label
+      - unit_price_snapshot
+      - unit_snapshot
+      - updated_at
+      - version
+      - work_package
+      - work_package_title
+    ServiceEntryAuditEvent:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        action:
+          $ref: '#/components/schemas/ActionEnum'
+        version:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        changes: {}
+        actor:
+          type: string
+          nullable: true
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - action
+      - actor
+      - created_at
+      - id
+      - version
+    ServiceEntryCreate:
+      type: object
+      properties:
+        project:
+          type: string
+          format: uuid
+        work_package:
+          type: string
+          format: uuid
+        catalog_item:
+          type: string
+          format: uuid
+        service_date:
+          type: string
+          format: date
+        quantity:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,9}(?:\.\d{0,3})?$
+        description:
+          type: string
+        billable:
+          type: boolean
+      required:
+      - catalog_item
+      - project
+      - quantity
+      - service_date
+      - work_package
     TimeEntry:
       type: object
       properties:

@@ -4,9 +4,12 @@ import pytest
 from django.contrib.auth import get_user_model
 from django.urls import reverse
 
+from apps.catalog.models import CatalogItem, CatalogPrice
 from apps.crm.models import Contact
 from apps.projects.models import Project, WorkPackage
-from apps.timetracking.models import TimeEntry, TimeEntryAuditEvent
+from apps.timetracking.models import (
+    ServiceEntry, ServiceEntryAuditEvent, TimeEntry, TimeEntryAuditEvent,
+)
 
 
 @pytest.fixture
@@ -52,6 +55,18 @@ def work_package(project, employee):
         project=project, title="Beratung", status="in_progress", planned_hours="12.00",
         assignee=employee, hourly_rate_override="125.00", created_by=employee, updated_by=employee,
     )
+
+
+@pytest.fixture
+def service_item(employee):
+    item = CatalogItem.objects.create(
+        item_number="L-02001", kind=CatalogItem.Kind.SERVICE, name="Workshop-Pauschale",
+        unit=CatalogItem.Unit.FLAT, tax_rate="19.00", created_by=employee, updated_by=employee,
+    )
+    CatalogPrice.objects.create(
+        item=item, net_amount="350.00", valid_from=date.today() - timedelta(days=30)
+    )
+    return item
 
 
 def payload(project, work_package, **overrides):
@@ -214,4 +229,145 @@ def test_project_time_summary_separates_billable_and_non_billable(
         "unbilled_value": "187.50",
         "remaining_budget_hours": "18.00",
         "remaining_budget_amount": "2812.50",
+        "service_entry_count": 0,
+        "service_value": "0.00",
+        "unbilled_service_value": "0.00",
     }
+
+
+def service_payload(project, work_package, service_item, **overrides):
+    return {
+        "project": str(project.id), "work_package": str(work_package.id),
+        "catalog_item": str(service_item.id), "service_date": date.today().isoformat(),
+        "quantity": "3.000", "description": "Drei Workshops", "billable": True,
+        **overrides,
+    }
+
+
+@pytest.mark.django_db
+def test_employee_creates_service_entry_with_complete_catalog_snapshot(
+    api_client, employee, project, work_package, service_item
+):
+    api_client.force_authenticate(employee)
+    response = api_client.post(
+        reverse("service-entry-list"),
+        service_payload(project, work_package, service_item),
+        format="json",
+    )
+
+    assert response.status_code == 201
+    assert response.data["employee"] == employee.id
+    assert response.data["catalog_item_number_snapshot"] == "L-02001"
+    assert response.data["catalog_item_name_snapshot"] == "Workshop-Pauschale"
+    assert response.data["unit_snapshot"] == "flat"
+    assert response.data["unit_price_snapshot"] == "350.00"
+    assert response.data["tax_rate_snapshot"] == "19.00"
+    assert response.data["total_net"] == "1050.00"
+    assert ServiceEntryAuditEvent.objects.get(
+        service_entry_id=response.data["id"]
+    ).action == ServiceEntryAuditEvent.Action.CREATED
+
+
+@pytest.mark.django_db
+def test_service_entry_rejects_product_missing_price_and_invalid_quantity(
+    api_client, employee, project, work_package, service_item
+):
+    product = CatalogItem.objects.create(
+        item_number="A-02002", kind=CatalogItem.Kind.PRODUCT, name="Gerät",
+        unit=CatalogItem.Unit.PIECE, tax_rate="19.00", created_by=employee, updated_by=employee,
+    )
+    CatalogPrice.objects.create(item=product, net_amount="25.00", valid_from=date.today())
+    api_client.force_authenticate(employee)
+
+    invalid_quantity = api_client.post(
+        reverse("service-entry-list"),
+        service_payload(project, work_package, service_item, quantity="0"), format="json",
+    )
+    product_response = api_client.post(
+        reverse("service-entry-list"),
+        service_payload(project, work_package, product), format="json",
+    )
+    missing_price = api_client.post(
+        reverse("service-entry-list"),
+        service_payload(
+            project, work_package, service_item,
+            service_date=(date.today() - timedelta(days=60)).isoformat(),
+        ), format="json",
+    )
+
+    assert invalid_quantity.status_code == 400
+    assert product_response.status_code == 400
+    assert missing_price.status_code == 400
+
+
+@pytest.mark.django_db
+def test_service_entry_isolation_version_archive_and_billed_lock(
+    api_client, employee, other_employee, time_admin, project, work_package, service_item
+):
+    api_client.force_authenticate(employee)
+    created = api_client.post(
+        reverse("service-entry-list"),
+        service_payload(project, work_package, service_item), format="json",
+    ).data
+    detail = reverse("service-entry-detail", args=[created["id"]])
+
+    api_client.force_authenticate(other_employee)
+    assert api_client.get(detail).status_code == 404
+
+    api_client.force_authenticate(employee)
+    missing_version = api_client.patch(detail, {"quantity": "2.000"}, format="json")
+    updated = api_client.patch(
+        detail, {"quantity": "2.000", "version": 1}, format="json"
+    )
+    conflict = api_client.patch(
+        detail, {"quantity": "1.000", "version": 1}, format="json"
+    )
+    assert missing_version.status_code == 400
+    assert updated.status_code == 200
+    assert updated.data["total_net"] == "700.00"
+    assert conflict.status_code == 409
+
+    archived = api_client.post(reverse("service-entry-archive", args=[created["id"]]))
+    assert archived.status_code == 200
+    assert api_client.get(reverse("service-entry-list")).data["count"] == 0
+
+    locked = ServiceEntry.objects.get(pk=created["id"])
+    locked.archived_at = None
+    locked.billing_status = ServiceEntry.BillingStatus.BILLED
+    locked.save(update_fields=("archived_at", "billing_status"))
+    rejected = api_client.patch(
+        detail, {"quantity": "1.000", "version": locked.version}, format="json"
+    )
+    assert rejected.status_code == 400
+
+    api_client.force_authenticate(time_admin)
+    assert api_client.get(reverse("service-entry-list"), {"employee": employee.id}).data[
+        "count"
+    ] == 1
+
+
+@pytest.mark.django_db
+def test_service_entries_extend_project_value_summary(
+    api_client, employee, project, work_package, service_item
+):
+    api_client.force_authenticate(employee)
+    api_client.post(
+        reverse("service-entry-list"),
+        service_payload(project, work_package, service_item, quantity="2.000"), format="json",
+    )
+    api_client.post(
+        reverse("service-entry-list"),
+        service_payload(
+            project, work_package, service_item, quantity="1.000", billable=False,
+            description="Kulanz",
+        ), format="json",
+    )
+
+    summary = api_client.get(reverse("project-time-summary"), {"project": project.id})
+
+    assert summary.status_code == 200
+    assert summary.data["service_entry_count"] == 2
+    assert summary.data["service_value"] == "700.00"
+    assert summary.data["unbilled_service_value"] == "700.00"
+    assert summary.data["actual_value"] == "700.00"
+    assert summary.data["remaining_budget_amount"] == "2300.00"

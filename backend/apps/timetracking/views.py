@@ -3,22 +3,23 @@ from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.pagination import PageNumberPagination
 
 from apps.core.models import User
 from apps.core.permissions import HasCompletedPasswordChange
 from apps.core.serializers import ApiErrorResponseSerializer
 from apps.projects.models import Project
 
-from .models import TimeEntry
+from .models import ServiceEntry, TimeEntry
 from .serializers import (
-    ProjectTimeSummarySerializer, TimeEntryAuditEventSerializer, TimeEntryCreateSerializer,
-    TimeEntrySerializer, TimeEntryUpdateSerializer,
+    ProjectTimeSummarySerializer, ServiceEntryAuditEventSerializer, ServiceEntryCreateSerializer,
+    ServiceEntrySerializer, ServiceEntryUpdateSerializer, TimeEntryAuditEventSerializer,
+    TimeEntryCreateSerializer, TimeEntrySerializer, TimeEntryUpdateSerializer,
 )
-from .services import archive_time_entry, project_time_summary
+from .services import archive_service_entry, archive_time_entry, project_time_summary
 
 
 class TimeEntryPagination(PageNumberPagination):
@@ -104,6 +105,95 @@ class TimeEntryViewSet(
     def history(self, request, pk=None):
         return Response(
             TimeEntryAuditEventSerializer(self.get_object().audit_events.all(), many=True).data
+        )
+
+
+class ServiceEntryViewSet(
+    mixins.CreateModelMixin,
+    mixins.ListModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.UpdateModelMixin,
+    viewsets.GenericViewSet,
+):
+    queryset = ServiceEntry.objects.select_related(
+        "employee", "project", "work_package", "catalog_item"
+    )
+    pagination_class = TimeEntryPagination
+    permission_classes = [IsAuthenticated, HasCompletedPasswordChange]
+    http_method_names = ["get", "post", "patch", "head", "options"]
+
+    @extend_schema(parameters=[
+        OpenApiParameter("date_from", OpenApiTypes.DATE),
+        OpenApiParameter("date_to", OpenApiTypes.DATE),
+        OpenApiParameter("project", OpenApiTypes.UUID),
+        OpenApiParameter("employee", OpenApiTypes.INT, description="Nur für Administratoren"),
+        OpenApiParameter("billable", OpenApiTypes.BOOL),
+        OpenApiParameter("archived", OpenApiTypes.STR, enum=("false", "true", "all")),
+    ])
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
+
+    @extend_schema(
+        request=ServiceEntryCreateSerializer,
+        responses={201: ServiceEntrySerializer, 400: ApiErrorResponseSerializer},
+    )
+    def create(self, request, *args, **kwargs):
+        return super().create(request, *args, **kwargs)
+
+    @extend_schema(
+        request=ServiceEntryUpdateSerializer,
+        responses={200: ServiceEntrySerializer, 400: ApiErrorResponseSerializer, 409: ApiErrorResponseSerializer},
+    )
+    def partial_update(self, request, *args, **kwargs):
+        return super().partial_update(request, *args, **kwargs)
+
+    def get_serializer_class(self):
+        if self.action == "create":
+            return ServiceEntryCreateSerializer
+        if self.action in {"update", "partial_update"}:
+            return ServiceEntryUpdateSerializer
+        return ServiceEntrySerializer
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        if self.request.user.role != User.Role.ADMIN:
+            queryset = queryset.filter(employee=self.request.user)
+        elif employee := self.request.query_params.get("employee"):
+            queryset = queryset.filter(employee_id=employee)
+        if self.action == "list":
+            if value := self.request.query_params.get("date_from"):
+                queryset = queryset.filter(service_date__gte=value)
+            if value := self.request.query_params.get("date_to"):
+                queryset = queryset.filter(service_date__lte=value)
+            if value := self.request.query_params.get("project"):
+                queryset = queryset.filter(project_id=value)
+            if value := self.request.query_params.get("billable"):
+                queryset = queryset.filter(billable=value.lower() == "true")
+            archived = self.request.query_params.get("archived", "false").lower()
+            if archived != "all":
+                queryset = queryset.filter(archived_at__isnull=archived != "true")
+        return queryset
+
+    @extend_schema(
+        request=None, responses={200: ServiceEntrySerializer, 400: ApiErrorResponseSerializer}
+    )
+    @action(detail=True, methods=["post"])
+    def archive(self, request, pk=None):
+        try:
+            entry = archive_service_entry(self.get_object().pk, request.user)
+        except ValueError as error:
+            return Response(
+                {"error": {"code": "invalid_state", "message": str(error)}}, status=400
+            )
+        return Response(ServiceEntrySerializer(entry).data, status=status.HTTP_200_OK)
+
+    @extend_schema(responses={200: ServiceEntryAuditEventSerializer(many=True)})
+    @action(detail=True, methods=["get"], pagination_class=None)
+    def history(self, request, pk=None):
+        return Response(
+            ServiceEntryAuditEventSerializer(
+                self.get_object().audit_events.all(), many=True
+            ).data
         )
 
 

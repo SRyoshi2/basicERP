@@ -80,6 +80,11 @@ export type TimeEntryInput = components["schemas"]["TimeEntryCreate"];
 export type TimeEntryPage = Omit<components["schemas"]["PaginatedTimeEntryList"], "results"> & {
   results: TimeEntry[];
 };
+export type ServiceEntry = Required<components["schemas"]["ServiceEntry"]>;
+export type ServiceEntryInput = components["schemas"]["ServiceEntryCreate"];
+export type ServiceEntryPage = Omit<
+  components["schemas"]["PaginatedServiceEntryList"], "results"
+> & { results: ServiceEntry[] };
 export type ProjectTimeSummary = components["schemas"]["ProjectTimeSummary"];
 export type ManualIncomingInvoiceInput = {
   invoice_number: string;
@@ -410,6 +415,47 @@ export async function updateTimeEntry(entry: TimeEntry, data: TimeEntryInput): P
 
 export async function archiveTimeEntry(entry: TimeEntry): Promise<TimeEntry> {
   return request<TimeEntry>(`/api/v1/time/entries/${entry.id}/archive/`, {
+    method: "POST",
+    body: "{}",
+  });
+}
+
+export async function getServiceEntries(options: {
+  dateFrom?: string;
+  dateTo?: string;
+  project?: string;
+  employee?: string;
+  page?: number;
+} = {}): Promise<ServiceEntryPage> {
+  const params = new URLSearchParams();
+  if (options.dateFrom) params.set("date_from", options.dateFrom);
+  if (options.dateTo) params.set("date_to", options.dateTo);
+  if (options.project) params.set("project", options.project);
+  if (options.employee) params.set("employee", options.employee);
+  if (options.page && options.page > 1) params.set("page", String(options.page));
+  const query = params.size ? `?${params.toString()}` : "";
+  return request<ServiceEntryPage>(`/api/v1/time/service-entries/${query}`);
+}
+
+export async function createServiceEntry(data: ServiceEntryInput): Promise<ServiceEntry> {
+  return request<ServiceEntry>("/api/v1/time/service-entries/", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function updateServiceEntry(
+  entry: ServiceEntry,
+  data: ServiceEntryInput,
+): Promise<ServiceEntry> {
+  return request<ServiceEntry>(`/api/v1/time/service-entries/${entry.id}/`, {
+    method: "PATCH",
+    body: JSON.stringify({ ...data, version: entry.version }),
+  });
+}
+
+export async function archiveServiceEntry(entry: ServiceEntry): Promise<ServiceEntry> {
+  return request<ServiceEntry>(`/api/v1/time/service-entries/${entry.id}/archive/`, {
     method: "POST",
     body: "{}",
   });

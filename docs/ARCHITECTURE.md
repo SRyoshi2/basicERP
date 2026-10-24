@@ -242,6 +242,7 @@ Freigabelogik folgt der Trennung konsequent.
 | Project | Kunde, Status und Budget; Sätze werden zeitlich/sachlich eindeutig aufgelöst |
 | WorkPackage | gehört genau zu einem Projekt; Status, Planstunden, Mitarbeiter und optionaler Satz-Override |
 | TimeEntry | positive Dauer, Mitarbeiter/Projekt/Arbeitspaket; Satz-Snapshot; Abrechnungsstatus; abgerechnete Einträge gesperrt |
+| ServiceEntry | positive Menge; Projekt/Arbeitspaket/Katalogleistung; Preis-/Steuer-/Text-Snapshot; abgerechnete Einträge gesperrt |
 | Invoice | Summe der Positionen/Steuern; erlaubter Zustandsübergang; finaler Snapshot unveränderlich |
 | NumberSequence | Eindeutigkeit je Dokumentart/Jahr; Zuweisung unter Datenbanksperre |
 | Payment | Summe darf fachlich nachvollziehbar zu offen/teil-/bezahlt führen |
@@ -275,6 +276,15 @@ können projekt- und mitarbeiterübergreifend auswerten. Abgerechnete Einträge
 sind unveränderlich. Das Projektmodul bleibt Eigentümer von Plan und Budget;
 die Ist-Zusammenfassung wird über einen öffentlichen, read-only
 `timetracking`-Anwendungsservice bereitgestellt.
+
+Mengenleistungen werden als eigenes `ServiceEntry`-Aggregat geführt und nicht
+in künstliche Stunden umgerechnet. Der am Leistungsdatum gültige Katalogpreis
+sowie Artikelnummer, Bezeichnung, Einheit und Steuersatz werden beim Erfassen
+gesichert. Damit bleiben spätere Auswertungen und Rechnungsentwürfe trotz
+Katalogänderungen reproduzierbar. Nur Katalogeinträge vom Typ `service` und mit
+einem am Leistungsdatum gültigen Preis dürfen erfasst werden. Das gemeinsame
+Projektcontrolling summiert abrechenbare Zeit- und Leistungswerte, weist
+Leistungswerte aber zusätzlich separat aus.
 
 ### Rechnungssnapshot
 

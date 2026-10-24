@@ -13,6 +13,7 @@ import { ContactsPage } from "./Contacts";
 import { CatalogPage } from "./Catalog";
 import { IncomingInvoicesPage } from "./IncomingInvoices";
 import { ProjectsPage } from "./Projects";
+import { ServiceTrackingPage } from "./ServiceTracking";
 import { TimeTrackingPage } from "./TimeTracking";
 
 function Brand() {
@@ -242,7 +243,7 @@ function CompanySettings({ user, onBack }: { user: User; onBack: () => void }) {
 }
 
 function Dashboard({ user, onLogout }: { user: User; onLogout: () => void }) {
-  const [view, setView] = useState<"dashboard" | "company" | "contacts" | "catalog" | "incoming-invoices" | "projects" | "time">("dashboard");
+  const [view, setView] = useState<"dashboard" | "company" | "contacts" | "catalog" | "incoming-invoices" | "projects" | "time" | "services">("dashboard");
 
   return (
     <div className="min-h-screen bg-slate-100">
@@ -255,7 +256,7 @@ function Dashboard({ user, onLogout }: { user: User; onLogout: () => void }) {
           </div>
         </div>
       </header>
-      {view === "company" ? <CompanySettings user={user} onBack={() => setView("dashboard")} /> : view === "contacts" ? <ContactsPage user={user} onBack={() => setView("dashboard")} /> : view === "catalog" ? <CatalogPage user={user} onBack={() => setView("dashboard")} /> : view === "incoming-invoices" ? <IncomingInvoicesPage onBack={() => setView("dashboard")} /> : view === "projects" ? <ProjectsPage user={user} onBack={() => setView("dashboard")} /> : view === "time" ? <TimeTrackingPage user={user} onBack={() => setView("dashboard")} /> : (
+      {view === "company" ? <CompanySettings user={user} onBack={() => setView("dashboard")} /> : view === "contacts" ? <ContactsPage user={user} onBack={() => setView("dashboard")} /> : view === "catalog" ? <CatalogPage user={user} onBack={() => setView("dashboard")} /> : view === "incoming-invoices" ? <IncomingInvoicesPage onBack={() => setView("dashboard")} /> : view === "projects" ? <ProjectsPage user={user} onBack={() => setView("dashboard")} /> : view === "time" ? <TimeTrackingPage user={user} onBack={() => setView("dashboard")} /> : view === "services" ? <ServiceTrackingPage user={user} onBack={() => setView("dashboard")} /> : (
       <main className="mx-auto max-w-7xl px-6 py-10">
         <div className="rounded-[2rem] bg-slate-950 p-8 text-white shadow-xl">
           <p className="text-sm font-semibold uppercase tracking-[0.2em] text-cyan-300">v0.4 · Zeit &amp; Portal im Aufbau</p>
@@ -266,6 +267,10 @@ function Dashboard({ user, onLogout }: { user: User; onLogout: () => void }) {
           <button onClick={() => setView("time")} className="rounded-2xl border border-teal-200 bg-teal-50 p-6 text-left shadow-sm transition hover:-translate-y-1 hover:shadow-lg">
             <p className="text-sm font-bold uppercase tracking-wider text-teal-800">Zeiterfassung</p>
             <p className="mt-3 font-semibold text-slate-900">Eigene Arbeitswoche erfassen</p>
+          </button>
+          <button onClick={() => setView("services")} className="rounded-2xl border border-amber-200 bg-amber-50 p-6 text-left shadow-sm transition hover:-translate-y-1 hover:shadow-lg">
+            <p className="text-sm font-bold uppercase tracking-wider text-amber-800">Leistungen</p>
+            <p className="mt-3 font-semibold text-slate-900">Mengen aus dem Katalog erfassen</p>
           </button>
           <button onClick={() => setView("projects")} className="rounded-2xl border border-violet-200 bg-violet-50 p-6 text-left shadow-sm transition hover:-translate-y-1 hover:shadow-lg">
             <p className="text-sm font-bold uppercase tracking-wider text-violet-800">Projekte</p>
