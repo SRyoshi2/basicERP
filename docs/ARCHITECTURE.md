@@ -1,7 +1,7 @@
 # basicERP – Softwarearchitektur
 
 **Stand:** 24.10.2026
-**Status:** Angenommen; Phase 0, Phase 1, Phase 1a und Phase 2 abgeschlossen; Phase 3 in Umsetzung
+**Status:** Angenommen; Phase 0, Phase 1, Phase 1a, Phase 2 und Phase 3 abgeschlossen; Phase 4 als Nächstes
 **Zugehörige Entscheidung:** [`ADR-0001`](adr/0001-modularer-monolith.md), [`ADR-0002`](adr/0002-belegfestschreibung-und-outbox.md)
 
 ## 1. Kurzfassung
@@ -295,6 +295,15 @@ das Urlaubskonto, Krankheit und sonstige Abwesenheit nicht. Arbeitstage werden
 in dieser Ausbaustufe als Montag bis Freitag berechnet; ein regionaler
 Feiertagskalender bleibt eine explizite spätere Erweiterung. Statusübergänge
 und Änderungen sind auditierbar und versionsgeschützt.
+
+Die Zeit-/Leistungsauswertung ist eine schreibgeschützte Projektion über
+`TimeEntry` und `ServiceEntry`. Sie greift ausschließlich auf nicht archivierte
+Einträge und deren historische Satz-/Preissnapshots zu. Mitarbeiter werden auf
+die eigenen Daten eingeschränkt; nur Administratoren dürfen projekt- und
+mitarbeiterübergreifend filtern. JSON und Excel-kompatible UTF-8-CSV werden aus
+demselben Report-Service erzeugt, damit Summen und Export nicht auseinanderlaufen.
+Berichtszeiträume sind auf 366 Tage begrenzt; größere Auswertungen werden später
+als Hintergrundexport ergänzt, falls reale Datenmengen dies erfordern.
 
 ### Rechnungssnapshot
 

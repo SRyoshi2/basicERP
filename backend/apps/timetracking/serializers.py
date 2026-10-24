@@ -1,4 +1,7 @@
 from decimal import Decimal
+from datetime import timedelta
+
+from django.utils import timezone
 
 from rest_framework import serializers
 
@@ -231,3 +234,56 @@ class ProjectTimeSummarySerializer(serializers.Serializer):
     remaining_budget_amount = serializers.DecimalField(
         max_digits=14, decimal_places=2, allow_null=True
     )
+
+
+class TimeReportFilterSerializer(serializers.Serializer):
+    date_from = serializers.DateField(required=False)
+    date_to = serializers.DateField(required=False)
+    project = serializers.UUIDField(required=False)
+    employee = serializers.IntegerField(required=False, min_value=1)
+
+    def validate(self, attrs):
+        today = timezone.localdate()
+        date_from = attrs.get("date_from", today.replace(day=1))
+        date_to = attrs.get("date_to", today)
+        if date_to < date_from:
+            raise serializers.ValidationError({"date_to": "Das Enddatum darf nicht vor dem Startdatum liegen."})
+        if date_to - date_from > timedelta(days=365):
+            raise serializers.ValidationError({"date_to": "Der Berichtszeitraum darf höchstens 366 Tage umfassen."})
+        attrs["date_from"] = date_from
+        attrs["date_to"] = date_to
+        return attrs
+
+
+class TimeReportSummarySerializer(serializers.Serializer):
+    time_entry_count = serializers.IntegerField()
+    total_hours = serializers.DecimalField(max_digits=14, decimal_places=2)
+    billable_hours = serializers.DecimalField(max_digits=14, decimal_places=2)
+    time_value = serializers.DecimalField(max_digits=18, decimal_places=2)
+    service_entry_count = serializers.IntegerField()
+    service_quantity = serializers.DecimalField(max_digits=18, decimal_places=3)
+    service_value = serializers.DecimalField(max_digits=18, decimal_places=2)
+    total_value = serializers.DecimalField(max_digits=18, decimal_places=2)
+
+
+class TimeReportRowSerializer(serializers.Serializer):
+    entry_type = serializers.ChoiceField(choices=("time", "service"))
+    date = serializers.DateField()
+    employee_name = serializers.CharField()
+    project_number = serializers.CharField()
+    project_name = serializers.CharField()
+    work_package_title = serializers.CharField()
+    description = serializers.CharField()
+    hours = serializers.DecimalField(max_digits=14, decimal_places=2, allow_null=True)
+    quantity = serializers.DecimalField(max_digits=18, decimal_places=3, allow_null=True)
+    unit = serializers.CharField()
+    billable = serializers.BooleanField()
+    net_value = serializers.DecimalField(max_digits=18, decimal_places=2, allow_null=True)
+    billing_status = serializers.CharField()
+
+
+class TimeReportSerializer(serializers.Serializer):
+    date_from = serializers.DateField()
+    date_to = serializers.DateField()
+    summary = TimeReportSummarySerializer()
+    rows = TimeReportRowSerializer(many=True)

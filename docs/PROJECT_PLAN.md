@@ -1,7 +1,7 @@
 # basicERP – Projektplan
 
 **Stand:** 24.10.2026
-**Status:** Freigegeben; Phase 0, Phase 1, Phase 1a und Phase 2 abgeschlossen; Phase 3 in Umsetzung
+**Status:** Freigegeben; Phase 0, Phase 1, Phase 1a, Phase 2 und Phase 3 abgeschlossen; Phase 4 als Nächstes
 **Quelle:** [`ROADMAP.md`](../ROADMAP.md)
 
 ## 1. Zielbild
@@ -134,7 +134,7 @@ Abnahmetests benötigen gemeinsame Entscheidungen und teilweise externe Prüfung
   Satzüberschreibung. **Erledigt.**
 - Listen-/Boardansicht und Plancontrolling. **Erledigt.**
 
-### Iteration 7 – Zeit- und Leistungserfassung (in Umsetzung)
+### Iteration 7 – Zeit- und Leistungserfassung (abgeschlossen)
 
 - Zeiteinträge mit Projekt, Arbeitspaket, Mitarbeiter, Datum, Dauer,
   Beschreibung und Abrechenbarkeit. **Erledigt.**
@@ -143,7 +143,8 @@ Abnahmetests benötigen gemeinsame Entscheidungen und teilweise externe Prüfung
 - Ist-Stunden und noch nicht abgerechnete Leistungen im Projektcontrolling.
   **Für Zeiten und Mengenleistungen erledigt.**
 - Abwesenheitsanträge, Freigabe und einfaches Urlaubskonto. **Erledigt; Arbeitstage derzeit Montag bis Freitag ohne Feiertagskalender.**
-- Zeit-/Leistungsauswertung mit CSV-Export.
+- Zeit-/Leistungsauswertung mit Zeitraum-, Projekt- und Mitarbeiterfilter sowie
+  Excel-kompatiblem CSV-Export. **Erledigt.**
 
 ## 6. Arbeitsweise und Qualitätsregeln
 

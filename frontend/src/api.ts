@@ -86,6 +86,13 @@ export type ServiceEntryPage = Omit<
   components["schemas"]["PaginatedServiceEntryList"], "results"
 > & { results: ServiceEntry[] };
 export type ProjectTimeSummary = components["schemas"]["ProjectTimeSummary"];
+export type TimeReport = components["schemas"]["TimeReport"];
+export type TimeReportFilters = {
+  dateFrom: string;
+  dateTo: string;
+  project?: string;
+  employee?: string;
+};
 export type AbsenceRequest = Required<components["schemas"]["AbsenceRequest"]>;
 export type AbsenceInput = components["schemas"]["AbsenceCreate"];
 export type AbsencePage = Omit<
@@ -471,6 +478,21 @@ export async function archiveServiceEntry(entry: ServiceEntry): Promise<ServiceE
 export async function getProjectTimeSummary(projectId: string): Promise<ProjectTimeSummary> {
   const params = new URLSearchParams({ project: projectId });
   return request<ProjectTimeSummary>(`/api/v1/time/project-summary/?${params.toString()}`);
+}
+
+function timeReportQuery(options: TimeReportFilters): string {
+  const params = new URLSearchParams({ date_from: options.dateFrom, date_to: options.dateTo });
+  if (options.project) params.set("project", options.project);
+  if (options.employee) params.set("employee", options.employee);
+  return params.toString();
+}
+
+export async function getTimeReport(options: TimeReportFilters): Promise<TimeReport> {
+  return request<TimeReport>(`/api/v1/time/report/?${timeReportQuery(options)}`);
+}
+
+export function timeReportExportUrl(options: TimeReportFilters): string {
+  return `/api/v1/time/report/export/?${timeReportQuery(options)}`;
 }
 
 export async function getAbsences(options: {

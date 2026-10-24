@@ -77,6 +77,98 @@ def payload(project, work_package, **overrides):
     }
 
 
+def create_report_entries(employee, project, work_package, service_item, *, entry_date=None):
+    entry_date = entry_date or date.today()
+    time_entry = TimeEntry.objects.create(
+        employee=employee, project=project, work_package=work_package, work_date=entry_date,
+        duration_minutes=90, description="Analyse", billable=True,
+        hourly_rate_snapshot="125.00", created_by=employee, updated_by=employee,
+    )
+    service_entry = ServiceEntry.objects.create(
+        employee=employee, project=project, work_package=work_package, catalog_item=service_item,
+        service_date=entry_date, quantity="2.000", description="Workshop", billable=True,
+        catalog_item_number_snapshot=service_item.item_number,
+        catalog_item_name_snapshot=service_item.name, unit_snapshot=service_item.unit,
+        unit_price_snapshot="350.00", tax_rate_snapshot="19.00",
+        created_by=employee, updated_by=employee,
+    )
+    return time_entry, service_entry
+
+
+@pytest.mark.django_db
+def test_report_combines_time_and_services_and_restricts_employee_data(
+    api_client, employee, other_employee, project, work_package, service_item
+):
+    create_report_entries(employee, project, work_package, service_item)
+    TimeEntry.objects.create(
+        employee=other_employee, project=project, work_package=work_package,
+        work_date=date.today(), duration_minutes=60, description="Fremder Eintrag",
+        billable=True, hourly_rate_snapshot="100.00", created_by=other_employee,
+        updated_by=other_employee,
+    )
+    api_client.force_authenticate(employee)
+
+    response = api_client.get(reverse("time-report"), {
+        "date_from": date.today().isoformat(), "date_to": date.today().isoformat(),
+        "employee": other_employee.id,
+    })
+
+    assert response.status_code == 200
+    assert response.data["summary"] == {
+        "time_entry_count": 1, "total_hours": "1.50", "billable_hours": "1.50",
+        "time_value": "187.50", "service_entry_count": 1,
+        "service_quantity": "2.000", "service_value": "700.00", "total_value": "887.50",
+    }
+    assert [row["entry_type"] for row in response.data["rows"]] == ["service", "time"]
+    assert all(row["employee_name"] == employee.username for row in response.data["rows"])
+
+
+@pytest.mark.django_db
+def test_admin_report_filters_employee_and_exports_excel_compatible_csv(
+    api_client, employee, other_employee, time_admin, project, work_package, service_item
+):
+    time_entry, _ = create_report_entries(employee, project, work_package, service_item)
+    time_entry.description = "=HYPERLINK(\"https://example.test\")"
+    time_entry.save(update_fields=("description",))
+    TimeEntry.objects.create(
+        employee=other_employee, project=project, work_package=work_package,
+        work_date=date.today(), duration_minutes=60, description="Nicht im Export",
+        billable=True, hourly_rate_snapshot="100.00", created_by=other_employee,
+        updated_by=other_employee,
+    )
+    api_client.force_authenticate(time_admin)
+    params = {
+        "date_from": date.today().isoformat(), "date_to": date.today().isoformat(),
+        "project": project.id, "employee": employee.id,
+    }
+
+    response = api_client.get(reverse("time-report-export"), params)
+
+    assert response.status_code == 200
+    assert response["Content-Type"].startswith("text/csv")
+    assert "zeiterfassung-" in response["Content-Disposition"]
+    content = response.content.decode("utf-8")
+    assert content.startswith("\ufeffArt;Datum;Mitarbeiter")
+    assert "Zeit;" in content and "Leistung;" in content
+    assert ";1,50;" in content and ";2,000;" in content and ";700,00;" in content
+    assert "'=HYPERLINK" in content
+    assert "Nicht im Export" not in content
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("date_from,date_to", [
+    ("2026-10-02", "2026-10-01"),
+    ("2025-01-01", "2026-01-02"),
+])
+def test_report_rejects_invalid_date_ranges(api_client, employee, date_from, date_to):
+    api_client.force_authenticate(employee)
+    response = api_client.get(reverse("time-report"), {
+        "date_from": date_from, "date_to": date_to,
+    })
+    assert response.status_code == 400
+    assert response.data["error"]["code"] == "validation_error"
+
+
 @pytest.mark.django_db
 def test_employee_creates_own_time_with_rate_snapshot_and_audit(
     api_client, employee, project, work_package

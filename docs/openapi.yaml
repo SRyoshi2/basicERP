@@ -1906,6 +1906,88 @@ paths:
               schema:
                 $ref: '#/components/schemas/ApiErrorResponse'
           description: ''
+  /api/v1/time/report/:
+    get:
+      operationId: time_report_retrieve
+      parameters:
+      - in: query
+        name: date_from
+        schema:
+          type: string
+          format: date
+        description: 'Standard: erster Tag des aktuellen Monats'
+      - in: query
+        name: date_to
+        schema:
+          type: string
+          format: date
+        description: 'Standard: heute'
+      - in: query
+        name: employee
+        schema:
+          type: integer
+        description: Nur für Administratoren
+      - in: query
+        name: project
+        schema:
+          type: string
+          format: uuid
+      tags:
+      - time
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TimeReport'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+          description: ''
+  /api/v1/time/report/export/:
+    get:
+      operationId: time_report_export_retrieve
+      parameters:
+      - in: query
+        name: date_from
+        schema:
+          type: string
+          format: date
+        description: 'Standard: erster Tag des aktuellen Monats'
+      - in: query
+        name: date_to
+        schema:
+          type: string
+          format: date
+        description: 'Standard: heute'
+      - in: query
+        name: employee
+        schema:
+          type: integer
+        description: Nur für Administratoren
+      - in: query
+        name: project
+        schema:
+          type: string
+          format: uuid
+      tags:
+      - time
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          description: Excel-kompatibler CSV-Export
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+          description: ''
   /api/v1/time/service-entries/:
     get:
       operationId: time_service_entries_list
@@ -2245,9 +2327,8 @@ components:
           $ref: '#/components/schemas/AbsenceActionEnum'
         version:
           type: integer
-          maximum: 9223372036854775807
+          maximum: 2147483647
           minimum: 0
-          format: int64
         changes: {}
         actor:
           type: string
@@ -2380,9 +2461,8 @@ components:
           $ref: '#/components/schemas/AuditActionEnum'
         version:
           type: integer
-          maximum: 9223372036854775807
+          maximum: 2147483647
           minimum: 0
-          format: int64
         changes: {}
         actor:
           type: string
@@ -2433,9 +2513,8 @@ components:
           readOnly: true
         version:
           type: integer
-          maximum: 9223372036854775807
+          maximum: 2147483647
           minimum: 0
-          format: int64
         archived_at:
           type: string
           format: date-time
@@ -2654,9 +2733,8 @@ components:
           maxLength: 64
         version:
           type: integer
-          maximum: 9223372036854775807
+          maximum: 2147483647
           minimum: 0
-          format: int64
         archived_at:
           type: string
           format: date-time
@@ -2760,9 +2838,8 @@ components:
           $ref: '#/components/schemas/AuditActionEnum'
         version:
           type: integer
-          maximum: 9223372036854775807
+          maximum: 2147483647
           minimum: 0
-          format: int64
         changes: {}
         actor:
           type: string
@@ -2954,6 +3031,14 @@ components:
       description: |-
         * `approved` - approved
         * `rejected` - rejected
+    EntryTypeEnum:
+      enum:
+      - time
+      - service
+      type: string
+      description: |-
+        * `time` - time
+        * `service` - service
     Health:
       type: object
       properties:
@@ -3149,9 +3234,8 @@ components:
           readOnly: true
         year:
           type: integer
-          maximum: 9223372036854775807
+          maximum: 32767
           minimum: 0
-          format: int64
         entitlement_days:
           type: string
           format: decimal
@@ -3162,9 +3246,8 @@ components:
           pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
         version:
           type: integer
-          maximum: 9223372036854775807
+          maximum: 2147483647
           minimum: 0
-          format: int64
         updated_at:
           type: string
           format: date-time
@@ -3777,9 +3860,8 @@ components:
           nullable: true
         version:
           type: integer
-          maximum: 9223372036854775807
+          maximum: 2147483647
           minimum: 0
-          format: int64
         archived_at:
           type: string
           format: date-time
@@ -3813,9 +3895,8 @@ components:
           $ref: '#/components/schemas/AuditActionEnum'
         version:
           type: integer
-          maximum: 9223372036854775807
+          maximum: 2147483647
           minimum: 0
-          format: int64
         changes: {}
         actor:
           type: string
@@ -4117,9 +4198,8 @@ components:
           $ref: '#/components/schemas/AuditActionEnum'
         version:
           type: integer
-          maximum: 9223372036854775807
+          maximum: 2147483647
           minimum: 0
-          format: int64
         changes: {}
         actor:
           type: string
@@ -4197,9 +4277,8 @@ components:
           format: date
         duration_minutes:
           type: integer
-          maximum: 9223372036854775807
+          maximum: 2147483647
           minimum: 0
-          format: int64
         duration_hours:
           type: string
           format: decimal
@@ -4276,9 +4355,8 @@ components:
           $ref: '#/components/schemas/AuditActionEnum'
         version:
           type: integer
-          maximum: 9223372036854775807
+          maximum: 2147483647
           minimum: 0
-          format: int64
         changes: {}
         actor:
           type: string
@@ -4328,6 +4406,119 @@ components:
       - project
       - work_date
       - work_package
+    TimeReport:
+      type: object
+      properties:
+        date_from:
+          type: string
+          format: date
+        date_to:
+          type: string
+          format: date
+        summary:
+          $ref: '#/components/schemas/TimeReportSummary'
+        rows:
+          type: array
+          items:
+            $ref: '#/components/schemas/TimeReportRow'
+      required:
+      - date_from
+      - date_to
+      - rows
+      - summary
+    TimeReportRow:
+      type: object
+      properties:
+        entry_type:
+          $ref: '#/components/schemas/EntryTypeEnum'
+        date:
+          type: string
+          format: date
+        employee_name:
+          type: string
+        project_number:
+          type: string
+        project_name:
+          type: string
+        work_package_title:
+          type: string
+        description:
+          type: string
+        hours:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+          nullable: true
+        quantity:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,15}(?:\.\d{0,3})?$
+          nullable: true
+        unit:
+          type: string
+        billable:
+          type: boolean
+        net_value:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+          nullable: true
+        billing_status:
+          type: string
+      required:
+      - billable
+      - billing_status
+      - date
+      - description
+      - employee_name
+      - entry_type
+      - hours
+      - net_value
+      - project_name
+      - project_number
+      - quantity
+      - unit
+      - work_package_title
+    TimeReportSummary:
+      type: object
+      properties:
+        time_entry_count:
+          type: integer
+        total_hours:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+        billable_hours:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+        time_value:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+        service_entry_count:
+          type: integer
+        service_quantity:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,15}(?:\.\d{0,3})?$
+        service_value:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+        total_value:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+      required:
+      - billable_hours
+      - service_entry_count
+      - service_quantity
+      - service_value
+      - time_entry_count
+      - time_value
+      - total_hours
+      - total_value
     User:
       type: object
       properties:
@@ -4407,9 +4598,8 @@ components:
           nullable: true
         version:
           type: integer
-          maximum: 9223372036854775807
+          maximum: 2147483647
           minimum: 0
-          format: int64
         archived_at:
           type: string
           format: date-time
@@ -4443,9 +4633,8 @@ components:
           $ref: '#/components/schemas/AuditActionEnum'
         version:
           type: integer
-          maximum: 9223372036854775807
+          maximum: 2147483647
           minimum: 0
-          format: int64
         changes: {}
         actor:
           type: string

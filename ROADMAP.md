@@ -1,6 +1,6 @@
 # basicERP — Fahrplan zur Umsetzung
 
-**Stand:** 24.10.2026 · **Status:** Phase 0, Phase 1, Phase 1a und Phase 2 abgeschlossen; Phase 3 in Umsetzung
+**Stand:** 24.10.2026 · **Status:** Phase 0, Phase 1, Phase 1a, Phase 2 und Phase 3 abgeschlossen; Phase 4 als Nächstes
 
 > Der fortlaufend aktualisierte Fahrplan mit Umsetzungsstand und Testanleitung
 > liegt in [`ROADMAP.html`](ROADMAP.html). Dieses Dokument bleibt die fachliche
@@ -95,8 +95,8 @@ Planstunden, Planwert, Restbudgets und gewichteter Fortschritt sind umgesetzt.
 ### Phase 3 — Zeit- & Leistungserfassung + Mitarbeiterportal (v0.4)
 **Ziel:** Der tägliche Erfassungs-Workflow — bewusst vor der Rechnungserstellung, damit "Zeiten → Rechnung" später durchgängig ist.
 
-**Umsetzungsstand:** In Umsetzung. Der erste vertikale Schnitt ist abgeschlossen:
-Mitarbeiter erfassen eigene Zeiten in einer mobiltauglichen Wochenansicht; Projekt,
+**Umsetzungsstand:** Abgeschlossen. Mitarbeiter erfassen eigene Zeiten in einer
+mobiltauglichen Wochenansicht; Projekt,
 Arbeitspaket, Datum, Dauer, Beschreibung und Abrechenbarkeit werden gespeichert.
 Der beim Erfassen gültige Stundensatz wird als historischer Snapshot gesichert.
 Projektcontrolling zeigt Ist-, abrechenbare und noch nicht abgerechnete Stunden
@@ -105,14 +105,16 @@ sowie Ist-Wert und Restbudget. Mengenbasierte Katalogleistungen sind ebenfalls
 werden historisch gesichert und im Ist-Wert berücksichtigt. Urlaub, Krankheit
 und sonstige Abwesenheiten besitzen einen Genehmigungsworkflow; Jahresanspruch,
 Übertrag, genehmigte, beantragte und verbleibende Urlaubstage sind sichtbar.
-Die CSV-Auswertung folgt als letzter Phase-3-Schritt.
+Die kombinierte Auswertung filtert nach Zeitraum, Projekt und – für
+Administratoren – Mitarbeiter, trennt Zeit- und Leistungswerte und exportiert
+eine Excel-kompatible UTF-8-CSV auf Basis der historischen Preis-Snapshots.
 
 - Zeiteintrag: Datum, Dauer (oder Start/Stopp-Timer), Projekt, Arbeitspaket, Tätigkeitsbeschreibung, abrechenbar ja/nein **(Basiserfassung erledigt; Timer optional später)**
 - Leistungserfassung: mengenbasierte Einträge aus dem Katalog (z. B. 3 × Beratungspauschale) zusätzlich zu Zeiten **(erledigt)**
 - Mitarbeiterportal als eigener, reduzierter SPA-Bereich (eigene Route/Rolle): eigene Zeiten erfassen, Wochenansicht, Abwesenheiten beantragen — mobiltauglich zuerst **(Zeit-Wochenansicht erledigt)**
 - Abwesenheiten: Urlaub, Krankheit, Sonstiges; Genehmigungs-Workflow (beantragt → genehmigt/abgelehnt), Urlaubskonto mit Jahresanspruch **(erledigt; Feiertagskalender später)**
 - Projektcontrolling wird echt: Ist-Stunden vs. Budget, abrechenbar/nicht abrechenbar, noch nicht abgerechnete Zeiten pro Projekt **(für Zeiten erledigt)**
-- Auswertungen: Zeiten pro Projekt/Mitarbeiter/Zeitraum, CSV-Export
+- Auswertungen: Zeiten pro Projekt/Mitarbeiter/Zeitraum, CSV-Export **(erledigt)**
 
 **Fertig wenn:** Ein Mitarbeiter kann seinen Arbeitstag komplett im Portal erfassen; das Projekt zeigt live Budget vs. Ist.
 

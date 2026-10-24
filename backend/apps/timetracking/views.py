@@ -1,6 +1,10 @@
+import csv
+from io import StringIO
+
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from drf_spectacular.types import OpenApiTypes
-from drf_spectacular.utils import OpenApiParameter, extend_schema
+from drf_spectacular.utils import OpenApiParameter, OpenApiResponse, extend_schema
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
@@ -14,10 +18,12 @@ from apps.core.serializers import ApiErrorResponseSerializer
 from apps.projects.models import Project
 
 from .models import ServiceEntry, TimeEntry
+from .reporting import build_time_report
 from .serializers import (
     ProjectTimeSummarySerializer, ServiceEntryAuditEventSerializer, ServiceEntryCreateSerializer,
     ServiceEntrySerializer, ServiceEntryUpdateSerializer, TimeEntryAuditEventSerializer,
     TimeEntryCreateSerializer, TimeEntrySerializer, TimeEntryUpdateSerializer,
+    TimeReportFilterSerializer, TimeReportSerializer,
 )
 from .services import archive_service_entry, archive_time_entry, project_time_summary
 
@@ -213,3 +219,84 @@ class ProjectTimeSummaryView(APIView):
             )
         project = get_object_or_404(Project, pk=project_id)
         return Response(ProjectTimeSummarySerializer(project_time_summary(project)).data)
+
+
+REPORT_PARAMETERS = [
+    OpenApiParameter("date_from", OpenApiTypes.DATE, description="Standard: erster Tag des aktuellen Monats"),
+    OpenApiParameter("date_to", OpenApiTypes.DATE, description="Standard: heute"),
+    OpenApiParameter("project", OpenApiTypes.UUID),
+    OpenApiParameter("employee", OpenApiTypes.INT, description="Nur für Administratoren"),
+]
+
+
+def _report_from_request(request):
+    filters = TimeReportFilterSerializer(data=request.query_params)
+    filters.is_valid(raise_exception=True)
+    values = filters.validated_data
+    return build_time_report(
+        request.user,
+        date_from=values["date_from"],
+        date_to=values["date_to"],
+        project_id=values.get("project"),
+        employee_id=values.get("employee"),
+    )
+
+
+class TimeReportView(APIView):
+    permission_classes = [IsAuthenticated, HasCompletedPasswordChange]
+
+    @extend_schema(
+        parameters=REPORT_PARAMETERS,
+        responses={200: TimeReportSerializer, 400: ApiErrorResponseSerializer},
+    )
+    def get(self, request):
+        return Response(TimeReportSerializer(_report_from_request(request)).data)
+
+
+def _csv_decimal(value, decimal_places):
+    if value is None:
+        return ""
+    return f"{value:.{decimal_places}f}".replace(".", ",")
+
+
+def _csv_text(value):
+    text = str(value)
+    if text.startswith(("=", "+", "-", "@", "\t", "\r")):
+        return "'" + text
+    return text
+
+
+class TimeReportExportView(APIView):
+    permission_classes = [IsAuthenticated, HasCompletedPasswordChange]
+
+    @extend_schema(
+        parameters=REPORT_PARAMETERS,
+        responses={
+            (200, "text/csv"): OpenApiResponse(description="Excel-kompatibler CSV-Export"),
+            400: ApiErrorResponseSerializer,
+        },
+    )
+    def get(self, request):
+        report = _report_from_request(request)
+        stream = StringIO()
+        writer = csv.writer(stream, delimiter=";", lineterminator="\r\n")
+        writer.writerow([
+            "Art", "Datum", "Mitarbeiter", "Projektnummer", "Projekt", "Arbeitspaket",
+            "Beschreibung", "Stunden", "Menge", "Einheit", "Abrechenbar", "Nettowert EUR",
+            "Abrechnungsstatus",
+        ])
+        for row in report["rows"]:
+            writer.writerow([
+                "Zeit" if row["entry_type"] == "time" else "Leistung",
+                row["date"].strftime("%d.%m.%Y"), _csv_text(row["employee_name"]),
+                _csv_text(row["project_number"]), _csv_text(row["project_name"]),
+                _csv_text(row["work_package_title"]), _csv_text(row["description"]),
+                _csv_decimal(row["hours"], 2), _csv_decimal(row["quantity"], 3),
+                _csv_text(row["unit"]),
+                "Ja" if row["billable"] else "Nein", _csv_decimal(row["net_value"], 2),
+                _csv_text(row["billing_status"]),
+            ])
+        filename = f'zeiterfassung-{report["date_from"]}-{report["date_to"]}.csv'
+        response = HttpResponse("\ufeff" + stream.getvalue(), content_type="text/csv; charset=utf-8")
+        response["Content-Disposition"] = f'attachment; filename="{filename}"'
+        return response

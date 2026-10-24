@@ -756,6 +756,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/time/report/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["time_report_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/time/report/export/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["time_report_export_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/time/service-entries/": {
         parameters: {
             query?: never;
@@ -879,7 +911,6 @@ export interface components {
             /** Format: uuid */
             readonly id: string;
             action: components["schemas"]["AbsenceActionEnum"];
-            /** Format: int64 */
             version: number;
             changes?: unknown;
             readonly actor: string | null;
@@ -941,7 +972,6 @@ export interface components {
             /** Format: uuid */
             readonly id: string;
             action: components["schemas"]["AuditActionEnum"];
-            /** Format: int64 */
             version: number;
             changes?: unknown;
             actor: string | null;
@@ -960,7 +990,6 @@ export interface components {
             tax_note?: string;
             readonly current_price: components["schemas"]["CatalogPrice"] | null;
             readonly prices: components["schemas"]["CatalogPrice"][];
-            /** Format: int64 */
             version?: number;
             /** Format: date-time */
             archived_at?: string | null;
@@ -1051,7 +1080,6 @@ export interface components {
             website?: string;
             vat_id?: string;
             leitweg_id?: string;
-            /** Format: int64 */
             version?: number;
             /** Format: date-time */
             archived_at?: string | null;
@@ -1093,7 +1121,6 @@ export interface components {
             /** Format: uuid */
             readonly id: string;
             action: components["schemas"]["AuditActionEnum"];
-            /** Format: int64 */
             version: number;
             changes?: unknown;
             readonly actor: string | null;
@@ -1172,6 +1199,12 @@ export interface components {
          * @enum {string}
          */
         DecisionEnum: "approved" | "rejected";
+        /**
+         * @description * `time` - time
+         *     * `service` - service
+         * @enum {string}
+         */
+        EntryTypeEnum: "time" | "service";
         Health: {
             status: string;
         };
@@ -1246,13 +1279,11 @@ export interface components {
         LeaveEntitlement: {
             employee: number;
             readonly employee_name: string;
-            /** Format: int64 */
             year: number;
             /** Format: decimal */
             entitlement_days?: string;
             /** Format: decimal */
             carryover_days?: string;
-            /** Format: int64 */
             version?: number;
             /** Format: date-time */
             readonly updated_at: string;
@@ -1574,7 +1605,6 @@ export interface components {
             budget_hours?: string | null;
             /** Format: decimal */
             default_hourly_rate?: string | null;
-            /** Format: int64 */
             version?: number;
             /** Format: date-time */
             archived_at?: string | null;
@@ -1587,7 +1617,6 @@ export interface components {
             /** Format: uuid */
             readonly id: string;
             action: components["schemas"]["AuditActionEnum"];
-            /** Format: int64 */
             version: number;
             changes?: unknown;
             readonly actor: string | null;
@@ -1707,7 +1736,6 @@ export interface components {
             /** Format: uuid */
             readonly id: string;
             action: components["schemas"]["AuditActionEnum"];
-            /** Format: int64 */
             version: number;
             changes?: unknown;
             readonly actor: string | null;
@@ -1742,7 +1770,6 @@ export interface components {
             readonly work_package_title: string;
             /** Format: date */
             work_date: string;
-            /** Format: int64 */
             duration_minutes: number;
             /** Format: decimal */
             readonly duration_hours: string;
@@ -1766,7 +1793,6 @@ export interface components {
             /** Format: uuid */
             readonly id: string;
             action: components["schemas"]["AuditActionEnum"];
-            /** Format: int64 */
             version: number;
             changes?: unknown;
             readonly actor: string | null;
@@ -1789,6 +1815,49 @@ export interface components {
             duration_minutes: number;
             description: string;
             billable?: boolean;
+        };
+        TimeReport: {
+            /** Format: date */
+            date_from: string;
+            /** Format: date */
+            date_to: string;
+            summary: components["schemas"]["TimeReportSummary"];
+            rows: components["schemas"]["TimeReportRow"][];
+        };
+        TimeReportRow: {
+            entry_type: components["schemas"]["EntryTypeEnum"];
+            /** Format: date */
+            date: string;
+            employee_name: string;
+            project_number: string;
+            project_name: string;
+            work_package_title: string;
+            description: string;
+            /** Format: decimal */
+            hours: string | null;
+            /** Format: decimal */
+            quantity: string | null;
+            unit: string;
+            billable: boolean;
+            /** Format: decimal */
+            net_value: string | null;
+            billing_status: string;
+        };
+        TimeReportSummary: {
+            time_entry_count: number;
+            /** Format: decimal */
+            total_hours: string;
+            /** Format: decimal */
+            billable_hours: string;
+            /** Format: decimal */
+            time_value: string;
+            service_entry_count: number;
+            /** Format: decimal */
+            service_quantity: string;
+            /** Format: decimal */
+            service_value: string;
+            /** Format: decimal */
+            total_value: string;
         };
         User: {
             id: string;
@@ -1820,7 +1889,6 @@ export interface components {
             readonly resolved_hourly_rate: string | null;
             /** Format: decimal */
             readonly planned_value: string | null;
-            /** Format: int64 */
             version?: number;
             /** Format: date-time */
             archived_at?: string | null;
@@ -1833,7 +1901,6 @@ export interface components {
             /** Format: uuid */
             readonly id: string;
             action: components["schemas"]["AuditActionEnum"];
-            /** Format: int64 */
             version: number;
             changes?: unknown;
             readonly actor: string | null;
@@ -3677,6 +3744,75 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["ProjectTimeSummary"];
                 };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    time_report_retrieve: {
+        parameters: {
+            query?: {
+                /** @description Standard: erster Tag des aktuellen Monats */
+                date_from?: string;
+                /** @description Standard: heute */
+                date_to?: string;
+                /** @description Nur für Administratoren */
+                employee?: number;
+                project?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TimeReport"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    time_report_export_retrieve: {
+        parameters: {
+            query?: {
+                /** @description Standard: erster Tag des aktuellen Monats */
+                date_from?: string;
+                /** @description Standard: heute */
+                date_to?: string;
+                /** @description Nur für Administratoren */
+                employee?: number;
+                project?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Excel-kompatibler CSV-Export */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             400: {
                 headers: {
