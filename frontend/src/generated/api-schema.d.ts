@@ -372,6 +372,70 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/documents/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["documents_list"];
+        put?: never;
+        post: operations["documents_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/documents/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["documents_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["documents_partial_update"];
+        trace?: never;
+    };
+    "/api/v1/documents/{id}/archive/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["documents_archive_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/documents/{id}/history/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["documents_history_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/health/live/": {
         parameters: {
             query?: never;
@@ -969,6 +1033,90 @@ export interface components {
          * @enum {string}
          */
         AuditActionEnum: "created" | "updated" | "archived";
+        BusinessDocument: {
+            /** Format: uuid */
+            readonly id: string;
+            kind: components["schemas"]["DocumentKindEnum"];
+            readonly kind_label: string;
+            status?: components["schemas"]["BusinessDocumentStatusEnum"];
+            readonly status_label: string;
+            document_number?: string | null;
+            /** Format: uuid */
+            customer: string;
+            readonly customer_number: string;
+            readonly customer_name: string;
+            /** Format: uuid */
+            project?: string | null;
+            readonly project_number: string | null;
+            readonly project_name: string | null;
+            /** Format: date */
+            issue_date: string;
+            /** Format: date */
+            service_date_from?: string | null;
+            /** Format: date */
+            service_date_to?: string | null;
+            /** Format: date */
+            due_date?: string | null;
+            readonly currency: string;
+            tax_mode?: components["schemas"]["TaxModeEnum"];
+            tax_exemption_note?: string;
+            introduction?: string;
+            closing_text?: string;
+            payment_terms?: string;
+            readonly lines: components["schemas"]["DocumentLine"][];
+            /** Format: decimal */
+            readonly net_total: string;
+            /** Format: decimal */
+            readonly tax_total: string;
+            /** Format: decimal */
+            readonly gross_total: string;
+            readonly tax_breakdown: components["schemas"]["TaxBreakdown"][];
+            /** Format: int64 */
+            version?: number;
+            /** Format: date-time */
+            archived_at?: string | null;
+            /** Format: date-time */
+            readonly created_at: string;
+            /** Format: date-time */
+            readonly updated_at: string;
+        };
+        BusinessDocumentAuditEvent: {
+            /** Format: uuid */
+            readonly id: string;
+            action: components["schemas"]["AuditActionEnum"];
+            /** Format: int64 */
+            version: number;
+            changes?: unknown;
+            actor: string | null;
+            /** Format: date-time */
+            readonly created_at: string;
+        };
+        BusinessDocumentCreate: {
+            kind: components["schemas"]["DocumentKindEnum"];
+            /** Format: uuid */
+            customer: string;
+            /** Format: uuid */
+            project?: string | null;
+            /** Format: date */
+            issue_date: string;
+            /** Format: date */
+            service_date_from?: string | null;
+            /** Format: date */
+            service_date_to?: string | null;
+            /** Format: date */
+            due_date?: string | null;
+            tax_mode?: components["schemas"]["TaxModeEnum"];
+            tax_exemption_note?: string;
+            introduction?: string;
+            closing_text?: string;
+            payment_terms?: string;
+            lines: components["schemas"]["DocumentLineWrite"][];
+        };
+        /**
+         * @description * `draft` - Entwurf
+         * @enum {string}
+         */
+        BusinessDocumentStatusEnum: "draft";
         CatalogAuditEvent: {
             /** Format: uuid */
             readonly id: string;
@@ -1205,6 +1353,56 @@ export interface components {
          */
         DecisionEnum: "approved" | "rejected";
         /**
+         * @description * `quote` - Angebot
+         *     * `invoice` - Rechnung
+         * @enum {string}
+         */
+        DocumentKindEnum: "quote" | "invoice";
+        DocumentLine: {
+            /** Format: uuid */
+            readonly id: string;
+            /** Format: int64 */
+            position: number;
+            /** Format: uuid */
+            catalog_item?: string | null;
+            readonly catalog_item_number: string | null;
+            readonly catalog_item_name: string | null;
+            description: string;
+            /** Format: decimal */
+            quantity: string;
+            unit: components["schemas"]["CatalogUnitEnum"];
+            readonly unit_label: string;
+            /** Format: decimal */
+            unit_price_net: string;
+            /** Format: decimal */
+            discount_percent?: string;
+            tax_rate: components["schemas"]["DocumentLineTaxRateEnum"];
+            tax_note?: string;
+            /** Format: decimal */
+            readonly net_amount: string;
+        };
+        /**
+         * @description * `19.00` - 19 %
+         *     * `7.00` - 7 %
+         *     * `0.00` - 0 %
+         * @enum {number}
+         */
+        DocumentLineTaxRateEnum: 19 | 7 | 0;
+        DocumentLineWrite: {
+            /** Format: uuid */
+            catalog_item?: string | null;
+            description: string;
+            /** Format: decimal */
+            quantity: string;
+            unit: components["schemas"]["CatalogUnitEnum"];
+            /** Format: decimal */
+            unit_price_net: string;
+            /** Format: decimal */
+            discount_percent: string;
+            tax_rate: components["schemas"]["CatalogTaxRateEnum"];
+            tax_note?: string;
+        };
+        /**
          * @description * `time` - time
          *     * `service` - service
          * @enum {string}
@@ -1331,6 +1529,21 @@ export interface components {
              */
             previous?: string | null;
             results: components["schemas"]["AbsenceRequest"][];
+        };
+        PaginatedBusinessDocumentList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=4
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=2
+             */
+            previous?: string | null;
+            results: components["schemas"]["BusinessDocument"][];
         };
         PaginatedCatalogItemList: {
             /** @example 123 */
@@ -1474,6 +1687,28 @@ export interface components {
             /** Format: date */
             end_date?: string;
             note?: string;
+            version?: number;
+        };
+        PatchedBusinessDocumentUpdate: {
+            kind?: components["schemas"]["DocumentKindEnum"];
+            /** Format: uuid */
+            customer?: string;
+            /** Format: uuid */
+            project?: string | null;
+            /** Format: date */
+            issue_date?: string;
+            /** Format: date */
+            service_date_from?: string | null;
+            /** Format: date */
+            service_date_to?: string | null;
+            /** Format: date */
+            due_date?: string | null;
+            tax_mode?: components["schemas"]["TaxModeEnum"];
+            tax_exemption_note?: string;
+            introduction?: string;
+            closing_text?: string;
+            payment_terms?: string;
+            lines?: components["schemas"]["DocumentLineWrite"][];
             version?: number;
         };
         PatchedCatalogItemUpdate: {
@@ -1766,6 +2001,22 @@ export interface components {
             description?: string;
             billable?: boolean;
         };
+        TaxBreakdown: {
+            /** Format: decimal */
+            tax_rate: string;
+            /** Format: decimal */
+            net_amount: string;
+            /** Format: decimal */
+            tax_amount: string;
+            /** Format: decimal */
+            gross_amount: string;
+        };
+        /**
+         * @description * `standard` - Regelbesteuerung
+         *     * `small_business` - Kleinunternehmer (§ 19 UStG)
+         * @enum {string}
+         */
+        TaxModeEnum: "standard" | "small_business";
         TimeEntry: {
             /** Format: uuid */
             readonly id: string;
@@ -2849,6 +3100,185 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    documents_list: {
+        parameters: {
+            query?: {
+                archived?: "all" | "false" | "true";
+                customer?: string;
+                kind?: "invoice" | "quote";
+                /** @description Eine Seitenzahl in der paginierten Ergebnismenge. */
+                page?: number;
+                project?: string;
+                /** @description Kunde, Projektnummer oder Projektname */
+                search?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedBusinessDocumentList"];
+                };
+            };
+        };
+    };
+    documents_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BusinessDocumentCreate"];
+                "application/x-www-form-urlencoded": components["schemas"]["BusinessDocumentCreate"];
+                "multipart/form-data": components["schemas"]["BusinessDocumentCreate"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BusinessDocument"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    documents_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Ein UUID-String, der business document identifiziert. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BusinessDocument"];
+                };
+            };
+        };
+    };
+    documents_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Ein UUID-String, der business document identifiziert. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedBusinessDocumentUpdate"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedBusinessDocumentUpdate"];
+                "multipart/form-data": components["schemas"]["PatchedBusinessDocumentUpdate"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BusinessDocument"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    documents_archive_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Ein UUID-String, der business document identifiziert. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BusinessDocument"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    documents_history_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Ein UUID-String, der business document identifiziert. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BusinessDocumentAuditEvent"][];
                 };
             };
         };

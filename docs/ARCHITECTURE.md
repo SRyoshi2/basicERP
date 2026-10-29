@@ -1,8 +1,8 @@
 # basicERP – Softwarearchitektur
 
-**Stand:** 24.10.2026
-**Status:** Angenommen; Phase 0, Phase 1, Phase 1a, Phase 2 und Phase 3 abgeschlossen; Phase 4 als Nächstes
-**Zugehörige Entscheidung:** [`ADR-0001`](adr/0001-modularer-monolith.md), [`ADR-0002`](adr/0002-belegfestschreibung-und-outbox.md)
+**Stand:** 29.10.2026
+**Status:** Angenommen; Phase 0 bis Phase 3 abgeschlossen; Phase 4 in Umsetzung
+**Zugehörige Entscheidung:** [`ADR-0001`](adr/0001-modularer-monolith.md), [`ADR-0002`](adr/0002-belegfestschreibung-und-outbox.md), [`ADR-0003`](adr/0003-kanonische-belegberechnung.md)
 
 ## 1. Kurzfassung
 
@@ -250,6 +250,21 @@ Freigabelogik folgt der Trennung konsequent.
 | Payment | Summe darf fachlich nachvollziehbar zu offen/teil-/bezahlt führen |
 | ArchiveObject | unveränderlicher Dateischlüssel, Hash, Größe, MIME, Ursprung, Aufbewahrung |
 | OutboxEvent | unveränderliches Payload, Status, Versuche, nächster Versuch, eindeutiger Eventschlüssel |
+
+Der erste Phase-4-Schnitt führt `BusinessDocument` als veränderlichen Entwurf
+für Angebot und normale Ausgangsrechnung ein. `DocumentLine` enthält die
+fachlichen Eingaben einer Katalog- oder Freitextposition. Entwürfe haben noch
+keine Belegnummer und sind weder Rechnungssnapshot noch revisionsfestes
+Artefakt. Änderungen ersetzen die vollständige Positionsmenge innerhalb einer
+Transaktion, verlangen die aktuelle `version` und erzeugen ein Audit-Ereignis.
+
+Alle Geld- und Steuerwerte werden im Backend durch eine reine kanonische
+Berechnungsfunktion erzeugt. Sie nutzt ausschließlich `Decimal`, rundet
+Positionsnettos kaufmännisch auf zwei Stellen, gruppiert danach nach Steuersatz
+und berechnet die Steuer genau einmal je Gruppe. Die SPA zeigt nur die vom
+Server gelieferten Summen an. Damit erhalten API, UI, späterer Snapshot, PDF
+und E-Rechnung dieselben Werte; Details und Alternativen dokumentiert
+[`ADR-0003`](adr/0003-kanonische-belegberechnung.md).
 
 Der Projektstamm ist als eigenes Aggregat im Modul `projects` umgesetzt. Er
 referenziert den Kunden per geschütztem Fremdschlüssel, übernimmt aber keine

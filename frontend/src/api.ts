@@ -87,6 +87,12 @@ export type ServiceEntryPage = Omit<
 > & { results: ServiceEntry[] };
 export type ProjectTimeSummary = components["schemas"]["ProjectTimeSummary"];
 export type TimeReport = components["schemas"]["TimeReport"];
+export type BusinessDocument = components["schemas"]["BusinessDocument"];
+export type BusinessDocumentInput = components["schemas"]["BusinessDocumentCreate"];
+export type DocumentLineInput = components["schemas"]["DocumentLineWrite"];
+export type BusinessDocumentPage = Omit<
+  components["schemas"]["PaginatedBusinessDocumentList"], "results"
+> & { results: BusinessDocument[] };
 export type TimeReportFilters = {
   dateFrom: string;
   dateTo: string;
@@ -322,6 +328,43 @@ export async function archiveCatalogItem(item: CatalogItem): Promise<CatalogItem
   return request<CatalogItem>(`/api/v1/catalog/items/${item.id}/archive/`, {
     method: "POST",
     body: "{}",
+  });
+}
+
+export async function getBusinessDocuments(options: {
+  search?: string;
+  kind?: "quote" | "invoice" | "";
+  page?: number;
+} = {}): Promise<BusinessDocumentPage> {
+  const params = new URLSearchParams();
+  if (options.search) params.set("search", options.search);
+  if (options.kind) params.set("kind", options.kind);
+  if (options.page && options.page > 1) params.set("page", String(options.page));
+  const query = params.size ? `?${params.toString()}` : "";
+  return request<BusinessDocumentPage>(`/api/v1/documents/${query}`);
+}
+
+export async function createBusinessDocument(
+  data: BusinessDocumentInput,
+): Promise<BusinessDocument> {
+  return request<BusinessDocument>("/api/v1/documents/", {
+    method: "POST", body: JSON.stringify(data),
+  });
+}
+
+export async function updateBusinessDocument(
+  document: BusinessDocument, data: BusinessDocumentInput,
+): Promise<BusinessDocument> {
+  return request<BusinessDocument>(`/api/v1/documents/${document.id}/`, {
+    method: "PATCH", body: JSON.stringify({ ...data, version: document.version }),
+  });
+}
+
+export async function archiveBusinessDocument(
+  document: BusinessDocument,
+): Promise<BusinessDocument> {
+  return request<BusinessDocument>(`/api/v1/documents/${document.id}/archive/`, {
+    method: "POST", body: "{}",
   });
 }
 

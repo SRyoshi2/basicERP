@@ -15,6 +15,7 @@ import { AbsencesPage } from "./Absences";
 import { IncomingInvoicesPage } from "./IncomingInvoices";
 import { ProjectsPage } from "./Projects";
 import { ReportsPage } from "./Reports";
+import { DocumentsPage } from "./Documents";
 import { ServiceTrackingPage } from "./ServiceTracking";
 import { TimeTrackingPage } from "./TimeTracking";
 
@@ -26,7 +27,7 @@ function Brand() {
       </div>
       <div>
         <p className="m-0 text-lg font-bold tracking-tight text-slate-950">basicERP</p>
-        <p className="m-0 text-xs font-medium uppercase tracking-[0.2em] text-slate-500">v0.2</p>
+        <p className="m-0 text-xs font-medium uppercase tracking-[0.2em] text-slate-500">v0.5</p>
       </div>
     </div>
   );
@@ -245,7 +246,7 @@ function CompanySettings({ user, onBack }: { user: User; onBack: () => void }) {
 }
 
 function Dashboard({ user, onLogout }: { user: User; onLogout: () => void }) {
-  const [view, setView] = useState<"dashboard" | "company" | "contacts" | "catalog" | "incoming-invoices" | "projects" | "time" | "services" | "absences" | "reports">("dashboard");
+  const [view, setView] = useState<"dashboard" | "company" | "contacts" | "catalog" | "incoming-invoices" | "projects" | "time" | "services" | "absences" | "reports" | "documents">("dashboard");
 
   return (
     <div className="min-h-screen bg-slate-100">
@@ -258,14 +259,18 @@ function Dashboard({ user, onLogout }: { user: User; onLogout: () => void }) {
           </div>
         </div>
       </header>
-      {view === "company" ? <CompanySettings user={user} onBack={() => setView("dashboard")} /> : view === "contacts" ? <ContactsPage user={user} onBack={() => setView("dashboard")} /> : view === "catalog" ? <CatalogPage user={user} onBack={() => setView("dashboard")} /> : view === "incoming-invoices" ? <IncomingInvoicesPage onBack={() => setView("dashboard")} /> : view === "projects" ? <ProjectsPage user={user} onBack={() => setView("dashboard")} /> : view === "time" ? <TimeTrackingPage user={user} onBack={() => setView("dashboard")} /> : view === "services" ? <ServiceTrackingPage user={user} onBack={() => setView("dashboard")} /> : view === "absences" ? <AbsencesPage user={user} onBack={() => setView("dashboard")} /> : view === "reports" ? <ReportsPage user={user} onBack={() => setView("dashboard")} /> : (
+      {view === "company" ? <CompanySettings user={user} onBack={() => setView("dashboard")} /> : view === "contacts" ? <ContactsPage user={user} onBack={() => setView("dashboard")} /> : view === "catalog" ? <CatalogPage user={user} onBack={() => setView("dashboard")} /> : view === "incoming-invoices" ? <IncomingInvoicesPage onBack={() => setView("dashboard")} /> : view === "projects" ? <ProjectsPage user={user} onBack={() => setView("dashboard")} /> : view === "time" ? <TimeTrackingPage user={user} onBack={() => setView("dashboard")} /> : view === "services" ? <ServiceTrackingPage user={user} onBack={() => setView("dashboard")} /> : view === "absences" ? <AbsencesPage user={user} onBack={() => setView("dashboard")} /> : view === "reports" ? <ReportsPage user={user} onBack={() => setView("dashboard")} /> : view === "documents" ? <DocumentsPage onBack={() => setView("dashboard")} /> : (
       <main className="mx-auto max-w-7xl px-6 py-10">
         <div className="rounded-[2rem] bg-slate-950 p-8 text-white shadow-xl">
-          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-cyan-300">v0.4 · Zeit &amp; Portal vollständig</p>
+          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-cyan-300">v0.5 · Dokumentkern im Aufbau</p>
           <h1 className="mt-3 text-4xl font-bold tracking-tight">Hallo {user.username}.</h1>
           <p className="mt-4 max-w-2xl leading-7 text-slate-300">Verwalte Kunden, Artikel und Leistungen samt zeitlich gültigen Nettopreisen als Grundlage der späteren Projekte und Belege.</p>
         </div>
         <div className="mt-8 grid gap-5 md:grid-cols-2 lg:grid-cols-4">
+          {user.role === "admin" && <button onClick={() => setView("documents")} className="rounded-2xl border border-fuchsia-200 bg-fuchsia-50 p-6 text-left shadow-sm transition hover:-translate-y-1 hover:shadow-lg">
+            <p className="text-sm font-bold uppercase tracking-wider text-fuchsia-800">Ausgangsbelege</p>
+            <p className="mt-3 font-semibold text-slate-900">Angebote &amp; Rechnungsentwürfe</p>
+          </button>}
           <button onClick={() => setView("time")} className="rounded-2xl border border-teal-200 bg-teal-50 p-6 text-left shadow-sm transition hover:-translate-y-1 hover:shadow-lg">
             <p className="text-sm font-bold uppercase tracking-wider text-teal-800">Zeiterfassung</p>
             <p className="mt-3 font-semibold text-slate-900">Eigene Arbeitswoche erfassen</p>

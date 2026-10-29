@@ -1,6 +1,6 @@
 # basicERP — Fahrplan zur Umsetzung
 
-**Stand:** 24.10.2026 · **Status:** Phase 0, Phase 1, Phase 1a, Phase 2 und Phase 3 abgeschlossen; Phase 4 als Nächstes
+**Stand:** 29.10.2026 · **Status:** Phase 0 bis Phase 3 abgeschlossen; Phase 4 in Umsetzung
 
 > Der fortlaufend aktualisierte Fahrplan mit Umsetzungsstand und Testanleitung
 > liegt in [`ROADMAP.html`](ROADMAP.html). Dieses Dokument bleibt die fachliche
@@ -121,8 +121,16 @@ eine Excel-kompatible UTF-8-CSV auf Basis der historischen Preis-Snapshots.
 ### Phase 4 — Rechnungen & Angebote, Teil 1: Kernprozess (v0.5)
 **Ziel:** Rechtskonforme Angebote und Rechnungen als PDF — das Herzstück.
 
-- Dokumentmodell: Angebot, Rechnung, Gutschrift/Korrekturrechnung; Positionen (Katalog-Referenz oder Freitext, Menge, Einheit, Einzelpreis, Rabatt, Steuersatz)
-- Pflichtangaben §14 UStG vollständig; Kleinunternehmer-Variante (§19-Hinweis, keine USt)
+**Umsetzungsstand:** In Arbeit. Angebote und normale Ausgangsrechnungen können
+als veränderliche Entwürfe mit Kunde, optionalem Projekt, Leistungs-/Fälligkeitsdaten
+und vollständigen Positionen erfasst werden. Freitext- und Katalogpositionen,
+Menge, Einheit, Nettopreis, Rabatt sowie 0/7/19 % und die Kleinunternehmer-Variante
+sind enthalten. Eine einzige serverseitige Decimal-Berechnung gruppiert und
+rundet die Steuer deterministisch; Versionsschutz, Audit und Archivierung sind
+aktiv. Festschreibung, Nummernkreis, Snapshot und PDF folgen als nächster Schritt.
+
+- Dokumentmodell: Angebot, Rechnung, Gutschrift/Korrekturrechnung; Positionen (Katalog-Referenz oder Freitext, Menge, Einheit, Einzelpreis, Rabatt, Steuersatz) **(Angebot und normale Rechnung als Entwurf erledigt; Korrekturrechnung folgt)**
+- Pflichtangaben §14 UStG vollständig; Kleinunternehmer-Variante (§19-Hinweis, keine USt) **(Entwurfsfelder und Kleinunternehmer-Berechnung erledigt; Pflichtangabenprüfung bei Festschreibung folgt)**
 - Nummernkreise: fortlaufend, lückenlos, konfigurierbares Format (z. B. `RE-2026-0001`); Rechnung nach Festschreibung unveränderbar → Änderungen nur per Korrekturrechnung
 - Statusfluss: Entwurf → festgeschrieben/versendet → bezahlt (Teilzahlungen) / storniert; Angebote: offen → angenommen/abgelehnt → in Rechnung überführen
 - **Aus dem Projekt heraus:** nicht abgerechnete Zeiten/Leistungen auswählen → Rechnungsentwurf mit gruppierten Positionen (pro Arbeitspaket oder pro Tag); abgerechnete Einträge werden verknüpft und gesperrt

@@ -1,7 +1,7 @@
 # basicERP – Projektplan
 
-**Stand:** 24.10.2026
-**Status:** Freigegeben; Phase 0, Phase 1, Phase 1a, Phase 2 und Phase 3 abgeschlossen; Phase 4 als Nächstes
+**Stand:** 29.10.2026
+**Status:** Freigegeben; Phase 0 bis Phase 3 abgeschlossen; Phase 4 in Umsetzung
 **Quelle:** [`ROADMAP.md`](../ROADMAP.md)
 
 ## 1. Zielbild
@@ -145,6 +145,18 @@ Abnahmetests benötigen gemeinsame Entscheidungen und teilweise externe Prüfung
 - Abwesenheitsanträge, Freigabe und einfaches Urlaubskonto. **Erledigt; Arbeitstage derzeit Montag bis Freitag ohne Feiertagskalender.**
 - Zeit-/Leistungsauswertung mit Zeitraum-, Projekt- und Mitarbeiterfilter sowie
   Excel-kompatiblem CSV-Export. **Erledigt.**
+
+### Iteration 8 – Dokumententwürfe und Rechenkern (in Umsetzung)
+
+- Angebote und normale Ausgangsrechnungen als veränderliche Entwürfe. **Erledigt.**
+- Katalog- und Freitextpositionen mit Menge, Einheit, Nettopreis, Rabatt und
+  0/7/19 % Steuer. **Erledigt.**
+- Kanonische Decimal-Berechnung mit Rundung je Steuergruppe. **Erledigt.**
+- Kleinunternehmer-Belege ohne Umsatzsteuer und mit Pflicht-Hinweis. **Erledigt.**
+- Admin-Berechtigung, Versionskonflikt, Audit und Archivierung. **Erledigt.**
+- Festschreibung mit Nummernkreis, unveränderlichem Snapshot und
+  Pflichtangabenprüfung. **Nächster Schritt.**
+- Standard-PDF ausschließlich aus dem finalen Snapshot. **Danach.**
 
 ## 6. Arbeitsweise und Qualitätsregeln
 
