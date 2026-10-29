@@ -452,6 +452,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/documents/{id}/pdf/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["documents_pdf_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/documents/{id}/snapshot/": {
         parameters: {
             query?: never;
@@ -1104,6 +1120,7 @@ export interface components {
             readonly gross_total: string;
             readonly tax_breakdown: components["schemas"]["TaxBreakdown"][];
             readonly snapshot: components["schemas"]["DocumentSnapshotMetadata"] | null;
+            readonly artifact: components["schemas"]["DocumentArtifactMetadata"] | null;
             /** Format: int64 */
             version?: number;
             /** Format: date-time */
@@ -1131,9 +1148,11 @@ export interface components {
          *     * `updated` - Geändert
          *     * `archived` - Archiviert
          *     * `finalized` - Festgeschrieben
+         *     * `artifact_created` - PDF erzeugt
+         *     * `artifact_failed` - PDF fehlgeschlagen
          * @enum {string}
          */
-        BusinessDocumentAuditEventActionEnum: "created" | "updated" | "archived" | "finalized";
+        BusinessDocumentAuditEventActionEnum: "created" | "updated" | "archived" | "finalized" | "artifact_created" | "artifact_failed";
         BusinessDocumentCreate: {
             kind: components["schemas"]["DocumentKindEnum"];
             /** Format: uuid */
@@ -1158,9 +1177,11 @@ export interface components {
         /**
          * @description * `draft` - Entwurf
          *     * `finalizing` - Festgeschrieben · PDF ausstehend
+         *     * `finalized` - Finalisiert
+         *     * `artifact_failed` - PDF-Erzeugung fehlgeschlagen
          * @enum {string}
          */
-        BusinessDocumentStatusEnum: "draft" | "finalizing";
+        BusinessDocumentStatusEnum: "draft" | "finalizing" | "finalized" | "artifact_failed";
         CatalogAuditEvent: {
             /** Format: uuid */
             readonly id: string;
@@ -1396,6 +1417,24 @@ export interface components {
          * @enum {string}
          */
         DecisionEnum: "approved" | "rejected";
+        DocumentArtifactMetadata: {
+            /** Format: uuid */
+            readonly id: string;
+            kind?: components["schemas"]["DocumentArtifactMetadataKindEnum"];
+            sha256: string;
+            size: number;
+            renderer_version: string;
+            /** Format: int64 */
+            template_version?: number;
+            readonly download_url: string;
+            /** Format: date-time */
+            readonly created_at: string;
+        };
+        /**
+         * @description * `standard_pdf` - Standard-PDF
+         * @enum {string}
+         */
+        DocumentArtifactMetadataKindEnum: "standard_pdf";
         /**
          * @description * `quote` - Angebot
          *     * `invoice` - Rechnung
@@ -3387,6 +3426,28 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["BusinessDocumentAuditEvent"][];
+                };
+            };
+        };
+    };
+    documents_pdf_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Ein UUID-String, der business document identifiziert. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/pdf": string;
                 };
             };
         };

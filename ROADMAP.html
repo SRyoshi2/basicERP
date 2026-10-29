@@ -139,12 +139,12 @@
       <aside class="status-card">
         <p class="eyebrow" style="color:#84caff">Aktueller Stand</p>
         <h2>Phase 4 in Umsetzung</h2>
-        <div class="big-number">45%</div>
-        <div class="progress" aria-label="Phase 4 zu 45 Prozent umgesetzt"><span style="width:45%"></span></div>
+        <div class="big-number">60%</div>
+        <div class="progress" aria-label="Phase 4 zu 60 Prozent umgesetzt"><span style="width:60%"></span></div>
         <ul class="meta">
-          <li><strong>Gesamtfortschritt:</strong> ca. 51 %</li>
+          <li><strong>Gesamtfortschritt:</strong> ca. 54 %</li>
           <li><strong>Letzte Aktualisierung:</strong> 29.10.2026</li>
-          <li><strong>Nächster Schritt:</strong> Standard-PDF aus dem Snapshot</li>
+          <li><strong>Nächster Schritt:</strong> Projektzeiten und Leistungen in Rechnungsentwürfe übernehmen</li>
           <li><strong>Zieltermin:</strong> keiner; Qualität vor Kalender</li>
         </ul>
       </aside>
@@ -185,10 +185,11 @@
         <li class="ok">Versionsschutz, Audit-Verlauf und Archivierung</li>
         <li class="ok">Festschreibung, Nummernkreis und Pflichtangabenprüfung</li>
         <li class="ok">Unveränderlicher Snapshot, SHA-256, Audit und Outbox</li>
-        <li class="wait">Standard-PDF ausschließlich aus dem Snapshot</li>
+        <li class="ok">Standard-PDF ausschließlich aus dem Snapshot</li>
+        <li class="ok">Asynchrone Archivierung, Retry und PDF-Download</li>
         <li class="wait">Projektleistungen übernehmen, Versand und Zahlungen</li>
       </ul>
-      <div class="notice success">Der zweite Phase-4-Schnitt ist fertig: Rechnungsentwürfe werden erst nach Prüfung der zentralen Pflichtangaben festgeschrieben. Nummer, Snapshot, Hash, Audit und Outbox-Ereignis entstehen atomar; danach ist der Beleg unveränderbar. Der Status „PDF ausstehend“ ist bewusst sichtbar, bis der nächste Schritt das Standard-PDF ausschließlich aus diesem Snapshot erzeugt.</div>
+      <div class="notice success">Der dritte Phase-4-Schnitt ist fertig: Nach der atomaren Festschreibung erzeugt ein Hintergrundprozess das Standard-PDF ausschließlich aus dem unveränderlichen Snapshot. Kerndaten und PDF-Struktur werden geprüft, das Ergebnis SHA-256-adressiert archiviert und in der Belegliste zum Download angeboten. Unterbrochene oder fehlgeschlagene Versuche werden idempotent und mit wachsendem Abstand wiederholt.</div>
     </section>
 
     <section id="phasen" class="panel">
@@ -232,20 +233,20 @@
         <li><strong>Abwesenheiten prüfen:</strong> Im Dashboard „Abwesenheiten“ öffnen, den Jahresanspruch als Administrator setzen und einen Urlaubsantrag anlegen. Unter „Offene Genehmigungen“ genehmigen oder ablehnen. Das Urlaubskonto muss beantragte, genehmigte und verbleibende Tage korrekt zeigen; Krankheit darf den Resturlaub nicht reduzieren.</li>
         <li><strong>Auswertung prüfen:</strong> Im Dashboard „Auswertung“ öffnen, einen Zeitraum sowie optional Projekt und Mitarbeiter wählen. Arbeitszeit, Zeitwert, Leistungswert und Gesamtwert müssen zu den zuvor erfassten Daten passen. „CSV für Excel exportieren“ lädt eine UTF-8-Datei mit Semikolon-Trennung und deutschen Dezimalzahlen; Mitarbeiter sehen ausschließlich eigene Daten.</li>
         <li><strong>Ausgangsbeleg prüfen:</strong> Im Dashboard „Ausgangsbelege“ öffnen und einen Rechnungsentwurf mit Kunde samt Rechnungsadresse, optionalem Projekt sowie mindestens zwei Positionen anlegen, beispielsweise 100,00 € zu 19 % und 50,00 € zu 7 %. Erwartet werden 150,00 € netto, 22,50 € Steuer und 172,50 € brutto. Belegart oder Position ändern und erneut speichern; die Version und Summen müssen aktualisiert werden.</li>
-        <li><strong>Rechnung festschreiben:</strong> Den gespeicherten Rechnungsentwurf erneut öffnen und „Endgültig festschreiben“ wählen. Nach der Bestätigung wird eine Nummer im Format <code>RE-JJJJ-0001</code> angezeigt; Status und Hinweis lauten „Festgeschrieben · PDF ausstehend“. Der Beleg lässt sich danach weder bearbeiten noch archivieren. Vorherige Stammdatenänderungen verändern den gespeicherten Snapshot nicht. Für reine Angebote ist die Festschreibung in diesem Schritt noch gesperrt.</li>
+        <li><strong>Rechnung festschreiben und PDF prüfen:</strong> Den gespeicherten Rechnungsentwurf erneut öffnen und „Endgültig festschreiben“ wählen. Zunächst erscheint die Nummer im Format <code>RE-JJJJ-0001</code> mit „PDF ausstehend“. Innerhalb weniger Sekunden wechselt der Status automatisch zu „Finalisiert“ und „PDF herunterladen“ wird sichtbar. Im PDF müssen Nummer, Aussteller, Empfänger, Positionen, Steuergruppen und Summen mit dem Entwurf übereinstimmen. Der Beleg lässt sich danach weder bearbeiten noch archivieren. Für reine Angebote ist die Festschreibung noch gesperrt.</li>
         <li><strong>E-Rechnungseingang prüfen:</strong> Im Dashboard „Rechnungseingang“ öffnen und <code>docs/examples/incoming-invoice-ubl.xml</code> hochladen. Erwartet werden „Basisprüfung bestanden“, Rechnungsnummer <code>BEISPIEL-2026-001</code>, Verkäufer und Zahlbetrag. Das heruntergeladene Original muss bytegleich sein. Derselbe erneute Upload erzeugt keinen zweiten Eintrag.</li>
         <li><strong>Normale Rechnung prüfen:</strong> Im Rechnungseingang „Normale PDF-Rechnung“ wählen, eine PDF auswählen und Rechnungsnummer, Datum, Verkäufer, Käufer, Betrag und Währung eintragen. Nach dem Speichern erscheint der Beleg als „Vollständig erfasst“; der Hinweis grenzt die manuelle Erfassung klar von einer inhaltlichen Prüfung ab.</li>
         <li><strong>Systemprüfungen durchführen:</strong> Dashboard sichtbar, Readiness liefert <code>{"status":"ready"}</code>, API-Doku öffnet, alle Container sind healthy/running.</li>
       </ol>
       <div class="test-grid">
-        <article class="test-card"><h3>1 · Container</h3><pre>docker compose ps</pre><p>db, redis, web, worker und nginx sollen laufen; Healthchecks dürfen kurz „starting“ zeigen.</p></article>
+        <article class="test-card"><h3>1 · Container</h3><pre>docker compose ps</pre><p>db, redis, web, worker, beat und nginx sollen laufen; Healthchecks dürfen kurz „starting“ zeigen.</p></article>
         <article class="test-card"><h3>2 · Readiness</h3><pre>Invoke-RestMethod http://localhost:8080/api/v1/health/ready/</pre><p>Erwartet: Status <code>ready</code>.</p></article>
         <article class="test-card"><h3>3 · Logs</h3><pre>docker compose logs --tail 100</pre><p>Keine dauerhaften Tracebacks, Neustartschleifen oder Datenbankfehler.</p></article>
         <article class="test-card"><h3>4 · API-Vertrag</h3><pre>cd frontend
 npm run api:check</pre><p>Mit Node.js installiert: OpenAPI und generierte TypeScript-Typen müssen ohne Diff übereinstimmen.</p></article>
         <article class="test-card"><h3>5 · Backup</h3><pre>powershell -ExecutionPolicy Bypass -File .\scripts\backup-windows.ps1</pre><p>Erzeugt Dump, Archiv, Medien, Manifest und SHA-256-Prüfsummen unter <code>backups/</code>.</p></article>
       </div>
-      <div class="notice success">Zuletzt am 29.10.2026 auf dem aktuellen Windows-System erfolgreich getestet. Vor der additiven Festschreibungsmigration wurde das konsistente Backup <code>basicerp-20261029-110935</code> erstellt. Alle fünf Dienste laufen gesund. 79 Backend-Tests, Ruff, Frontend-Lint/-Build, OpenAPI-Validierung und Abhängigkeitsprüfung waren erfolgreich. Der reale PostgreSQL-Durchstich bestätigte <code>RE-2026-0001</code>, Snapshot, SHA-256, Audit, Outbox und 150,00 € netto + 22,50 € Steuer = 172,50 € brutto. Zwei vollständige Rollbacks vergaben anschließend erneut dieselbe Nummer; der vorhandene reale Entwurf und seine Historie blieben unverändert.</div>
+      <div class="notice success">Zuletzt am 29.10.2026 auf dem aktuellen Windows-System erfolgreich getestet. Vor den additiven Artefaktmigrationen wurde das konsistente Backup <code>basicerp-20261029-153247</code> erstellt. Alle sechs Dienste laufen gesund. 81 Backend-Tests, Ruff, Frontend-Lint/-Build, OpenAPI-Synchronität und Abhängigkeitsprüfung waren erfolgreich. Der reale PostgreSQL-/Celery-Durchstich verarbeitete das ausstehende Ereignis für <code>RE-2026-0001</code> automatisch, erzeugte ein geprüftes einseitiges A4-PDF mit SHA-256 <code>a0aac023…c8250</code>, archivierte es unveränderlich und lieferte es über den geschützten Download mit HTTP 200 aus.</div>
     </section>
 
     <section id="ubuntu" class="panel">
@@ -276,8 +277,6 @@ docker compose logs --tail 100</pre>
       <table>
         <thead><tr><th>Zweck</th><th>Befehl</th><th>Hinweis</th></tr></thead>
         <tbody>
-          <tr><td>29.10.2026</td><td>Phase 4 / Festschreibung</td><td>Pflichtangaben-Gate, atomare jahresbezogene Rechnungsnummer, unveränderlicher versionierter Snapshot mit SHA-256 sowie Audit und transaktionales Outbox-Ereignis umgesetzt. 79 Backend-Tests und ein realer PostgreSQL-Durchstich bestätigten Summen, Snapshot und lückenlosen Nummern-Rollback; vorhandene Daten blieben unverändert. Festgeschriebene Rechnungen sind über API und Admin gesperrt; das Standard-PDF aus demselben Snapshot folgt als nächster Schritt.</td></tr>
-          <tr><td>29.10.2026</td><td>Phase 4 / Dokumententwürfe</td><td>Angebote und normale Ausgangsrechnungen als Admin-Entwürfe mit Katalog-/Freitextpositionen, Rabatten, 0/7/19 %, Kleinunternehmer-Variante, kanonischer Steuerberechnung, Versionsschutz, Audit und Archivierung umgesetzt. 75 Backend-Tests und der zurückgerollte PostgreSQL-Durchstich waren erfolgreich; ein dabei erkannter optionaler Join in der Sperrabfrage wurde vor Freigabe korrigiert. Festschreibung, Nummernkreis, Snapshot und PDF sind der nächste Schritt.</td></tr>
           <tr><td>Status</td><td><code>docker compose ps</code></td><td>Zeigt Dienste und Healthchecks.</td></tr>
           <tr><td>Logs</td><td><code>docker compose logs -f --tail 100</code></td><td>Mit Strg+C verlassen; Container laufen weiter.</td></tr>
           <tr><td>Stoppen</td><td><code>docker compose stop</code></td><td>Datenvolumes bleiben erhalten.</td></tr>
@@ -301,6 +300,9 @@ docker compose logs --tail 100</pre>
       <table>
         <thead><tr><th>Datum</th><th>Schritt</th><th>Ergebnis</th></tr></thead>
         <tbody>
+          <tr><td>29.10.2026</td><td>Phase 4 / Standard-PDF</td><td>Versioniertes WeasyPrint-Standard-PDF ausschließlich aus dem finalen Snapshot, inhaltliche PDF-Prüfung, SHA-256-adressierte Archivierung, idempotente Celery-Outbox-Verarbeitung, automatische Wiederholung und Download in der Belegliste umgesetzt. Projektzeiten und Leistungen in Rechnungsentwürfe zu übernehmen ist der nächste Schritt.</td></tr>
+          <tr><td>29.10.2026</td><td>Phase 4 / Festschreibung</td><td>Pflichtangaben-Gate, atomare jahresbezogene Rechnungsnummer, unveränderlicher versionierter Snapshot mit SHA-256 sowie Audit und transaktionales Outbox-Ereignis umgesetzt. 79 Backend-Tests und ein realer PostgreSQL-Durchstich bestätigten Summen, Snapshot und lückenlosen Nummern-Rollback; vorhandene Daten blieben unverändert.</td></tr>
+          <tr><td>29.10.2026</td><td>Phase 4 / Dokumententwürfe</td><td>Angebote und normale Ausgangsrechnungen als Admin-Entwürfe mit Katalog-/Freitextpositionen, Rabatten, 0/7/19 %, Kleinunternehmer-Variante, kanonischer Steuerberechnung, Versionsschutz, Audit und Archivierung umgesetzt. 75 Backend-Tests und der zurückgerollte PostgreSQL-Durchstich waren erfolgreich; ein dabei erkannter optionaler Join in der Sperrabfrage wurde vor Freigabe korrigiert.</td></tr>
           <tr><td>24.10.2026</td><td>Phase 3 / Abschluss</td><td>Kombinierte Zeit- und Leistungsauswertung mit Zeitraum-, Projekt- und Mitarbeiterfilter, Rollenisolierung, getrennten Kennzahlen und gegen Formelinjektion geschütztem Excel-CSV-Export umgesetzt. 67 Backend-Tests und ein vollständig zurückgerollter PostgreSQL-Durchstich bestätigten 180,00 € Zeitwert + 750,00 € Leistungswert = 930,00 €. API-Vertrag, Oberfläche, Architektur und Selbsttest aktualisiert; Phase 3 damit vollständig abgeschlossen.</td></tr>
           <tr><td>24.10.2026</td><td>Phase 3 / Abwesenheiten</td><td>Urlaub, Krankheit und sonstige Abwesenheiten mit Mitarbeiterisolation, Überschneidungsschutz, Versionsschutz, Audit und Genehmigung umgesetzt. Administratoren pflegen Jahresanspruch und Übertrag; das Urlaubskonto trennt beantragte, genehmigte und verbleibende Tage. 63 Backend-Tests sowie ein zurückgerollter PostgreSQL-Durchstich von 30 Tagen Anspruch über fünf Tage Genehmigung zu 25 Tagen Rest erfolgreich.</td></tr>
           <tr><td>23.10.2026</td><td>Phase 3 / Leistungserfassung</td><td>Mengenbasierte Katalogleistungen mit Projekt, Arbeitspaket, Datum und Abrechenbarkeit ergänzt. Preis, Nummer, Name, Einheit und Steuersatz werden als Snapshot gespeichert; eine eigene Wochenansicht und das kombinierte Ist-Controlling zeigen Mengen- und Zeitwerte nachvollziehbar getrennt. 56 Backend-Tests sowie ein zurückgerollter PostgreSQL-/API-Durchstich mit 3 × 250,00 € erfolgreich.</td></tr>

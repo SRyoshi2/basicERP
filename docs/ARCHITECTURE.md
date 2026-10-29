@@ -362,14 +362,19 @@ der Retry arbeitet mit derselben Snapshot-/Nummernidentität.
 5. Erst nach Hash-/Metadatenpersistenz wird `Finalized` erreicht. Versandjobs
    dürfen nur von dort starten.
 
-Der Transaktionskern der Schritte 1 bis 3 ist umgesetzt. Die Rechnungsfolge
+Die Schritte 1 bis 5 sind für das Standard-PDF umgesetzt. Die Rechnungsfolge
 `RE-<Jahr>-<laufende Nummer>` wird je Belegart und Jahr unter einer
 Datenbanksperre fortgeschrieben. Die Zuweisung liegt in derselben Transaktion
 wie Statuswechsel, schreibgeschützter JSON-Snapshot, SHA-256, Audit und
 idempotent adressiertes Outbox-Ereignis. Ein Fehler rollt deshalb auch die
 Nummernvergabe zurück. Der Zustand `Finalizing` bedeutet bereits fachlich
-unveränderbar; der nächste Schritt verarbeitet das Outbox-Ereignis zum
-Standard-PDF und wechselt erst danach auf `Finalized`.
+unveränderbar. Celery Beat stößt alle zehn Sekunden den Dispatcher an. Dieser
+plant fällige Outbox-Ereignisse ein; der Worker beansprucht jedes Ereignis
+transaktional, rendert ausschließlich den Snapshot, validiert Signatur,
+Seitenzahl und Kerndaten und archiviert die PDF SHA-256-adressiert. Erst dann
+wechselt der Beleg auf `Finalized`. Abgebrochene Claims werden nach 15 Minuten
+wieder freigegeben; Fehler erhalten exponentielles Backoff von 30 Sekunden bis
+maximal 30 Minuten. Handler und Artefaktmodell sind idempotent.
 
 ### Berechnungen
 
@@ -393,6 +398,9 @@ InvoiceSnapshot vN
 
 - XML und PDF werden nicht voneinander abgeleitet, sondern aus demselben
   kanonischen Snapshot.
+- Das Standard-PDF verwendet derzeit WeasyPrint 70 und ein versioniertes,
+  serverseitiges HTML/CSS-Template. `DocumentArtifact` hält Renderer- und
+  Templateversion sowie die Referenz auf das unveränderliche Archivobjekt.
 - Mappings sind versioniert; Artefakte speichern Mapper-/Schema-Version.
 - Der offizielle Validator läuft im CI über ein Grenzfallkorpus und beim
   Festschreiben. Ein Validierungsfehler verhindert den Versand dieses Formats.
@@ -454,7 +462,12 @@ Quelle; visuelle Regressionstests erkennen Rendering-Abweichungen.
 Das Speichern eines Fachobjekts und das Publizieren einer Nachricht dürfen
 nicht auseinanderfallen. Deshalb schreibt dieselbe DB-Transaktion ein
 `OutboxEvent`. Ein Dispatcher beansprucht Einträge mit Row Locks, führt den
-idempotenten Handler aus und protokolliert Ergebnis und Retry.
+idempotenten Handler aus und protokolliert Ergebnis und Retry. Für das
+Standard-PDF ist dieser Pfad implementiert: `Celery Beat → Dispatcher →
+Worker → Renderer/Prüfung → Archivobjekt → DocumentArtifact`. Eine technische
+Fehlermeldung bleibt im Outbox-Ereignis sichtbar; der fachlich bereits
+festgeschriebene Beleg erhält bis zum erfolgreichen Retry den Status
+`artifact_failed`.
 
 Anwendungsfälle:
 

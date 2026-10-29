@@ -13,6 +13,8 @@ media/
 /archive/
 /backend/archive/
 /backups/
+/output/
+/tmp/
 *.log
 .idea/
 .vscode/

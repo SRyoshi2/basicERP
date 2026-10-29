@@ -16,6 +16,8 @@ class BusinessDocument(models.Model):
     class Status(models.TextChoices):
         DRAFT = "draft", "Entwurf"
         FINALIZING = "finalizing", "Festgeschrieben · PDF ausstehend"
+        FINALIZED = "finalized", "Finalisiert"
+        ARTIFACT_FAILED = "artifact_failed", "PDF-Erzeugung fehlgeschlagen"
 
     class TaxMode(models.TextChoices):
         STANDARD = "standard", "Regelbesteuerung"
@@ -81,7 +83,8 @@ class BusinessDocument(models.Model):
                         finalized_at__isnull=True,
                     )
                     | models.Q(
-                        status="finalizing", document_number__isnull=False,
+                        status__in=("finalizing", "finalized", "artifact_failed"),
+                        document_number__isnull=False,
                         finalized_at__isnull=False,
                     )
                 ),
@@ -218,6 +221,8 @@ class BusinessDocumentAuditEvent(models.Model):
         UPDATED = "updated", "Geändert"
         ARCHIVED = "archived", "Archiviert"
         FINALIZED = "finalized", "Festgeschrieben"
+        ARTIFACT_CREATED = "artifact_created", "PDF erzeugt"
+        ARTIFACT_FAILED = "artifact_failed", "PDF fehlgeschlagen"
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     document = models.ForeignKey(
@@ -260,6 +265,36 @@ class DocumentSnapshot(models.Model):
         raise ValidationError("Ein festgeschriebener Belegsnapshot darf nicht gelöscht werden.")
 
 
+class DocumentArtifact(models.Model):
+    class Kind(models.TextChoices):
+        STANDARD_PDF = "standard_pdf", "Standard-PDF"
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    document = models.ForeignKey(
+        BusinessDocument, on_delete=models.PROTECT, related_name="artifacts"
+    )
+    snapshot = models.OneToOneField(
+        DocumentSnapshot, on_delete=models.PROTECT, related_name="artifact"
+    )
+    archive_object = models.OneToOneField(
+        "archive.ArchiveObject", on_delete=models.PROTECT,
+        related_name="outgoing_document_artifact",
+    )
+    kind = models.CharField(
+        max_length=24, choices=Kind.choices, default=Kind.STANDARD_PDF
+    )
+    renderer_version = models.CharField(max_length=40)
+    template_version = models.PositiveSmallIntegerField(default=1)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=("document", "kind"), name="document_artifact_unique_kind"
+            )
+        ]
+
+
 class DocumentOutboxEvent(models.Model):
     class Status(models.TextChoices):
         PENDING = "pending", "Ausstehend"
@@ -278,6 +313,7 @@ class DocumentOutboxEvent(models.Model):
     attempts = models.PositiveSmallIntegerField(default=0)
     available_at = models.DateTimeField()
     processed_at = models.DateTimeField(null=True, blank=True)
+    claimed_at = models.DateTimeField(null=True, blank=True)
     last_error = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 

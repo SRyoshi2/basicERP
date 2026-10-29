@@ -5,6 +5,7 @@ from rest_framework import serializers
 
 from .models import (
     BusinessDocument, BusinessDocumentAuditEvent, DocumentLine, DocumentSnapshot,
+    DocumentArtifact,
 )
 from .services import create_document, update_document
 
@@ -86,6 +87,22 @@ class DocumentSnapshotSerializer(serializers.ModelSerializer):
         )
 
 
+class DocumentArtifactMetadataSerializer(serializers.ModelSerializer):
+    sha256 = serializers.CharField(source="archive_object.sha256")
+    size = serializers.IntegerField(source="archive_object.size")
+    download_url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = DocumentArtifact
+        fields = (
+            "id", "kind", "sha256", "size", "renderer_version", "template_version",
+            "download_url", "created_at",
+        )
+
+    def get_download_url(self, obj) -> str:
+        return f"/api/v1/documents/{obj.document_id}/pdf/"
+
+
 class BusinessDocumentSerializer(serializers.ModelSerializer):
     kind_label = serializers.CharField(source="get_kind_display", read_only=True)
     status_label = serializers.CharField(source="get_status_display", read_only=True)
@@ -101,6 +118,7 @@ class BusinessDocumentSerializer(serializers.ModelSerializer):
     gross_total = serializers.SerializerMethodField()
     tax_breakdown = serializers.SerializerMethodField()
     snapshot = serializers.SerializerMethodField()
+    artifact = serializers.SerializerMethodField()
 
     class Meta:
         model = BusinessDocument
@@ -110,8 +128,8 @@ class BusinessDocumentSerializer(serializers.ModelSerializer):
             "project_name", "issue_date", "service_date_from", "service_date_to", "due_date",
             "currency", "tax_mode", "tax_exemption_note", "introduction", "closing_text",
             "payment_terms", "lines", "net_total", "tax_total", "gross_total",
-            "tax_breakdown", "snapshot", "version", "archived_at", "finalized_at",
-            "created_at", "updated_at",
+            "tax_breakdown", "snapshot", "artifact", "version", "archived_at",
+            "finalized_at", "created_at", "updated_at",
         )
 
     def _totals(self, obj):
@@ -141,6 +159,17 @@ class BusinessDocumentSerializer(serializers.ModelSerializer):
         if not snapshot:
             return None
         return DocumentSnapshotMetadataSerializer(snapshot).data
+
+    @extend_schema_field(DocumentArtifactMetadataSerializer(allow_null=True))
+    def get_artifact(self, obj) -> dict | None:
+        artifact = next(
+            (
+                item for item in obj.artifacts.all()
+                if item.kind == DocumentArtifact.Kind.STANDARD_PDF
+            ),
+            None,
+        )
+        return DocumentArtifactMetadataSerializer(artifact).data if artifact else None
 
 
 class BusinessDocumentWriteMixin(serializers.ModelSerializer):

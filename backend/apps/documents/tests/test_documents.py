@@ -1,3 +1,4 @@
+import io
 from datetime import date, timedelta
 from decimal import Decimal
 from types import SimpleNamespace
@@ -5,15 +6,19 @@ from types import SimpleNamespace
 import pytest
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
+from django.core.files.storage import storages
 from django.urls import reverse
+from django.utils import timezone
+from pypdf import PdfWriter
 
 from apps.catalog.models import CatalogItem
 from apps.core.models import CompanyProfile
 from apps.crm.models import Address, Contact
+from apps.documents.artifacts import process_artifact_event
 from apps.documents.calculations import calculate_document
 from apps.documents.models import (
-    BusinessDocument, BusinessDocumentAuditEvent, DocumentNumberSequence,
-    DocumentOutboxEvent, DocumentSnapshot,
+    BusinessDocument, BusinessDocumentAuditEvent, DocumentArtifact,
+    DocumentNumberSequence, DocumentOutboxEvent, DocumentSnapshot,
 )
 from apps.projects.models import Project
 
@@ -24,6 +29,20 @@ def document_admin():
         username="document-admin", email="document-admin@example.test",
         password="test-password", role=get_user_model().Role.ADMIN,
     )
+
+
+@pytest.fixture(autouse=True)
+def isolated_document_archive(settings, tmp_path):
+    settings.STORAGES = {
+        **settings.STORAGES,
+        "archive": {
+            "BACKEND": "django.core.files.storage.FileSystemStorage",
+            "OPTIONS": {"location": tmp_path / "archive"},
+        },
+    }
+    storages._storages.clear()
+    yield
+    storages._storages.clear()
 
 
 @pytest.fixture
@@ -398,3 +417,88 @@ def test_finalization_rejects_quote_and_customer_without_billing_address(
     )
     assert address_response.status_code == 400
     assert "customer_address" in address_response.data["error"]["fields"]
+
+
+@pytest.mark.django_db
+def test_artifact_event_archives_pdf_finalizes_document_and_downloads(
+    api_client, document_admin, document_customer, document_project,
+    complete_company, monkeypatch
+):
+    api_client.force_authenticate(document_admin)
+    created = api_client.post(
+        reverse("business-document-list"),
+        document_payload(document_customer, document_project), format="json",
+    )
+    api_client.post(
+        reverse("business-document-finalize", args=(created.data["id"],)),
+        {"version": created.data["version"]}, format="json",
+    )
+    event = DocumentOutboxEvent.objects.get(document_id=created.data["id"])
+    stream = io.BytesIO()
+    writer = PdfWriter()
+    writer.add_blank_page(width=595, height=842)
+    writer.write(stream)
+    pdf_bytes = stream.getvalue()
+    monkeypatch.setattr(
+        "apps.documents.artifacts.render_invoice_pdf", lambda snapshot: pdf_bytes
+    )
+
+    artifact = process_artifact_event(event.id)
+    assert artifact is not None
+    document = BusinessDocument.objects.get(pk=created.data["id"])
+    assert document.status == BusinessDocument.Status.FINALIZED
+    assert DocumentArtifact.objects.filter(document=document).count() == 1
+    event.refresh_from_db()
+    assert event.status == DocumentOutboxEvent.Status.COMPLETED
+    assert event.attempts == 1
+    assert BusinessDocumentAuditEvent.objects.filter(
+        document=document, action=BusinessDocumentAuditEvent.Action.ARTIFACT_CREATED
+    ).exists()
+
+    assert process_artifact_event(event.id) is None
+    assert DocumentArtifact.objects.filter(document=document).count() == 1
+    response = api_client.get(reverse("business-document-pdf", args=(document.id,)))
+    assert response.status_code == 200
+    assert b"".join(response.streaming_content) == pdf_bytes
+
+
+@pytest.mark.django_db
+def test_failed_artifact_is_recorded_and_can_be_retried(
+    api_client, document_admin, document_customer, document_project,
+    complete_company, monkeypatch
+):
+    api_client.force_authenticate(document_admin)
+    created = api_client.post(
+        reverse("business-document-list"),
+        document_payload(document_customer, document_project), format="json",
+    )
+    api_client.post(
+        reverse("business-document-finalize", args=(created.data["id"],)),
+        {"version": created.data["version"]}, format="json",
+    )
+    event = DocumentOutboxEvent.objects.get(document_id=created.data["id"])
+
+    def fail(_snapshot):
+        raise RuntimeError("Renderfehler im Test")
+
+    monkeypatch.setattr("apps.documents.artifacts.render_invoice_pdf", fail)
+    assert process_artifact_event(event.id) is None
+    event.refresh_from_db()
+    assert event.status == DocumentOutboxEvent.Status.FAILED
+    assert "Renderfehler" in event.last_error
+    assert event.available_at > timezone.now()
+    assert BusinessDocument.objects.get(pk=created.data["id"]).status == "artifact_failed"
+
+    stream = io.BytesIO()
+    writer = PdfWriter()
+    writer.add_blank_page(width=595, height=842)
+    writer.write(stream)
+    monkeypatch.setattr(
+        "apps.documents.artifacts.render_invoice_pdf", lambda snapshot: stream.getvalue()
+    )
+    artifact = process_artifact_event(event.id)
+    assert artifact is not None
+    event.refresh_from_db()
+    assert event.status == DocumentOutboxEvent.Status.COMPLETED
+    assert event.attempts == 2
+    assert BusinessDocument.objects.get(pk=created.data["id"]).status == "finalized"

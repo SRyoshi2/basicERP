@@ -52,6 +52,14 @@ SHA-256-dedupliziert im separaten Archiv-Volume. Der Umfang ist keine
 vollständige KoSIT-/Schematron- oder Rechtsprüfung. Für einen Selbsttest steht
 `docs/examples/incoming-invoice-ubl.xml` bereit.
 
+Unter **Ausgangsbelege** entstehen normale Rechnungen zunächst als bearbeitbare
+Entwürfe. Beim Festschreiben werden Rechnungsnummer und unveränderlicher
+Snapshot atomar gespeichert. Ein Hintergrundprozess erzeugt daraus ein
+versioniertes Standard-PDF, prüft dessen Kerndaten, archiviert es
+SHA-256-adressiert und stellt es anschließend in der Belegliste zum Download
+bereit. Fehlgeschlagene Render-Versuche werden automatisch mit wachsendem
+Abstand wiederholt.
+
 ## Schnellstart unter Ubuntu
 
 Voraussetzung: Docker Engine, das Docker-Compose-Plugin, OpenSSL und curl sind
@@ -73,7 +81,7 @@ Nach der Installation bei Standardwerten:
 
 ```powershell
 docker compose ps
-docker compose logs --tail 100
+docker compose logs --tail 100 web worker beat
 ```
 
 Der versionierte API-Vertrag liegt in `docs/openapi.yaml`. Mit installiertem

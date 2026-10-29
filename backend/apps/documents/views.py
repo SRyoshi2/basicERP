@@ -1,5 +1,6 @@
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db.models import Q
+from django.http import FileResponse
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import mixins, status, viewsets
@@ -11,7 +12,7 @@ from rest_framework.serializers import ValidationError
 from apps.core.permissions import HasCompletedPasswordChange, IsAdministrator
 from apps.core.serializers import ApiErrorResponseSerializer
 
-from .models import BusinessDocument, DocumentSnapshot
+from .models import BusinessDocument, DocumentArtifact, DocumentSnapshot
 from .serializers import (
     BusinessDocumentAuditEventSerializer, BusinessDocumentCreateSerializer,
     BusinessDocumentSerializer, BusinessDocumentUpdateSerializer,
@@ -29,7 +30,7 @@ class BusinessDocumentViewSet(
 ):
     queryset = BusinessDocument.objects.select_related(
         "customer", "project", "snapshot"
-    ).prefetch_related("lines__catalog_item")
+    ).prefetch_related("lines__catalog_item", "artifacts__archive_object")
     permission_classes = [IsAuthenticated, HasCompletedPasswordChange, IsAdministrator]
     http_method_names = ["get", "post", "patch", "head", "options"]
 
@@ -141,6 +142,30 @@ class BusinessDocumentViewSet(
                 status=status.HTTP_404_NOT_FOUND,
             )
         return Response(DocumentSnapshotSerializer(snapshot).data)
+
+    @extend_schema(responses={(200, "application/pdf"): OpenApiTypes.BINARY})
+    @action(detail=True, methods=["get"], pagination_class=None)
+    def pdf(self, request, pk=None):
+        document = self.get_object()
+        artifact = document.artifacts.filter(
+            kind=DocumentArtifact.Kind.STANDARD_PDF
+        ).select_related("archive_object").first()
+        if artifact is None:
+            return Response(
+                {
+                    "error": {
+                        "code": "pdf_not_ready",
+                        "message": "Das Standard-PDF ist noch nicht verfügbar.",
+                    }
+                },
+                status=status.HTTP_409_CONFLICT,
+            )
+        return FileResponse(
+            artifact.archive_object.file.open("rb"),
+            as_attachment=True,
+            filename=artifact.archive_object.original_name,
+            content_type="application/pdf",
+        )
 
     @extend_schema(responses={200: BusinessDocumentAuditEventSerializer(many=True)})
     @action(detail=True, methods=["get"], pagination_class=None)

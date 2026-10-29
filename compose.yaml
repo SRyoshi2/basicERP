@@ -73,6 +73,20 @@ services:
       - media_data:/app/media
       - archive_data:/app/archive
 
+  beat:
+    build:
+      context: ./backend
+    restart: unless-stopped
+    command: ["celery", "-A", "config", "beat", "--loglevel=INFO", "--schedule=/tmp/celerybeat-schedule"]
+    environment: *backend_environment
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      web:
+        condition: service_healthy
+
   nginx:
     build:
       context: .

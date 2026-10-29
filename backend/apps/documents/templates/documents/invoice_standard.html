@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="author" content="{{ invoice.issuer.name }}">
+  <meta name="description" content="Rechnung {{ invoice.document_number }}">
+  <title>Rechnung {{ invoice.document_number }}</title>
+  <style>
+    @page {
+      size: A4;
+      margin: 14mm 16mm 18mm;
+      @bottom-left { content: "{{ invoice.issuer.name }} · {{ invoice.document_number }}"; color: #667085; font-size: 8pt; }
+      @bottom-right { content: "Seite " counter(page) " / " counter(pages); color: #667085; font-size: 8pt; }
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; color: #172033; font-family: "DejaVu Sans", sans-serif; font-size: 8.8pt; line-height: 1.4; }
+    header { display: flex; justify-content: space-between; gap: 24mm; padding-bottom: 7mm; border-bottom: 2px solid #175cd3; }
+    .brand { max-width: 105mm; }
+    .brand h1 { margin: 0 0 2mm; color: #101828; font-size: 19pt; letter-spacing: -.4pt; }
+    .brand p, .meta p, .address p { margin: 0; }
+    .meta { min-width: 55mm; text-align: right; }
+    .meta strong { display: block; margin-bottom: 2mm; color: #175cd3; font-size: 13pt; }
+    .addresses { display: grid; grid-template-columns: 1fr 1fr; gap: 14mm; margin-top: 7mm; }
+    .label { margin: 0 0 2mm; color: #667085; font-size: 7.5pt; font-weight: 700; letter-spacing: .7pt; text-transform: uppercase; }
+    .recipient { padding: 4mm; border-radius: 3mm; background: #f2f4f7; }
+    .intro { margin: 6mm 0 4mm; white-space: pre-line; }
+    table { width: 100%; border-collapse: collapse; }
+    thead { display: table-header-group; }
+    th { padding: 2.5mm 2mm; color: white; background: #101828; font-size: 7.2pt; text-align: right; text-transform: uppercase; }
+    th:nth-child(2) { text-align: left; }
+    td { padding: 2.6mm 2mm; border-bottom: 1px solid #d0d5dd; text-align: right; vertical-align: top; }
+    td.description { text-align: left; overflow-wrap: anywhere; }
+    td.description small { display: block; margin-top: 1mm; color: #667085; }
+    tr { break-inside: avoid; }
+    .summary { width: 92mm; margin: 5mm 0 0 auto; }
+    .summary td { padding: 1.5mm 0 1.5mm 5mm; border: 0; }
+    .summary td:first-child { text-align: left; color: #475467; }
+    .summary .total td { padding-top: 2mm; border-top: 2px solid #175cd3; color: #101828; font-size: 12pt; font-weight: 800; }
+    .note { margin-top: 7mm; padding: 4mm; border-left: 3px solid #175cd3; background: #eff8ff; }
+    .closing { margin-top: 5mm; white-space: pre-line; }
+    .payment { margin-top: 4mm; padding-top: 3mm; border-top: 1px solid #d0d5dd; break-inside: avoid; }
+    .muted { color: #667085; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <h1>{{ invoice.issuer.name }}</h1>
+      <p>{{ invoice.issuer.street }}</p>
+      <p>{{ invoice.issuer.postal_code }} {{ invoice.issuer.city }} · {{ invoice.issuer.country_code }}</p>
+      {% if invoice.issuer.email %}<p>{{ invoice.issuer.email }}</p>{% endif %}
+      {% if invoice.issuer.phone %}<p>{{ invoice.issuer.phone }}</p>{% endif %}
+    </div>
+    <div class="meta">
+      <strong>Rechnung</strong>
+      <p>{{ invoice.document_number }}</p>
+      <p>Datum: {{ issue_date }}</p>
+      <p>Kunde: {{ invoice.recipient.customer_number }}</p>
+    </div>
+  </header>
+
+  <section class="addresses">
+    <div class="address recipient">
+      <p class="label">Rechnungsempfänger</p>
+      <p><strong>{{ invoice.recipient.name }}</strong></p>
+      <p>{{ invoice.recipient.street }}</p>
+      <p>{{ invoice.recipient.postal_code }} {{ invoice.recipient.city }}</p>
+      <p>{{ invoice.recipient.country_code }}</p>
+    </div>
+    <div class="address">
+      <p class="label">Leistungszeitraum</p>
+      <p>{{ service_date_from }}{% if invoice.service_date_to %} bis {{ service_date_to }}{% endif %}</p>
+      {% if invoice.project %}<p class="muted">Projekt {{ invoice.project.number }} · {{ invoice.project.name }}</p>{% endif %}
+      {% if invoice.due_date %}<p class="muted">Fällig am {{ due_date }}</p>{% endif %}
+    </div>
+  </section>
+
+  {% if invoice.introduction %}<div class="intro">{{ invoice.introduction }}</div>{% endif %}
+
+  <table aria-label="Rechnungspositionen">
+    <thead><tr><th>Pos.</th><th>Beschreibung</th><th>Menge</th><th>Einzel netto</th><th>Rabatt</th><th>USt.</th><th>Netto</th></tr></thead>
+    <tbody>
+      {% for line in lines %}
+      <tr>
+        <td>{{ line.position }}</td>
+        <td class="description">{{ line.description }}<small>{{ line.unit_label }}{% if line.catalog_item_number %} · {{ line.catalog_item_number }}{% endif %}</small></td>
+        <td>{{ line.quantity_display }}</td>
+        <td>{{ line.unit_price_display }} €</td>
+        <td>{{ line.discount_display }} %</td>
+        <td>{{ line.tax_rate_display }} %</td>
+        <td>{{ line.net_display }} €</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <table class="summary" aria-label="Rechnungssummen">
+    <tbody>
+      <tr><td>Nettosumme</td><td>{{ net_total }} €</td></tr>
+      {% for group in breakdown %}<tr><td>USt. {{ group.tax_rate_display }} % auf {{ group.net_display }} €</td><td>{{ group.tax_display }} €</td></tr>{% endfor %}
+      <tr class="total"><td>Gesamtbetrag</td><td>{{ gross_total }} €</td></tr>
+    </tbody>
+  </table>
+
+  {% if invoice.tax_exemption_note %}<div class="note">{{ invoice.tax_exemption_note }}</div>{% endif %}
+  {% for line in lines %}{% if line.tax_note and line.tax_note != invoice.tax_exemption_note %}<div class="note">Position {{ line.position }}: {{ line.tax_note }}</div>{% endif %}{% endfor %}
+  {% if invoice.closing_text %}<div class="closing">{{ invoice.closing_text }}</div>{% endif %}
+  {% if invoice.payment_terms %}<div class="payment"><strong>Zahlungsbedingungen</strong><br>{{ invoice.payment_terms }}</div>{% endif %}
+  <div class="payment muted">
+    {% if invoice.issuer.tax_number %}Steuernummer: {{ invoice.issuer.tax_number }}{% endif %}
+    {% if invoice.issuer.vat_id %}{% if invoice.issuer.tax_number %} · {% endif %}USt-IdNr.: {{ invoice.issuer.vat_id }}{% endif %}
+  </div>
+</body>
+</html>

@@ -59,7 +59,7 @@ if [[ "$SKIP_SAFETY_BACKUP" != "true" ]]; then
   "${SCRIPT_DIR}/backup-ubuntu.sh" --output "$SAFETY_PATH" --project-name "$PROJECT_NAME"
 fi
 
-"${COMPOSE[@]}" stop web worker nginx >/dev/null 2>&1 || true
+"${COMPOSE[@]}" stop web worker beat nginx >/dev/null 2>&1 || true
 "${COMPOSE[@]}" up -d --wait db
 "${COMPOSE[@]}" cp "${BACKUP_DIRECTORY}/database.dump" db:/tmp/basicerp-restore.dump
 "${COMPOSE[@]}" exec -T db sh -c 'dropdb -U "$POSTGRES_USER" --maintenance-db=postgres --if-exists "$POSTGRES_DB" && createdb -U "$POSTGRES_USER" -O "$POSTGRES_USER" "$POSTGRES_DB" && pg_restore -U "$POSTGRES_USER" -d "$POSTGRES_DB" --no-owner /tmp/basicerp-restore.dump && rm -f /tmp/basicerp-restore.dump'

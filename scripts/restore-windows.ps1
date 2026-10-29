@@ -65,7 +65,7 @@ try {
         if ($LASTEXITCODE -ne 0) { throw "Sicherheitsbackup vor Restore fehlgeschlagen." }
     }
 
-    & docker compose --env-file $EnvPath --project-name $ProjectName stop web worker nginx 2>$null
+    & docker compose --env-file $EnvPath --project-name $ProjectName stop web worker beat nginx 2>$null
     Invoke-Compose @("up", "-d", "--wait", "db")
     Invoke-Compose @("cp", (Join-Path $BackupDirectory "database.dump"), "db:/tmp/basicerp-restore.dump")
     $databaseCommand = "dropdb -U `"`$POSTGRES_USER`" --maintenance-db=postgres --if-exists `"`$POSTGRES_DB`" && createdb -U `"`$POSTGRES_USER`" -O `"`$POSTGRES_USER`" `"`$POSTGRES_DB`" && pg_restore -U `"`$POSTGRES_USER`" -d `"`$POSTGRES_DB`" --no-owner /tmp/basicerp-restore.dump && rm -f /tmp/basicerp-restore.dump"

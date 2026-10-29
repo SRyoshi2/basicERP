@@ -49,7 +49,7 @@ trap restart_services EXIT
 cd "$PROJECT_ROOT"
 "${COMPOSE[@]}" up -d --wait db
 mapfile -t RUNNING_SERVICES < <("${COMPOSE[@]}" ps --services --status running)
-for service in web worker nginx; do
+for service in web worker beat nginx; do
   for running in "${RUNNING_SERVICES[@]}"; do
     if [[ "$service" == "$running" ]]; then SERVICES_TO_RESTART+=("$service"); fi
   done

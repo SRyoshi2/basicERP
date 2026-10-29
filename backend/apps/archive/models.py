@@ -14,6 +14,7 @@ def archive_upload_path(instance, filename):
 class ArchiveObject(models.Model):
     class Source(models.TextChoices):
         INCOMING_INVOICE = "incoming_invoice", "E-Rechnungseingang"
+        OUTGOING_INVOICE = "outgoing_invoice", "Ausgangsrechnung"
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     file = models.FileField(

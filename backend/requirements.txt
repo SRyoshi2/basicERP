@@ -7,3 +7,4 @@ gunicorn>=23,<24
 Pillow>=11.3,<12
 psycopg[binary]>=3.2,<3.3
 pypdf>=6.1,<7
+weasyprint==70.0

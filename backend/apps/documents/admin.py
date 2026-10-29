@@ -2,7 +2,7 @@ from django.contrib import admin
 
 from .models import (
     BusinessDocument, BusinessDocumentAuditEvent, DocumentLine,
-    DocumentNumberSequence, DocumentOutboxEvent, DocumentSnapshot,
+    DocumentArtifact, DocumentNumberSequence, DocumentOutboxEvent, DocumentSnapshot,
 )
 
 
@@ -74,7 +74,24 @@ class DocumentOutboxEventAdmin(admin.ModelAdmin):
     list_display = ("topic", "document", "status", "attempts", "available_at", "created_at")
     readonly_fields = (
         "document", "topic", "event_key", "payload", "status", "attempts",
-        "available_at", "processed_at", "last_error", "created_at",
+        "available_at", "claimed_at", "processed_at", "last_error", "created_at",
+    )
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
+@admin.register(DocumentArtifact)
+class DocumentArtifactAdmin(admin.ModelAdmin):
+    list_display = (
+        "document", "kind", "renderer_version", "template_version", "created_at",
+    )
+    readonly_fields = (
+        "document", "snapshot", "archive_object", "kind", "renderer_version",
+        "template_version", "created_at",
     )
 
     def has_add_permission(self, request):

@@ -43,7 +43,7 @@ try {
     Invoke-Compose @("up", "-d", "--wait", "db")
     $runningServices = & docker compose --env-file $EnvPath --project-name $ProjectName ps --services --status running
     if ($LASTEXITCODE -ne 0) { throw "Laufende Dienste konnten nicht ermittelt werden." }
-    $servicesToRestart = @("web", "worker", "nginx") | Where-Object { $runningServices -contains $_ }
+    $servicesToRestart = @("web", "worker", "beat", "nginx") | Where-Object { $runningServices -contains $_ }
     if ($servicesToRestart.Count -gt 0) {
         Invoke-Compose (@("stop") + $servicesToRestart)
     }

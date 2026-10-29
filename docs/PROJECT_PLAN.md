@@ -158,7 +158,12 @@ Abnahmetests benötigen gemeinsame Entscheidungen und teilweise externe Prüfung
   Pflichtangabenprüfung. **Erledigt.**
 - Audit und transaktionales Outbox-Ereignis gemeinsam mit Nummer und Snapshot.
   **Erledigt.**
-- Standard-PDF ausschließlich aus dem finalen Snapshot. **Nächster Schritt.**
+- Standard-PDF ausschließlich aus dem finalen Snapshot. **Erledigt.**
+- Asynchrone, idempotente Artefakterzeugung mit archiviertem SHA-256-Objekt,
+  automatischem Retry und Download in der Belegliste. **Erledigt.**
+- Offene Projektzeiten und Mengenleistungen in einen Rechnungsentwurf
+  übernehmen und nach Festschreibung gegen Doppelabrechnung sperren.
+  **Nächster Schritt.**
 
 ## 6. Arbeitsweise und Qualitätsregeln
 

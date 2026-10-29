@@ -1167,6 +1167,29 @@ paths:
                 items:
                   $ref: '#/components/schemas/BusinessDocumentAuditEvent'
           description: ''
+  /api/v1/documents/{id}/pdf/:
+    get:
+      operationId: documents_pdf_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Ein UUID-String, der business document identifiziert.
+        required: true
+      tags:
+      - documents
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+          description: ''
   /api/v1/documents/{id}/snapshot/:
     get:
       operationId: documents_snapshot_retrieve
@@ -2821,6 +2844,11 @@ components:
           - $ref: '#/components/schemas/DocumentSnapshotMetadata'
           nullable: true
           readOnly: true
+        artifact:
+          allOf:
+          - $ref: '#/components/schemas/DocumentArtifactMetadata'
+          nullable: true
+          readOnly: true
         version:
           type: integer
           maximum: 9223372036854775807
@@ -2843,6 +2871,7 @@ components:
           format: date-time
           readOnly: true
       required:
+      - artifact
       - created_at
       - currency
       - customer
@@ -2896,12 +2925,16 @@ components:
       - updated
       - archived
       - finalized
+      - artifact_created
+      - artifact_failed
       type: string
       description: |-
         * `created` - Erstellt
         * `updated` - Geändert
         * `archived` - Archiviert
         * `finalized` - Festgeschrieben
+        * `artifact_created` - PDF erzeugt
+        * `artifact_failed` - PDF fehlgeschlagen
     BusinessDocumentCreate:
       type: object
       properties:
@@ -2954,10 +2987,14 @@ components:
       enum:
       - draft
       - finalizing
+      - finalized
+      - artifact_failed
       type: string
       description: |-
         * `draft` - Entwurf
         * `finalizing` - Festgeschrieben · PDF ausstehend
+        * `finalized` - Finalisiert
+        * `artifact_failed` - PDF-Erzeugung fehlgeschlagen
     CatalogAuditEvent:
       type: object
       properties:
@@ -3543,6 +3580,46 @@ components:
       description: |-
         * `approved` - approved
         * `rejected` - rejected
+    DocumentArtifactMetadata:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        kind:
+          $ref: '#/components/schemas/DocumentArtifactMetadataKindEnum'
+        sha256:
+          type: string
+        size:
+          type: integer
+        renderer_version:
+          type: string
+          maxLength: 40
+        template_version:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        download_url:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - download_url
+      - id
+      - renderer_version
+      - sha256
+      - size
+    DocumentArtifactMetadataKindEnum:
+      enum:
+      - standard_pdf
+      type: string
+      description: '* `standard_pdf` - Standard-PDF'
     DocumentKindEnum:
       enum:
       - quote
