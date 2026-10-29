@@ -2646,8 +2646,9 @@ components:
           $ref: '#/components/schemas/AbsenceActionEnum'
         version:
           type: integer
-          maximum: 2147483647
+          maximum: 9223372036854775807
           minimum: 0
+          format: int64
         changes: {}
         actor:
           type: string
@@ -2945,8 +2946,9 @@ components:
           readOnly: true
         version:
           type: integer
-          maximum: 2147483647
+          maximum: 9223372036854775807
           minimum: 0
+          format: int64
         archived_at:
           type: string
           format: date-time
@@ -2995,8 +2997,9 @@ components:
           $ref: '#/components/schemas/BusinessDocumentAuditEventActionEnum'
         version:
           type: integer
-          maximum: 2147483647
+          maximum: 9223372036854775807
           minimum: 0
+          format: int64
         changes: {}
         actor:
           type: string
@@ -3098,8 +3101,9 @@ components:
           $ref: '#/components/schemas/AuditActionEnum'
         version:
           type: integer
-          maximum: 2147483647
+          maximum: 9223372036854775807
           minimum: 0
+          format: int64
         changes: {}
         actor:
           type: string
@@ -3150,8 +3154,9 @@ components:
           readOnly: true
         version:
           type: integer
-          maximum: 2147483647
+          maximum: 9223372036854775807
           minimum: 0
+          format: int64
         archived_at:
           type: string
           format: date-time
@@ -3370,8 +3375,9 @@ components:
           maxLength: 64
         version:
           type: integer
-          maximum: 2147483647
+          maximum: 9223372036854775807
           minimum: 0
+          format: int64
         archived_at:
           type: string
           format: date-time
@@ -3475,8 +3481,9 @@ components:
           $ref: '#/components/schemas/AuditActionEnum'
         version:
           type: integer
-          maximum: 2147483647
+          maximum: 9223372036854775807
           minimum: 0
+          format: int64
         changes: {}
         actor:
           type: string
@@ -3686,8 +3693,9 @@ components:
           maxLength: 40
         template_version:
           type: integer
-          maximum: 32767
+          maximum: 9223372036854775807
           minimum: 0
+          format: int64
         download_url:
           type: string
           readOnly: true
@@ -3724,8 +3732,9 @@ components:
           readOnly: true
         position:
           type: integer
-          maximum: 32767
+          maximum: 9223372036854775807
           minimum: 0
+          format: int64
         catalog_item:
           type: string
           format: uuid
@@ -4104,8 +4113,9 @@ components:
           readOnly: true
         year:
           type: integer
-          maximum: 32767
+          maximum: 9223372036854775807
           minimum: 0
+          format: int64
         entitlement_days:
           type: string
           format: decimal
@@ -4116,8 +4126,9 @@ components:
           pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
         version:
           type: integer
-          maximum: 2147483647
+          maximum: 9223372036854775807
           minimum: 0
+          format: int64
         updated_at:
           type: string
           format: date-time
@@ -4799,8 +4810,9 @@ components:
           nullable: true
         version:
           type: integer
-          maximum: 2147483647
+          maximum: 9223372036854775807
           minimum: 0
+          format: int64
         archived_at:
           type: string
           format: date-time
@@ -4834,8 +4846,9 @@ components:
           $ref: '#/components/schemas/AuditActionEnum'
         version:
           type: integer
-          maximum: 2147483647
+          maximum: 9223372036854775807
           minimum: 0
+          format: int64
         changes: {}
         actor:
           type: string
@@ -5137,8 +5150,9 @@ components:
           $ref: '#/components/schemas/Action320Enum'
         version:
           type: integer
-          maximum: 2147483647
+          maximum: 9223372036854775807
           minimum: 0
+          format: int64
         changes: {}
         actor:
           type: string
@@ -5256,8 +5270,9 @@ components:
           format: date
         duration_minutes:
           type: integer
-          maximum: 2147483647
+          maximum: 9223372036854775807
           minimum: 0
+          format: int64
         duration_hours:
           type: string
           format: decimal
@@ -5334,8 +5349,9 @@ components:
           $ref: '#/components/schemas/Action320Enum'
         version:
           type: integer
-          maximum: 2147483647
+          maximum: 9223372036854775807
           minimum: 0
+          format: int64
         changes: {}
         actor:
           type: string
@@ -5577,8 +5593,9 @@ components:
           nullable: true
         version:
           type: integer
-          maximum: 2147483647
+          maximum: 9223372036854775807
           minimum: 0
+          format: int64
         archived_at:
           type: string
           format: date-time
@@ -5612,8 +5629,9 @@ components:
           $ref: '#/components/schemas/AuditActionEnum'
         version:
           type: integer
-          maximum: 2147483647
+          maximum: 9223372036854775807
           minimum: 0
+          format: int64
         changes: {}
         actor:
           type: string
