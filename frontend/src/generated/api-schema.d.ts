@@ -420,6 +420,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/documents/{id}/finalize/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["documents_finalize_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/documents/{id}/history/": {
         parameters: {
             query?: never;
@@ -428,6 +444,22 @@ export interface paths {
             cookie?: never;
         };
         get: operations["documents_history_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/documents/{id}/snapshot/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["documents_snapshot_retrieve"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1071,10 +1103,13 @@ export interface components {
             /** Format: decimal */
             readonly gross_total: string;
             readonly tax_breakdown: components["schemas"]["TaxBreakdown"][];
+            readonly snapshot: components["schemas"]["DocumentSnapshotMetadata"] | null;
             /** Format: int64 */
             version?: number;
             /** Format: date-time */
             archived_at?: string | null;
+            /** Format: date-time */
+            finalized_at?: string | null;
             /** Format: date-time */
             readonly created_at: string;
             /** Format: date-time */
@@ -1083,7 +1118,7 @@ export interface components {
         BusinessDocumentAuditEvent: {
             /** Format: uuid */
             readonly id: string;
-            action: components["schemas"]["AuditActionEnum"];
+            action: components["schemas"]["BusinessDocumentAuditEventActionEnum"];
             /** Format: int64 */
             version: number;
             changes?: unknown;
@@ -1091,6 +1126,14 @@ export interface components {
             /** Format: date-time */
             readonly created_at: string;
         };
+        /**
+         * @description * `created` - Erstellt
+         *     * `updated` - Geändert
+         *     * `archived` - Archiviert
+         *     * `finalized` - Festgeschrieben
+         * @enum {string}
+         */
+        BusinessDocumentAuditEventActionEnum: "created" | "updated" | "archived" | "finalized";
         BusinessDocumentCreate: {
             kind: components["schemas"]["DocumentKindEnum"];
             /** Format: uuid */
@@ -1114,9 +1157,10 @@ export interface components {
         };
         /**
          * @description * `draft` - Entwurf
+         *     * `finalizing` - Festgeschrieben · PDF ausstehend
          * @enum {string}
          */
-        BusinessDocumentStatusEnum: "draft";
+        BusinessDocumentStatusEnum: "draft" | "finalizing";
         CatalogAuditEvent: {
             /** Format: uuid */
             readonly id: string;
@@ -1402,12 +1446,32 @@ export interface components {
             tax_rate: components["schemas"]["CatalogTaxRateEnum"];
             tax_note?: string;
         };
+        DocumentSnapshot: {
+            /** Format: uuid */
+            readonly id: string;
+            readonly schema_version: number;
+            readonly calculation_version: number;
+            readonly sha256: string;
+            readonly payload: unknown;
+            /** Format: date-time */
+            readonly created_at: string;
+        };
+        DocumentSnapshotMetadata: {
+            schema_version: number;
+            calculation_version: number;
+            sha256: string;
+            /** Format: date-time */
+            created_at: string;
+        };
         /**
          * @description * `time` - time
          *     * `service` - service
          * @enum {string}
          */
         EntryTypeEnum: "time" | "service";
+        FinalizeDocument: {
+            version: number;
+        };
         Health: {
             status: string;
         };
@@ -3261,6 +3325,50 @@ export interface operations {
             };
         };
     };
+    documents_finalize_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Ein UUID-String, der business document identifiziert. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FinalizeDocument"];
+                "application/x-www-form-urlencoded": components["schemas"]["FinalizeDocument"];
+                "multipart/form-data": components["schemas"]["FinalizeDocument"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BusinessDocument"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
     documents_history_list: {
         parameters: {
             query?: never;
@@ -3279,6 +3387,28 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["BusinessDocumentAuditEvent"][];
+                };
+            };
+        };
+    };
+    documents_snapshot_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Ein UUID-String, der business document identifiziert. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DocumentSnapshot"];
                 };
             };
         };

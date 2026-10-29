@@ -106,7 +106,7 @@ werden.
 
 1. [x] Rechenkern und Grenzfalltests vor Festschreibungslogik implementieren.
 2. [ ] §19-, 0-%-, 7-%-, 19-%-, Rabatt- und gemischte Steuerfälle fachlich prüfen.
-3. [ ] Beim Festschreiben Rechenmodellversion und Steuergruppen mitspeichern.
+3. [x] Beim Festschreiben Rechenmodellversion und Steuergruppen mitspeichern.
 4. [ ] PDF und E-Rechnung ausschließlich aus demselben Snapshot erzeugen.
 
 ## Fachliche Quellen

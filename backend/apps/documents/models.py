@@ -15,6 +15,7 @@ class BusinessDocument(models.Model):
 
     class Status(models.TextChoices):
         DRAFT = "draft", "Entwurf"
+        FINALIZING = "finalizing", "Festgeschrieben · PDF ausstehend"
 
     class TaxMode(models.TextChoices):
         STANDARD = "standard", "Regelbesteuerung"
@@ -49,6 +50,7 @@ class BusinessDocument(models.Model):
     payment_terms = models.CharField(max_length=300, blank=True)
     version = models.PositiveIntegerField(default=1)
     archived_at = models.DateTimeField(null=True, blank=True)
+    finalized_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     created_by = models.ForeignKey(
@@ -59,6 +61,10 @@ class BusinessDocument(models.Model):
         settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL,
         related_name="updated_business_documents",
     )
+    finalized_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL,
+        related_name="finalized_business_documents",
+    )
 
     class Meta:
         ordering = ("-issue_date", "-created_at")
@@ -66,6 +72,21 @@ class BusinessDocument(models.Model):
             models.Index(fields=("kind", "status", "archived_at")),
             models.Index(fields=("customer", "issue_date")),
             models.Index(fields=("project", "issue_date")),
+        ]
+        constraints = [
+            models.CheckConstraint(
+                condition=(
+                    models.Q(
+                        status="draft", document_number__isnull=True,
+                        finalized_at__isnull=True,
+                    )
+                    | models.Q(
+                        status="finalizing", document_number__isnull=False,
+                        finalized_at__isnull=False,
+                    )
+                ),
+                name="document_finalization_fields_match_status",
+            )
         ]
 
     def clean(self):
@@ -89,7 +110,37 @@ class BusinessDocument(models.Model):
 
     @property
     def totals(self):
+        snapshot = getattr(self, "snapshot", None)
+        if snapshot:
+            totals = snapshot.payload["totals"]
+            return {
+                "net_total": Decimal(totals["net_total"]),
+                "tax_total": Decimal(totals["tax_total"]),
+                "gross_total": Decimal(totals["gross_total"]),
+                "tax_breakdown": [
+                    {key: Decimal(value) for key, value in group.items()}
+                    for group in totals["tax_breakdown"]
+                ],
+            }
         return calculate_document(self.lines.all())
+
+
+class DocumentNumberSequence(models.Model):
+    kind = models.CharField(max_length=16, choices=BusinessDocument.Kind.choices)
+    year = models.PositiveSmallIntegerField()
+    prefix = models.CharField(max_length=12, default="RE")
+    next_value = models.PositiveBigIntegerField(default=1)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=("kind", "year"), name="document_number_sequence_kind_year"
+            ),
+            models.CheckConstraint(
+                condition=models.Q(next_value__gt=0),
+                name="document_number_sequence_next_positive",
+            ),
+        ]
 
 
 class DocumentLine(models.Model):
@@ -166,6 +217,7 @@ class BusinessDocumentAuditEvent(models.Model):
         CREATED = "created", "Erstellt"
         UPDATED = "updated", "Geändert"
         ARCHIVED = "archived", "Archiviert"
+        FINALIZED = "finalized", "Festgeschrieben"
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     document = models.ForeignKey(
@@ -182,3 +234,53 @@ class BusinessDocumentAuditEvent(models.Model):
 
     class Meta:
         ordering = ("-created_at",)
+
+
+class DocumentSnapshot(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    document = models.OneToOneField(
+        BusinessDocument, on_delete=models.PROTECT, related_name="snapshot"
+    )
+    schema_version = models.PositiveSmallIntegerField(default=1, editable=False)
+    calculation_version = models.PositiveSmallIntegerField(default=1, editable=False)
+    payload = models.JSONField(editable=False)
+    sha256 = models.CharField(max_length=64, unique=True, editable=False)
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL,
+        related_name="created_document_snapshots",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def save(self, *args, **kwargs):
+        if self.pk and type(self).objects.filter(pk=self.pk).exists():
+            raise ValidationError("Ein festgeschriebener Belegsnapshot ist unveränderlich.")
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        raise ValidationError("Ein festgeschriebener Belegsnapshot darf nicht gelöscht werden.")
+
+
+class DocumentOutboxEvent(models.Model):
+    class Status(models.TextChoices):
+        PENDING = "pending", "Ausstehend"
+        PROCESSING = "processing", "In Bearbeitung"
+        COMPLETED = "completed", "Abgeschlossen"
+        FAILED = "failed", "Fehlgeschlagen"
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    document = models.ForeignKey(
+        BusinessDocument, on_delete=models.PROTECT, related_name="outbox_events"
+    )
+    topic = models.CharField(max_length=80)
+    event_key = models.CharField(max_length=160, unique=True)
+    payload = models.JSONField(default=dict)
+    status = models.CharField(max_length=16, choices=Status.choices, default=Status.PENDING)
+    attempts = models.PositiveSmallIntegerField(default=0)
+    available_at = models.DateTimeField()
+    processed_at = models.DateTimeField(null=True, blank=True)
+    last_error = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ("created_at",)
+        indexes = [models.Index(fields=("status", "available_at"))]

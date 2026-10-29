@@ -1,3 +1,4 @@
+from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db.models import Q
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema
@@ -5,16 +6,18 @@ from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.serializers import ValidationError
 
 from apps.core.permissions import HasCompletedPasswordChange, IsAdministrator
 from apps.core.serializers import ApiErrorResponseSerializer
 
-from .models import BusinessDocument
+from .models import BusinessDocument, DocumentSnapshot
 from .serializers import (
     BusinessDocumentAuditEventSerializer, BusinessDocumentCreateSerializer,
     BusinessDocumentSerializer, BusinessDocumentUpdateSerializer,
+    DocumentSnapshotSerializer, FinalizeDocumentSerializer,
 )
-from .services import archive_document
+from .services import archive_document, finalize_document
 
 
 class BusinessDocumentViewSet(
@@ -24,9 +27,9 @@ class BusinessDocumentViewSet(
     mixins.UpdateModelMixin,
     viewsets.GenericViewSet,
 ):
-    queryset = BusinessDocument.objects.select_related("customer", "project").prefetch_related(
-        "lines__catalog_item"
-    )
+    queryset = BusinessDocument.objects.select_related(
+        "customer", "project", "snapshot"
+    ).prefetch_related("lines__catalog_item")
     permission_classes = [IsAuthenticated, HasCompletedPasswordChange, IsAdministrator]
     http_method_names = ["get", "post", "patch", "head", "options"]
 
@@ -103,6 +106,41 @@ class BusinessDocumentViewSet(
                 {"error": {"code": "invalid_state", "message": str(error)}}, status=400
             )
         return Response(BusinessDocumentSerializer(document).data, status=status.HTTP_200_OK)
+
+    @extend_schema(
+        request=FinalizeDocumentSerializer,
+        responses={
+            200: BusinessDocumentSerializer,
+            400: ApiErrorResponseSerializer,
+            409: ApiErrorResponseSerializer,
+        },
+    )
+    @action(detail=True, methods=["post"])
+    def finalize(self, request, pk=None):
+        request_serializer = FinalizeDocumentSerializer(data=request.data)
+        request_serializer.is_valid(raise_exception=True)
+        try:
+            document = finalize_document(
+                self.get_object().pk,
+                request_serializer.validated_data["version"],
+                request.user,
+            )
+        except DjangoValidationError as error:
+            raise ValidationError(error.message_dict) from error
+        return Response(BusinessDocumentSerializer(document).data)
+
+    @extend_schema(responses={200: DocumentSnapshotSerializer})
+    @action(detail=True, methods=["get"], pagination_class=None)
+    def snapshot(self, request, pk=None):
+        document = self.get_object()
+        try:
+            snapshot = document.snapshot
+        except DocumentSnapshot.DoesNotExist:
+            return Response(
+                {"error": {"code": "not_finalized", "message": "Der Beleg ist nicht festgeschrieben."}},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        return Response(DocumentSnapshotSerializer(snapshot).data)
 
     @extend_schema(responses={200: BusinessDocumentAuditEventSerializer(many=True)})
     @action(detail=True, methods=["get"], pagination_class=None)

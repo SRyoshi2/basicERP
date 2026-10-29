@@ -116,9 +116,9 @@ Event Sourcing umzustellen.
 
 ## Maßnahmen
 
-1. [ ] Snapshot-Schema und Versionierungsstrategie fachlich freigeben.
-2. [ ] Nummernkreis unter Parallelität und Rollback testen.
-3. [ ] Outbox-Claiming, Retry, Backoff und Dead-Letter-Sicht implementieren.
+1. [x] Snapshot-Schema und Versionierungsstrategie technisch implementieren; fachliche Freigabe bleibt Release-Gate.
+2. [ ] Nummernkreis unter Parallelität und Rollback testen. **Rollback unter PostgreSQL erledigt; Parallelitätstest ausstehend.**
+3. [ ] Outbox-Claiming, Retry, Backoff und Dead-Letter-Sicht implementieren; transaktionale Erzeugung ist erledigt.
 4. [ ] Jeder Worker erhält Deduplizierungs- und Crash-Recovery-Tests.
 5. [ ] UI zeigt Finalisierung, Retry und Supporthinweis verständlich an.
 6. [ ] Versand verweigern, solange Pflichtartefakte nicht erfolgreich validiert sind.

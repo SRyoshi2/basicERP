@@ -1097,6 +1097,52 @@ paths:
               schema:
                 $ref: '#/components/schemas/ApiErrorResponse'
           description: ''
+  /api/v1/documents/{id}/finalize/:
+    post:
+      operationId: documents_finalize_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Ein UUID-String, der business document identifiziert.
+        required: true
+      tags:
+      - documents
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FinalizeDocument'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/FinalizeDocument'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/FinalizeDocument'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BusinessDocument'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+          description: ''
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+          description: ''
   /api/v1/documents/{id}/history/:
     get:
       operationId: documents_history_list
@@ -1120,6 +1166,28 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/BusinessDocumentAuditEvent'
+          description: ''
+  /api/v1/documents/{id}/snapshot/:
+    get:
+      operationId: documents_snapshot_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: Ein UUID-String, der business document identifiziert.
+        required: true
+      tags:
+      - documents
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentSnapshot'
           description: ''
   /api/v1/health/live/:
     get:
@@ -2748,12 +2816,21 @@ components:
           items:
             $ref: '#/components/schemas/TaxBreakdown'
           readOnly: true
+        snapshot:
+          allOf:
+          - $ref: '#/components/schemas/DocumentSnapshotMetadata'
+          nullable: true
+          readOnly: true
         version:
           type: integer
           maximum: 9223372036854775807
           minimum: 0
           format: int64
         archived_at:
+          type: string
+          format: date-time
+          nullable: true
+        finalized_at:
           type: string
           format: date-time
           nullable: true
@@ -2780,6 +2857,7 @@ components:
       - net_total
       - project_name
       - project_number
+      - snapshot
       - status_label
       - tax_breakdown
       - tax_total
@@ -2792,7 +2870,7 @@ components:
           format: uuid
           readOnly: true
         action:
-          $ref: '#/components/schemas/AuditActionEnum'
+          $ref: '#/components/schemas/BusinessDocumentAuditEventActionEnum'
         version:
           type: integer
           maximum: 9223372036854775807
@@ -2812,6 +2890,18 @@ components:
       - created_at
       - id
       - version
+    BusinessDocumentAuditEventActionEnum:
+      enum:
+      - created
+      - updated
+      - archived
+      - finalized
+      type: string
+      description: |-
+        * `created` - Erstellt
+        * `updated` - Geändert
+        * `archived` - Archiviert
+        * `finalized` - Festgeschrieben
     BusinessDocumentCreate:
       type: object
       properties:
@@ -2863,8 +2953,11 @@ components:
     BusinessDocumentStatusEnum:
       enum:
       - draft
+      - finalizing
       type: string
-      description: '* `draft` - Entwurf'
+      description: |-
+        * `draft` - Entwurf
+        * `finalizing` - Festgeschrieben · PDF ausstehend
     CatalogAuditEvent:
       type: object
       properties:
@@ -3575,6 +3668,52 @@ components:
       - tax_rate
       - unit
       - unit_price_net
+    DocumentSnapshot:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        schema_version:
+          type: integer
+          readOnly: true
+        calculation_version:
+          type: integer
+          readOnly: true
+        sha256:
+          type: string
+          readOnly: true
+        payload:
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - calculation_version
+      - created_at
+      - id
+      - payload
+      - schema_version
+      - sha256
+    DocumentSnapshotMetadata:
+      type: object
+      properties:
+        schema_version:
+          type: integer
+        calculation_version:
+          type: integer
+        sha256:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+      required:
+      - calculation_version
+      - created_at
+      - schema_version
+      - sha256
     EntryTypeEnum:
       enum:
       - time
@@ -3583,6 +3722,14 @@ components:
       description: |-
         * `time` - time
         * `service` - service
+    FinalizeDocument:
+      type: object
+      properties:
+        version:
+          type: integer
+          minimum: 1
+      required:
+      - version
     Health:
       type: object
       properties:

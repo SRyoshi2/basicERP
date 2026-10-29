@@ -4,12 +4,17 @@ from types import SimpleNamespace
 
 import pytest
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
 from django.urls import reverse
 
 from apps.catalog.models import CatalogItem
+from apps.core.models import CompanyProfile
 from apps.crm.models import Address, Contact
 from apps.documents.calculations import calculate_document
-from apps.documents.models import BusinessDocument, BusinessDocumentAuditEvent
+from apps.documents.models import (
+    BusinessDocument, BusinessDocumentAuditEvent, DocumentNumberSequence,
+    DocumentOutboxEvent, DocumentSnapshot,
+)
 from apps.projects.models import Project
 
 
@@ -67,9 +72,24 @@ def document_item(document_admin):
     )
 
 
+@pytest.fixture
+def complete_company(document_admin):
+    company, _ = CompanyProfile.objects.get_or_create(pk=1)
+    company.legal_name = "Musterbüro GmbH"
+    company.street = "Hauptstraße 10"
+    company.postal_code = "10115"
+    company.city = "Berlin"
+    company.country_code = "DE"
+    company.tax_number = "12/345/67890"
+    company.updated_by = document_admin
+    company.save()
+    return company
+
+
 def document_payload(customer, project, item=None, **overrides):
     payload = {
-        "kind": "invoice", "customer": str(customer.id), "project": str(project.id),
+        "kind": "invoice", "customer": str(customer.id),
+        "project": str(project.id) if project else None,
         "issue_date": date.today().isoformat(),
         "service_date_from": date.today().isoformat(),
         "service_date_to": date.today().isoformat(),
@@ -250,3 +270,131 @@ def test_admin_archives_draft(
     assert response.status_code == 200
     assert response.data["archived_at"] is not None
     assert not BusinessDocument.objects.filter(archived_at__isnull=True).exists()
+
+
+@pytest.mark.django_db
+def test_admin_finalizes_invoice_with_number_snapshot_audit_and_outbox(
+    api_client, document_admin, document_customer, document_project, complete_company
+):
+    api_client.force_authenticate(document_admin)
+    created = api_client.post(
+        reverse("business-document-list"),
+        document_payload(document_customer, document_project), format="json",
+    )
+    response = api_client.post(
+        reverse("business-document-finalize", args=(created.data["id"],)),
+        {"version": created.data["version"]}, format="json",
+    )
+    assert response.status_code == 200, response.data
+    assert response.data["status"] == "finalizing"
+    assert response.data["document_number"] == f"RE-{date.today().year}-0001"
+    assert response.data["snapshot"]["schema_version"] == 1
+    assert len(response.data["snapshot"]["sha256"]) == 64
+
+    document = BusinessDocument.objects.get(pk=created.data["id"])
+    snapshot = DocumentSnapshot.objects.get(document=document)
+    assert snapshot.payload["issuer"]["name"] == "Musterbüro GmbH"
+    assert snapshot.payload["recipient"]["street"] == "Teststraße 1"
+    assert snapshot.payload["totals"]["gross_total"] == "321.30"
+    assert snapshot.payload["lines"][0]["description"] == "Beratung"
+    assert BusinessDocumentAuditEvent.objects.filter(
+        document=document, action=BusinessDocumentAuditEvent.Action.FINALIZED
+    ).exists()
+    event = DocumentOutboxEvent.objects.get(document=document)
+    assert event.status == DocumentOutboxEvent.Status.PENDING
+    assert event.payload["snapshot_sha256"] == snapshot.sha256
+
+    snapshot_response = api_client.get(
+        reverse("business-document-snapshot", args=(document.id,))
+    )
+    assert snapshot_response.status_code == 200
+    assert snapshot_response.data["payload"]["document_number"] == document.document_number
+
+    snapshot.payload["document_number"] = "MANIPULIERT"
+    with pytest.raises(ValidationError):
+        snapshot.save()
+
+
+@pytest.mark.django_db
+def test_finalized_invoice_is_immutable_and_next_number_increments(
+    api_client, document_admin, document_customer, document_project, complete_company
+):
+    api_client.force_authenticate(document_admin)
+    numbers = []
+    first_id = None
+    for _ in range(2):
+        created = api_client.post(
+            reverse("business-document-list"),
+            document_payload(document_customer, document_project), format="json",
+        )
+        finalized = api_client.post(
+            reverse("business-document-finalize", args=(created.data["id"],)),
+            {"version": created.data["version"]}, format="json",
+        )
+        assert finalized.status_code == 200, finalized.data
+        numbers.append(finalized.data["document_number"])
+        first_id = first_id or created.data["id"]
+    assert numbers == [
+        f"RE-{date.today().year}-0001", f"RE-{date.today().year}-0002",
+    ]
+    document = BusinessDocument.objects.get(pk=first_id)
+    update_payload = document_payload(document_customer, document_project)
+    update_payload["version"] = document.version
+    update = api_client.patch(
+        reverse("business-document-detail", args=(document.id,)), update_payload, format="json",
+    )
+    assert update.status_code == 400
+    archive = api_client.post(
+        reverse("business-document-archive", args=(document.id,)), {}, format="json",
+    )
+    assert archive.status_code == 400
+
+
+@pytest.mark.django_db
+def test_finalization_requires_complete_issuer_and_does_not_consume_number(
+    api_client, document_admin, document_customer, document_project
+):
+    api_client.force_authenticate(document_admin)
+    CompanyProfile.objects.get_or_create(pk=1)
+    created = api_client.post(
+        reverse("business-document-list"),
+        document_payload(document_customer, document_project), format="json",
+    )
+    response = api_client.post(
+        reverse("business-document-finalize", args=(created.data["id"],)),
+        {"version": created.data["version"]}, format="json",
+    )
+    assert response.status_code == 400
+    fields = response.data["error"]["fields"]
+    assert {"company_name", "company_address", "company_tax_id"} <= set(fields)
+    assert not DocumentNumberSequence.objects.exists()
+    assert BusinessDocument.objects.get(pk=created.data["id"]).status == "draft"
+
+
+@pytest.mark.django_db
+def test_finalization_rejects_quote_and_customer_without_billing_address(
+    api_client, document_admin, document_customer, document_project,
+    other_document_customer, complete_company
+):
+    api_client.force_authenticate(document_admin)
+    quote = api_client.post(
+        reverse("business-document-list"),
+        document_payload(document_customer, document_project, kind="quote"), format="json",
+    )
+    quote_response = api_client.post(
+        reverse("business-document-finalize", args=(quote.data["id"],)),
+        {"version": quote.data["version"]}, format="json",
+    )
+    assert quote_response.status_code == 400
+    assert "kind" in quote_response.data["error"]["fields"]
+
+    invoice = api_client.post(
+        reverse("business-document-list"),
+        document_payload(other_document_customer, None), format="json",
+    )
+    address_response = api_client.post(
+        reverse("business-document-finalize", args=(invoice.data["id"],)),
+        {"version": invoice.data["version"]}, format="json",
+    )
+    assert address_response.status_code == 400
+    assert "customer_address" in address_response.data["error"]["fields"]

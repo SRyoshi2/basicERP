@@ -127,11 +127,14 @@ und vollständigen Positionen erfasst werden. Freitext- und Katalogpositionen,
 Menge, Einheit, Nettopreis, Rabatt sowie 0/7/19 % und die Kleinunternehmer-Variante
 sind enthalten. Eine einzige serverseitige Decimal-Berechnung gruppiert und
 rundet die Steuer deterministisch; Versionsschutz, Audit und Archivierung sind
-aktiv. Festschreibung, Nummernkreis, Snapshot und PDF folgen als nächster Schritt.
+aktiv. Rechnungsentwürfe werden nach einer Pflichtangabenprüfung atomar mit
+einer jahresbezogenen Nummer festgeschrieben. Ein versionierter, gehashter
+Snapshot sowie Audit- und Outbox-Ereignis entstehen in derselben Transaktion;
+der Beleg ist danach unveränderbar. Das Standard-PDF folgt als nächster Schritt.
 
 - Dokumentmodell: Angebot, Rechnung, Gutschrift/Korrekturrechnung; Positionen (Katalog-Referenz oder Freitext, Menge, Einheit, Einzelpreis, Rabatt, Steuersatz) **(Angebot und normale Rechnung als Entwurf erledigt; Korrekturrechnung folgt)**
-- Pflichtangaben §14 UStG vollständig; Kleinunternehmer-Variante (§19-Hinweis, keine USt) **(Entwurfsfelder und Kleinunternehmer-Berechnung erledigt; Pflichtangabenprüfung bei Festschreibung folgt)**
-- Nummernkreise: fortlaufend, lückenlos, konfigurierbares Format (z. B. `RE-2026-0001`); Rechnung nach Festschreibung unveränderbar → Änderungen nur per Korrekturrechnung
+- Pflichtangaben §14 UStG vollständig; Kleinunternehmer-Variante (§19-Hinweis, keine USt) **(Festschreibungsprüfung für Aussteller, Empfänger, Steuerkennung, Leistungsdatum und Positionen erledigt; fachliche Freigabe bleibt ausstehend)**
+- Nummernkreise: fortlaufend, lückenlos, konfigurierbares Format (z. B. `RE-2026-0001`); Rechnung nach Festschreibung unveränderbar → Änderungen nur per Korrekturrechnung **(atomare Jahresfolge, Snapshot und Sperre erledigt; Konfigurationsoberfläche später)**
 - Statusfluss: Entwurf → festgeschrieben/versendet → bezahlt (Teilzahlungen) / storniert; Angebote: offen → angenommen/abgelehnt → in Rechnung überführen
 - **Aus dem Projekt heraus:** nicht abgerechnete Zeiten/Leistungen auswählen → Rechnungsentwurf mit gruppierten Positionen (pro Arbeitspaket oder pro Tag); abgerechnete Einträge werden verknüpft und gesperrt
 - PDF via WeasyPrint aus einer soliden Standard-HTML-Vorlage (der Block-Editor kommt in Phase 5 — hier zählt Korrektheit)

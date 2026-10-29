@@ -155,8 +155,10 @@ Abnahmetests benötigen gemeinsame Entscheidungen und teilweise externe Prüfung
 - Kleinunternehmer-Belege ohne Umsatzsteuer und mit Pflicht-Hinweis. **Erledigt.**
 - Admin-Berechtigung, Versionskonflikt, Audit und Archivierung. **Erledigt.**
 - Festschreibung mit Nummernkreis, unveränderlichem Snapshot und
-  Pflichtangabenprüfung. **Nächster Schritt.**
-- Standard-PDF ausschließlich aus dem finalen Snapshot. **Danach.**
+  Pflichtangabenprüfung. **Erledigt.**
+- Audit und transaktionales Outbox-Ereignis gemeinsam mit Nummer und Snapshot.
+  **Erledigt.**
+- Standard-PDF ausschließlich aus dem finalen Snapshot. **Nächster Schritt.**
 
 ## 6. Arbeitsweise und Qualitätsregeln
 

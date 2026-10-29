@@ -3,7 +3,9 @@ from decimal import Decimal
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
-from .models import BusinessDocument, BusinessDocumentAuditEvent, DocumentLine
+from .models import (
+    BusinessDocument, BusinessDocumentAuditEvent, DocumentLine, DocumentSnapshot,
+)
 from .services import create_document, update_document
 
 
@@ -68,6 +70,22 @@ class TaxBreakdownSerializer(serializers.Serializer):
     gross_amount = serializers.DecimalField(max_digits=18, decimal_places=2)
 
 
+class DocumentSnapshotMetadataSerializer(serializers.Serializer):
+    schema_version = serializers.IntegerField()
+    calculation_version = serializers.IntegerField()
+    sha256 = serializers.CharField()
+    created_at = serializers.DateTimeField()
+
+
+class DocumentSnapshotSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DocumentSnapshot
+        fields = (
+            "id", "schema_version", "calculation_version", "sha256", "payload",
+            "created_at",
+        )
+
+
 class BusinessDocumentSerializer(serializers.ModelSerializer):
     kind_label = serializers.CharField(source="get_kind_display", read_only=True)
     status_label = serializers.CharField(source="get_status_display", read_only=True)
@@ -82,6 +100,7 @@ class BusinessDocumentSerializer(serializers.ModelSerializer):
     tax_total = serializers.SerializerMethodField()
     gross_total = serializers.SerializerMethodField()
     tax_breakdown = serializers.SerializerMethodField()
+    snapshot = serializers.SerializerMethodField()
 
     class Meta:
         model = BusinessDocument
@@ -91,7 +110,8 @@ class BusinessDocumentSerializer(serializers.ModelSerializer):
             "project_name", "issue_date", "service_date_from", "service_date_to", "due_date",
             "currency", "tax_mode", "tax_exemption_note", "introduction", "closing_text",
             "payment_terms", "lines", "net_total", "tax_total", "gross_total",
-            "tax_breakdown", "version", "archived_at", "created_at", "updated_at",
+            "tax_breakdown", "snapshot", "version", "archived_at", "finalized_at",
+            "created_at", "updated_at",
         )
 
     def _totals(self, obj):
@@ -114,6 +134,13 @@ class BusinessDocumentSerializer(serializers.ModelSerializer):
     @extend_schema_field(TaxBreakdownSerializer(many=True))
     def get_tax_breakdown(self, obj) -> list:
         return TaxBreakdownSerializer(self._totals(obj)["tax_breakdown"], many=True).data
+
+    @extend_schema_field(DocumentSnapshotMetadataSerializer(allow_null=True))
+    def get_snapshot(self, obj) -> dict | None:
+        snapshot = getattr(obj, "snapshot", None)
+        if not snapshot:
+            return None
+        return DocumentSnapshotMetadataSerializer(snapshot).data
 
 
 class BusinessDocumentWriteMixin(serializers.ModelSerializer):
@@ -164,6 +191,8 @@ class BusinessDocumentWriteMixin(serializers.ModelSerializer):
                 errors["lines"] = "Bei Kleinunternehmer-Belegen müssen alle Positionen 0 % Steuer haben."
         if self.instance and self.instance.archived_at is not None:
             errors["document"] = "Archivierte Belegentwürfe sind unveränderbar."
+        if self.instance and self.instance.status != BusinessDocument.Status.DRAFT:
+            errors["document"] = "Festgeschriebene Belege sind unveränderbar."
         if errors:
             raise serializers.ValidationError(errors)
         return attrs
@@ -190,3 +219,7 @@ class BusinessDocumentAuditEventSerializer(serializers.ModelSerializer):
     class Meta:
         model = BusinessDocumentAuditEvent
         fields = ("id", "action", "version", "changes", "actor", "created_at")
+
+
+class FinalizeDocumentSerializer(serializers.Serializer):
+    version = serializers.IntegerField(min_value=1)

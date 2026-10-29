@@ -368,6 +368,14 @@ export async function archiveBusinessDocument(
   });
 }
 
+export async function finalizeBusinessDocument(
+  document: BusinessDocument,
+): Promise<BusinessDocument> {
+  return request<BusinessDocument>(`/api/v1/documents/${document.id}/finalize/`, {
+    method: "POST", body: JSON.stringify({ version: document.version }),
+  });
+}
+
 export async function getProjects(options: {
   search?: string;
   status?: "quotation" | "active" | "paused" | "completed" | "";

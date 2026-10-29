@@ -362,6 +362,15 @@ der Retry arbeitet mit derselben Snapshot-/Nummernidentität.
 5. Erst nach Hash-/Metadatenpersistenz wird `Finalized` erreicht. Versandjobs
    dürfen nur von dort starten.
 
+Der Transaktionskern der Schritte 1 bis 3 ist umgesetzt. Die Rechnungsfolge
+`RE-<Jahr>-<laufende Nummer>` wird je Belegart und Jahr unter einer
+Datenbanksperre fortgeschrieben. Die Zuweisung liegt in derselben Transaktion
+wie Statuswechsel, schreibgeschützter JSON-Snapshot, SHA-256, Audit und
+idempotent adressiertes Outbox-Ereignis. Ein Fehler rollt deshalb auch die
+Nummernvergabe zurück. Der Zustand `Finalizing` bedeutet bereits fachlich
+unveränderbar; der nächste Schritt verarbeitet das Outbox-Ereignis zum
+Standard-PDF und wechselt erst danach auf `Finalized`.
+
 ### Berechnungen
 
 - Eine zentrale Rechnungs-Engine ist die einzige Quelle für Netto, Rabatt,

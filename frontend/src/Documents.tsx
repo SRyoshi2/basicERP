@@ -1,6 +1,7 @@
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import {
-  archiveBusinessDocument, createBusinessDocument, getBusinessDocuments, getCatalogItems,
+  archiveBusinessDocument, createBusinessDocument, finalizeBusinessDocument,
+  getBusinessDocuments, getCatalogItems,
   getContacts, getProjects, updateBusinessDocument, type BusinessDocument,
   type BusinessDocumentInput, type CatalogItem, type Contact, type DocumentLineInput,
   type Project,
@@ -8,6 +9,10 @@ import {
 
 const inputClass = "mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 font-normal outline-none transition focus:border-fuchsia-600 focus:ring-4 focus:ring-fuchsia-100";
 const kindLabels = { quote: "Angebot", invoice: "Rechnung" } as const;
+const statusLabels = {
+  draft: "Entwurf",
+  finalizing: "Festgeschrieben · PDF ausstehend",
+} as const;
 const unitLabels = { hour: "Stunde", day: "Tag", piece: "Stück", flat: "Pauschal" } as const;
 
 function today(): string { return new Date().toISOString().slice(0, 10); }
@@ -118,6 +123,14 @@ function DocumentForm({ document, onCancel, onSaved }: {
     catch (reason) { setError(reason instanceof Error ? reason.message : "Entwurf konnte nicht archiviert werden."); }
     finally { setBusy(false); }
   }
+  async function finalize() {
+    if (!document || document.kind !== "invoice") return;
+    if (!window.confirm("Rechnung jetzt endgültig festschreiben? Danach sind Inhalt und Rechnungsnummer unveränderbar.")) return;
+    setBusy(true); setError("");
+    try { await finalizeBusinessDocument(document); onSaved(); }
+    catch (reason) { setError(reason instanceof Error ? reason.message : "Rechnung konnte nicht festgeschrieben werden."); }
+    finally { setBusy(false); }
+  }
 
   const matchingProjects = projects.filter((project) => !form.customer || project.customer === form.customer);
   return <form className="rounded-[2rem] border border-fuchsia-200 bg-white p-6 shadow-sm sm:p-8" onSubmit={submit}>
@@ -152,7 +165,14 @@ function DocumentForm({ document, onCancel, onSaved }: {
     {form.tax_mode === "small_business" && <label className="mt-5 block text-sm font-semibold text-slate-800">Hinweis zur Steuerbefreiung<textarea className={`${inputClass} min-h-20`} value={form.tax_exemption_note ?? ""} onChange={(event) => field("tax_exemption_note", event.target.value)} required /></label>}
     <div className="mt-5 grid gap-5 md:grid-cols-2"><label className="text-sm font-semibold text-slate-800">Schlusstext<textarea className={`${inputClass} min-h-20`} value={form.closing_text ?? ""} onChange={(event) => field("closing_text", event.target.value)} /></label><label className="text-sm font-semibold text-slate-800">Zahlungsbedingungen<textarea className={`${inputClass} min-h-20`} value={form.payment_terms ?? ""} onChange={(event) => field("payment_terms", event.target.value)} /></label></div>
     {error && <p className="mt-5 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-800">{error}</p>}
-    <div className="mt-7 flex items-center justify-between">{document ? <button type="button" className="rounded-xl border border-red-200 px-4 py-3 text-sm font-semibold text-red-700" onClick={archive} disabled={busy}>Archivieren</button> : <span />}<button className="rounded-xl bg-fuchsia-700 px-5 py-3 font-semibold text-white hover:bg-fuchsia-800 disabled:opacity-60" disabled={busy}>{busy ? "Wird gespeichert …" : "Entwurf speichern"}</button></div>
+    <div className="mt-7 flex flex-wrap items-center justify-between gap-3">
+      {document ? <button type="button" className="rounded-xl border border-red-200 px-4 py-3 text-sm font-semibold text-red-700" onClick={archive} disabled={busy}>Archivieren</button> : <span />}
+      <div className="flex flex-wrap justify-end gap-3">
+        {document?.kind === "invoice" && <button type="button" className="rounded-xl border border-emerald-300 bg-emerald-50 px-5 py-3 font-semibold text-emerald-800 disabled:opacity-60" onClick={finalize} disabled={busy}>Endgültig festschreiben</button>}
+        <button className="rounded-xl bg-fuchsia-700 px-5 py-3 font-semibold text-white hover:bg-fuchsia-800 disabled:opacity-60" disabled={busy}>{busy ? "Wird gespeichert …" : "Entwurf speichern"}</button>
+      </div>
+    </div>
+    {document?.kind === "invoice" && <p className="mt-3 text-right text-xs text-slate-500">Beim Festschreiben werden Pflichtangaben geprüft, eine fortlaufende Nummer vergeben und ein unveränderlicher Snapshot erzeugt.</p>}
   </form>;
 }
 
@@ -179,7 +199,7 @@ export function DocumentsPage({ onBack }: { onBack: () => void }) {
     <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between"><div><p className="text-sm font-bold uppercase tracking-[0.18em] text-fuchsia-700">Dokumentkern · Phase 4</p><h1 className="mt-2 text-3xl font-bold text-slate-950">Angebote &amp; Ausgangsrechnungen</h1><p className="mt-2 text-sm text-slate-600">Editierbare Entwürfe mit serverseitiger Steuer- und Summenberechnung. Festschreibung und PDF folgen im nächsten Schritt.</p></div><button className="rounded-xl bg-fuchsia-700 px-5 py-3 font-semibold text-white" onClick={() => setEditing(null)}>+ Belegentwurf</button></div>
     <div className="mt-6 grid gap-4 rounded-2xl bg-white p-4 shadow-sm sm:grid-cols-[1fr_220px]"><input className="rounded-xl border border-slate-300 px-4 py-3" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Kunde oder Projekt suchen" /><select className="rounded-xl border border-slate-300 px-4 py-3" value={kind} onChange={(event) => setKind(event.target.value as typeof kind)}><option value="">Alle Belegarten</option><option value="quote">Angebote</option><option value="invoice">Rechnungen</option></select></div>
     {error && <p className="mt-5 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-800">{error}</p>}
-    <div className="mt-6 grid gap-4 lg:grid-cols-2">{documents.map((document) => <button key={document.id} className="rounded-2xl border border-slate-200 bg-white p-5 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg" onClick={() => setEditing(document)}><div className="flex items-start justify-between gap-3"><div><p className="text-xs font-bold uppercase tracking-wider text-fuchsia-700">{kindLabels[document.kind]} · Entwurf</p><h2 className="mt-2 text-xl font-bold text-slate-950">{document.customer_name}</h2><p className="mt-1 text-sm text-slate-500">{document.project_number ? `${document.project_number} · ${document.project_name}` : "Ohne Projekt"}</p></div><strong className="text-xl text-slate-950">{money(document.gross_total)}</strong></div><div className="mt-4 flex flex-wrap gap-3 text-xs text-slate-600"><span>{document.issue_date}</span><span>Netto {money(document.net_total)}</span><span>Steuer {money(document.tax_total)}</span><span>Version {document.version}</span></div></button>)}</div>
+    <div className="mt-6 grid gap-4 lg:grid-cols-2">{documents.map((document) => <button key={document.id} disabled={document.status !== "draft"} className="rounded-2xl border border-slate-200 bg-white p-5 text-left shadow-sm transition enabled:hover:-translate-y-0.5 enabled:hover:shadow-lg disabled:cursor-default" onClick={() => document.status === "draft" && setEditing(document)}><div className="flex items-start justify-between gap-3"><div><p className="text-xs font-bold uppercase tracking-wider text-fuchsia-700">{kindLabels[document.kind]} · {statusLabels[document.status ?? "draft"]}</p><h2 className="mt-2 text-xl font-bold text-slate-950">{document.document_number ?? document.customer_name}</h2>{document.document_number && <p className="mt-1 font-semibold text-slate-800">{document.customer_name}</p>}<p className="mt-1 text-sm text-slate-500">{document.project_number ? `${document.project_number} · ${document.project_name}` : "Ohne Projekt"}</p></div><strong className="text-xl text-slate-950">{money(document.gross_total)}</strong></div><div className="mt-4 flex flex-wrap gap-3 text-xs text-slate-600"><span>{document.issue_date}</span><span>Netto {money(document.net_total)}</span><span>Steuer {money(document.tax_total)}</span><span>Version {document.version}</span>{document.snapshot && <span title={document.snapshot.sha256}>Snapshot v{document.snapshot.schema_version}</span>}</div></button>)}</div>
     {!documents.length && !loading && !error && <p className="mt-6 rounded-2xl bg-white px-6 py-12 text-center text-sm text-slate-500">Noch keine passenden Belegentwürfe vorhanden.</p>}
     {loading && <p className="mt-6 text-center text-sm text-slate-500">Belege werden geladen …</p>}
   </main>;
