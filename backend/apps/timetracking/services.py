@@ -63,6 +63,8 @@ def update_time_entry(entry_id, validated_data, actor):
         raise VersionConflict
     if entry.billing_status == TimeEntry.BillingStatus.BILLED:
         raise ValueError("Abgerechnete Zeiteinträge sind unveränderbar.")
+    if hasattr(entry, "document_line"):
+        raise ValueError("Der Zeiteintrag ist bereits einem Rechnungsentwurf zugeordnet.")
     changed_fields = []
     for field in TIME_ENTRY_FIELDS:
         if field in validated_data and getattr(entry, field) != validated_data[field]:
@@ -94,6 +96,8 @@ def archive_time_entry(entry_id, actor):
     entry = TimeEntry.objects.select_for_update().get(pk=entry_id)
     if entry.billing_status == TimeEntry.BillingStatus.BILLED:
         raise ValueError("Abgerechnete Zeiteinträge sind unveränderbar.")
+    if hasattr(entry, "document_line"):
+        raise ValueError("Der Zeiteintrag ist bereits einem Rechnungsentwurf zugeordnet.")
     if entry.archived_at is None:
         entry.archived_at = timezone.now()
         entry.version += 1
@@ -150,6 +154,8 @@ def update_service_entry(entry_id, validated_data, actor):
         raise VersionConflict
     if entry.billing_status == ServiceEntry.BillingStatus.BILLED:
         raise ValueError("Abgerechnete Leistungseinträge sind unveränderbar.")
+    if hasattr(entry, "document_line"):
+        raise ValueError("Der Leistungseintrag ist bereits einem Rechnungsentwurf zugeordnet.")
     changed_fields = []
     for field in SERVICE_ENTRY_FIELDS:
         if field in validated_data and getattr(entry, field) != validated_data[field]:
@@ -185,6 +191,8 @@ def archive_service_entry(entry_id, actor):
     entry = ServiceEntry.objects.select_for_update().get(pk=entry_id)
     if entry.billing_status == ServiceEntry.BillingStatus.BILLED:
         raise ValueError("Abgerechnete Leistungseinträge sind unveränderbar.")
+    if hasattr(entry, "document_line"):
+        raise ValueError("Der Leistungseintrag ist bereits einem Rechnungsentwurf zugeordnet.")
     if entry.archived_at is None:
         entry.archived_at = timezone.now()
         entry.version += 1

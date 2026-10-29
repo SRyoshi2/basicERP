@@ -1212,6 +1212,34 @@ paths:
               schema:
                 $ref: '#/components/schemas/DocumentSnapshot'
           description: ''
+  /api/v1/documents/billable-items/:
+    get:
+      operationId: documents_billable_items_list
+      parameters:
+      - in: query
+        name: document
+        schema:
+          type: string
+          format: uuid
+      - in: query
+        name: project
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - documents
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BillableProjectItem'
+          description: ''
   /api/v1/health/live/:
     get:
       operationId: health_live_retrieve
@@ -2618,9 +2646,8 @@ components:
           $ref: '#/components/schemas/AbsenceActionEnum'
         version:
           type: integer
-          maximum: 9223372036854775807
+          maximum: 2147483647
           minimum: 0
-          format: int64
         changes: {}
         actor:
           type: string
@@ -2658,6 +2685,18 @@ components:
         * `approved` - Genehmigt
         * `rejected` - Abgelehnt
         * `cancelled` - Storniert
+    Action320Enum:
+      enum:
+      - created
+      - updated
+      - archived
+      - billed
+      type: string
+      description: |-
+        * `created` - Erstellt
+        * `updated` - Geändert
+        * `archived` - Archiviert
+        * `billed` - Abgerechnet
     Address:
       type: object
       properties:
@@ -2742,6 +2781,61 @@ components:
         * `created` - Erstellt
         * `updated` - Geändert
         * `archived` - Archiviert
+    BillableProjectItem:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        source_type:
+          $ref: '#/components/schemas/SourceTypeEnum'
+        date:
+          type: string
+          format: date
+        description:
+          type: string
+        quantity:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,9}(?:\.\d{0,6})?$
+        unit:
+          $ref: '#/components/schemas/CatalogUnitEnum'
+        unit_label:
+          type: string
+        unit_price_net:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        tax_rate:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+        net_amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+        employee:
+          type: string
+        work_package:
+          type: string
+        catalog_item:
+          type: string
+          format: uuid
+        tax_note:
+          type: string
+      required:
+      - date
+      - description
+      - employee
+      - id
+      - net_amount
+      - quantity
+      - source_type
+      - tax_rate
+      - unit
+      - unit_label
+      - unit_price_net
+      - work_package
     BusinessDocument:
       type: object
       properties:
@@ -2851,9 +2945,8 @@ components:
           readOnly: true
         version:
           type: integer
-          maximum: 9223372036854775807
+          maximum: 2147483647
           minimum: 0
-          format: int64
         archived_at:
           type: string
           format: date-time
@@ -2902,9 +2995,8 @@ components:
           $ref: '#/components/schemas/BusinessDocumentAuditEventActionEnum'
         version:
           type: integer
-          maximum: 9223372036854775807
+          maximum: 2147483647
           minimum: 0
-          format: int64
         changes: {}
         actor:
           type: string
@@ -3006,9 +3098,8 @@ components:
           $ref: '#/components/schemas/AuditActionEnum'
         version:
           type: integer
-          maximum: 9223372036854775807
+          maximum: 2147483647
           minimum: 0
-          format: int64
         changes: {}
         actor:
           type: string
@@ -3059,9 +3150,8 @@ components:
           readOnly: true
         version:
           type: integer
-          maximum: 9223372036854775807
+          maximum: 2147483647
           minimum: 0
-          format: int64
         archived_at:
           type: string
           format: date-time
@@ -3280,9 +3370,8 @@ components:
           maxLength: 64
         version:
           type: integer
-          maximum: 9223372036854775807
+          maximum: 2147483647
           minimum: 0
-          format: int64
         archived_at:
           type: string
           format: date-time
@@ -3386,9 +3475,8 @@ components:
           $ref: '#/components/schemas/AuditActionEnum'
         version:
           type: integer
-          maximum: 9223372036854775807
+          maximum: 2147483647
           minimum: 0
-          format: int64
         changes: {}
         actor:
           type: string
@@ -3598,9 +3686,8 @@ components:
           maxLength: 40
         template_version:
           type: integer
-          maximum: 9223372036854775807
+          maximum: 32767
           minimum: 0
-          format: int64
         download_url:
           type: string
           readOnly: true
@@ -3637,9 +3724,8 @@ components:
           readOnly: true
         position:
           type: integer
-          maximum: 9223372036854775807
+          maximum: 32767
           minimum: 0
-          format: int64
         catalog_item:
           type: string
           format: uuid
@@ -3652,13 +3738,21 @@ components:
           type: string
           readOnly: true
           nullable: true
+        source_time_entry:
+          type: string
+          format: uuid
+          nullable: true
+        source_service_entry:
+          type: string
+          format: uuid
+          nullable: true
         description:
           type: string
           maxLength: 500
         quantity:
           type: string
           format: decimal
-          pattern: ^-?\d{0,9}(?:\.\d{0,3})?$
+          pattern: ^-?\d{0,9}(?:\.\d{0,6})?$
         unit:
           $ref: '#/components/schemas/CatalogUnitEnum'
         unit_label:
@@ -3716,13 +3810,21 @@ components:
           type: string
           format: uuid
           nullable: true
+        source_time_entry:
+          type: string
+          format: uuid
+          nullable: true
+        source_service_entry:
+          type: string
+          format: uuid
+          nullable: true
         description:
           type: string
           maxLength: 500
         quantity:
           type: string
           format: decimal
-          pattern: ^-?\d{0,9}(?:\.\d{0,3})?$
+          pattern: ^-?\d{0,9}(?:\.\d{0,6})?$
         unit:
           $ref: '#/components/schemas/CatalogUnitEnum'
         unit_price_net:
@@ -4002,9 +4104,8 @@ components:
           readOnly: true
         year:
           type: integer
-          maximum: 9223372036854775807
+          maximum: 32767
           minimum: 0
-          format: int64
         entitlement_days:
           type: string
           format: decimal
@@ -4015,9 +4116,8 @@ components:
           pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
         version:
           type: integer
-          maximum: 9223372036854775807
+          maximum: 2147483647
           minimum: 0
-          format: int64
         updated_at:
           type: string
           format: date-time
@@ -4699,9 +4799,8 @@ components:
           nullable: true
         version:
           type: integer
-          maximum: 9223372036854775807
+          maximum: 2147483647
           minimum: 0
-          format: int64
         archived_at:
           type: string
           format: date-time
@@ -4735,9 +4834,8 @@ components:
           $ref: '#/components/schemas/AuditActionEnum'
         version:
           type: integer
-          maximum: 9223372036854775807
+          maximum: 2147483647
           minimum: 0
-          format: int64
         changes: {}
         actor:
           type: string
@@ -5036,12 +5134,11 @@ components:
           format: uuid
           readOnly: true
         action:
-          $ref: '#/components/schemas/AuditActionEnum'
+          $ref: '#/components/schemas/Action320Enum'
         version:
           type: integer
-          maximum: 9223372036854775807
+          maximum: 2147483647
           minimum: 0
-          format: int64
         changes: {}
         actor:
           type: string
@@ -5086,6 +5183,14 @@ components:
       - quantity
       - service_date
       - work_package
+    SourceTypeEnum:
+      enum:
+      - time
+      - service
+      type: string
+      description: |-
+        * `time` - time
+        * `service` - service
     TaxBreakdown:
       type: object
       properties:
@@ -5151,9 +5256,8 @@ components:
           format: date
         duration_minutes:
           type: integer
-          maximum: 9223372036854775807
+          maximum: 2147483647
           minimum: 0
-          format: int64
         duration_hours:
           type: string
           format: decimal
@@ -5227,12 +5331,11 @@ components:
           format: uuid
           readOnly: true
         action:
-          $ref: '#/components/schemas/AuditActionEnum'
+          $ref: '#/components/schemas/Action320Enum'
         version:
           type: integer
-          maximum: 9223372036854775807
+          maximum: 2147483647
           minimum: 0
-          format: int64
         changes: {}
         actor:
           type: string
@@ -5474,9 +5577,8 @@ components:
           nullable: true
         version:
           type: integer
-          maximum: 9223372036854775807
+          maximum: 2147483647
           minimum: 0
-          format: int64
         archived_at:
           type: string
           format: date-time
@@ -5510,9 +5612,8 @@ components:
           $ref: '#/components/schemas/AuditActionEnum'
         version:
           type: integer
-          maximum: 9223372036854775807
+          maximum: 2147483647
           minimum: 0
-          format: int64
         changes: {}
         actor:
           type: string

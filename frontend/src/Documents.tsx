@@ -1,10 +1,10 @@
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import {
   archiveBusinessDocument, createBusinessDocument, finalizeBusinessDocument,
-  getBusinessDocuments, getCatalogItems,
+  getBillableProjectItems, getBusinessDocuments, getCatalogItems,
   getContacts, getProjects, updateBusinessDocument, type BusinessDocument,
-  type BusinessDocumentInput, type CatalogItem, type Contact, type DocumentLineInput,
-  type Project,
+  type BillableProjectItem, type BusinessDocumentInput, type CatalogItem, type Contact,
+  type DocumentLineInput, type Project,
 } from "./api";
 
 const inputClass = "mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 font-normal outline-none transition focus:border-fuchsia-600 focus:ring-4 focus:ring-fuchsia-100";
@@ -29,6 +29,7 @@ function emptyLine(): DocumentLineInput {
   return {
     catalog_item: null, description: "", quantity: "1.000", unit: "piece",
     unit_price_net: "0.00", discount_percent: "0.00", tax_rate: "19.00", tax_note: "",
+    source_time_entry: null, source_service_entry: null,
   };
 }
 function emptyDocument(): BusinessDocumentInput {
@@ -51,6 +52,8 @@ function documentToInput(document: BusinessDocument): BusinessDocumentInput {
     closing_text: document.closing_text ?? "", payment_terms: document.payment_terms ?? "",
     lines: document.lines.map((line) => ({
       catalog_item: line.catalog_item ?? null, description: line.description,
+      source_time_entry: line.source_time_entry ?? null,
+      source_service_entry: line.source_service_entry ?? null,
       quantity: line.quantity, unit: line.unit, unit_price_net: line.unit_price_net,
       discount_percent: line.discount_percent ?? "0.00",
       tax_rate: Number(line.tax_rate).toFixed(2) as DocumentLineInput["tax_rate"],
@@ -68,6 +71,9 @@ function DocumentForm({ document, onCancel, onSaved }: {
   const [catalog, setCatalog] = useState<CatalogItem[]>([]);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [billableItems, setBillableItems] = useState<BillableProjectItem[]>([]);
+  const [selectedSources, setSelectedSources] = useState<string[]>([]);
+  const [sourcesLoading, setSourcesLoading] = useState(false);
 
   useEffect(() => {
     Promise.all([getContacts(), getProjects(), getCatalogItems()])
@@ -75,6 +81,19 @@ function DocumentForm({ document, onCancel, onSaved }: {
         setContacts(contactResult.results); setProjects(projectResult.results); setCatalog(catalogResult.results);
       }).catch(() => setError("Stammdaten konnten nicht vollständig geladen werden."));
   }, []);
+
+  useEffect(() => {
+    if (!form.project) {
+      setBillableItems([]); setSelectedSources([]); return;
+    }
+    setSourcesLoading(true);
+    getBillableProjectItems(form.project, document?.id)
+      .then(setBillableItems)
+      .catch((reason) => setError(
+        reason instanceof Error ? reason.message : "Projektleistungen konnten nicht geladen werden.",
+      ))
+      .finally(() => setSourcesLoading(false));
+  }, [document?.id, form.project]);
 
   function field<K extends keyof BusinessDocumentInput>(key: K, value: BusinessDocumentInput[K]) {
     setForm((current) => ({ ...current, [key]: value }));
@@ -107,6 +126,48 @@ function DocumentForm({ document, onCancel, onSaved }: {
         ? { ...line, tax_rate: "0.00", tax_note: note }
         : { ...line, tax_rate: "19.00", tax_note: "" }),
     }));
+  }
+  function changeProject(value: string) {
+    setForm((current) => {
+      const manualLines = current.lines.filter(
+        (line) => !line.source_time_entry && !line.source_service_entry,
+      );
+      return { ...current, project: value || null, lines: manualLines.length ? manualLines : [emptyLine()] };
+    });
+    setSelectedSources([]);
+  }
+  function addSelectedSources() {
+    const chosen = billableItems.filter((item) => selectedSources.includes(item.id));
+    const existingSourceIds = new Set(form.lines.flatMap((line) => [
+      line.source_time_entry, line.source_service_entry,
+    ]).filter((value): value is string => Boolean(value)));
+    const imported = chosen.filter((item) => !existingSourceIds.has(item.id)).map((item) => {
+      const smallBusiness = form.tax_mode === "small_business";
+      return {
+        catalog_item: item.catalog_item ?? null,
+        source_time_entry: item.source_type === "time" ? item.id : null,
+        source_service_entry: item.source_type === "service" ? item.id : null,
+        description: item.description,
+        quantity: item.quantity,
+        unit: item.unit,
+        unit_price_net: item.unit_price_net,
+        discount_percent: "0.00",
+        tax_rate: smallBusiness ? "0.00" : Number(item.tax_rate).toFixed(2),
+        tax_note: smallBusiness
+          ? form.tax_exemption_note ?? "Gemäß § 19 UStG wird keine Umsatzsteuer berechnet."
+          : item.tax_note ?? "",
+      } as DocumentLineInput;
+    });
+    const placeholderOnly = form.lines.length === 1
+      && !form.lines[0].description && Number(form.lines[0].unit_price_net) === 0;
+    const dates = chosen.map((item) => item.date).sort();
+    setForm((current) => ({
+      ...current,
+      lines: [...(placeholderOnly ? [] : current.lines), ...imported],
+      service_date_from: dates[0] ?? current.service_date_from,
+      service_date_to: dates.at(-1) ?? current.service_date_to,
+    }));
+    setSelectedSources([]);
   }
   async function submit(event: FormEvent) {
     event.preventDefault(); setBusy(true); setError("");
@@ -141,7 +202,7 @@ function DocumentForm({ document, onCancel, onSaved }: {
       <label className="text-sm font-semibold text-slate-800">Belegart<select className={inputClass} value={form.kind} onChange={(event) => field("kind", event.target.value as "quote" | "invoice")}><option value="quote">Angebot</option><option value="invoice">Rechnung</option></select></label>
       <label className="text-sm font-semibold text-slate-800">Besteuerung<select className={inputClass} value={form.tax_mode} onChange={(event) => changeTaxMode(event.target.value as "standard" | "small_business")}><option value="standard">Regelbesteuerung</option><option value="small_business">Kleinunternehmer (§ 19 UStG)</option></select></label>
       <label className="text-sm font-semibold text-slate-800">Kunde<select className={inputClass} value={form.customer} onChange={(event) => setForm({ ...form, customer: event.target.value, project: null })} required><option value="">Kunde auswählen …</option>{contacts.map((contact) => <option key={contact.id} value={contact.id}>{contact.customer_number} · {contact.display_name}</option>)}</select></label>
-      <label className="text-sm font-semibold text-slate-800">Projekt (optional)<select className={inputClass} value={form.project ?? ""} onChange={(event) => field("project", event.target.value || null)}><option value="">Ohne Projekt</option>{matchingProjects.map((project) => <option key={project.id} value={project.id}>{project.project_number} · {project.name}</option>)}</select></label>
+      <label className="text-sm font-semibold text-slate-800">Projekt (optional)<select className={inputClass} value={form.project ?? ""} onChange={(event) => changeProject(event.target.value)}><option value="">Ohne Projekt</option>{matchingProjects.map((project) => <option key={project.id} value={project.id}>{project.project_number} · {project.name}</option>)}</select></label>
       <label className="text-sm font-semibold text-slate-800">Belegdatum<input className={inputClass} type="date" value={form.issue_date} onChange={(event) => field("issue_date", event.target.value)} required /></label>
       <label className="text-sm font-semibold text-slate-800">{form.kind === "invoice" ? "Fällig am" : "Gültig bis"}<input className={inputClass} type="date" value={form.due_date ?? ""} onChange={(event) => field("due_date", event.target.value || null)} /></label>
       <label className="text-sm font-semibold text-slate-800">Leistung von<input className={inputClass} type="date" value={form.service_date_from ?? ""} onChange={(event) => field("service_date_from", event.target.value || null)} /></label>
@@ -149,17 +210,27 @@ function DocumentForm({ document, onCancel, onSaved }: {
       <label className="text-sm font-semibold text-slate-800 md:col-span-2">Einleitung<textarea className={`${inputClass} min-h-20`} value={form.introduction ?? ""} onChange={(event) => field("introduction", event.target.value)} /></label>
     </div>
 
+    {form.project && <section className="mt-7 rounded-2xl border border-sky-200 bg-sky-50 p-5">
+      <div className="flex flex-wrap items-start justify-between gap-3"><div><p className="text-sm font-bold uppercase tracking-wider text-sky-800">Offene Projektleistungen</p><p className="mt-1 text-sm text-sky-900">Ausgewählte Zeiten und Mengenleistungen werden mit ihrem erfassten Preis als Belegpositionen reserviert.</p></div><button type="button" className="rounded-xl bg-sky-700 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50" onClick={addSelectedSources} disabled={!selectedSources.length}>Auswahl übernehmen</button></div>
+      {sourcesLoading && <p className="mt-4 text-sm text-sky-800">Projektleistungen werden geladen …</p>}
+      {!sourcesLoading && !billableItems.length && <p className="mt-4 text-sm text-sky-800">Keine offenen abrechenbaren Einträge vorhanden.</p>}
+      <div className="mt-4 grid gap-2">{billableItems.map((item) => {
+        const alreadyAdded = form.lines.some((line) => line.source_time_entry === item.id || line.source_service_entry === item.id);
+        return <label key={`${item.source_type}-${item.id}`} className="flex items-start gap-3 rounded-xl bg-white p-3 text-sm text-slate-800"><input className="mt-1" type="checkbox" checked={alreadyAdded || selectedSources.includes(item.id)} disabled={alreadyAdded} onChange={(event) => setSelectedSources((current) => event.target.checked ? [...current, item.id] : current.filter((id) => id !== item.id))} /><span className="flex-1"><strong>{item.source_type === "time" ? "Zeit" : "Leistung"} · {item.date} · {item.work_package}</strong><span className="mt-1 block text-slate-600">{item.description} · {item.quantity} {item.unit_label} × {money(item.unit_price_net)} · {item.employee}</span></span><strong>{money(item.net_amount)}</strong></label>;
+      })}</div>
+    </section>}
+
     <div className="mt-8 flex items-center justify-between"><div><p className="text-sm font-bold uppercase tracking-wider text-fuchsia-700">Positionen</p><p className="mt-1 text-sm text-slate-500">Summen werden verbindlich auf dem Server berechnet.</p></div><button type="button" className="rounded-xl border border-fuchsia-200 px-4 py-2 text-sm font-semibold text-fuchsia-800" onClick={() => field("lines", [...form.lines, emptyLine()])}>+ Position</button></div>
     <div className="mt-4 space-y-4">{form.lines.map((line, index) => <section key={index} className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
       <div className="flex items-center justify-between"><strong className="text-slate-900">Position {index + 1}</strong>{form.lines.length > 1 && <button type="button" className="text-sm font-semibold text-red-700" onClick={() => field("lines", form.lines.filter((_, lineIndex) => lineIndex !== index))}>Entfernen</button>}</div>
       <div className="mt-4 grid gap-4 md:grid-cols-6">
-        <label className="text-xs font-bold uppercase tracking-wider text-slate-600 md:col-span-2">Katalog (optional)<select className={inputClass} value={line.catalog_item ?? ""} onChange={(event) => applyCatalog(index, event.target.value)}><option value="">Freie Position</option>{catalog.map((item) => <option key={item.id} value={item.id}>{item.item_number} · {item.name}</option>)}</select></label>
+        <label className="text-xs font-bold uppercase tracking-wider text-slate-600 md:col-span-2">Katalog (optional)<select className={inputClass} value={line.catalog_item ?? ""} disabled={Boolean(line.source_time_entry || line.source_service_entry)} onChange={(event) => applyCatalog(index, event.target.value)}><option value="">Freie Position</option>{catalog.map((item) => <option key={item.id} value={item.id}>{item.item_number} · {item.name}</option>)}</select></label>
         <label className="text-xs font-bold uppercase tracking-wider text-slate-600 md:col-span-4">Beschreibung<input className={inputClass} value={line.description} onChange={(event) => lineField(index, "description", event.target.value)} required /></label>
-        <label className="text-xs font-bold uppercase tracking-wider text-slate-600">Menge<input className={inputClass} type="number" min="0.001" step="0.001" value={line.quantity} onChange={(event) => lineField(index, "quantity", event.target.value)} required /></label>
-        <label className="text-xs font-bold uppercase tracking-wider text-slate-600">Einheit<select className={inputClass} value={line.unit} onChange={(event) => lineField(index, "unit", event.target.value)}>{Object.entries(unitLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
-        <label className="text-xs font-bold uppercase tracking-wider text-slate-600 md:col-span-2">Einzelpreis netto<input className={inputClass} type="number" min="0" step="0.01" value={line.unit_price_net} onChange={(event) => lineField(index, "unit_price_net", event.target.value)} required /></label>
-        <label className="text-xs font-bold uppercase tracking-wider text-slate-600">Rabatt %<input className={inputClass} type="number" min="0" max="100" step="0.01" value={line.discount_percent} onChange={(event) => lineField(index, "discount_percent", event.target.value)} required /></label>
-        <label className="text-xs font-bold uppercase tracking-wider text-slate-600">Steuer<select className={inputClass} value={line.tax_rate} disabled={form.tax_mode === "small_business"} onChange={(event) => lineField(index, "tax_rate", event.target.value)}><option value="19.00">19 %</option><option value="7.00">7 %</option><option value="0.00">0 %</option></select></label>
+        <label className="text-xs font-bold uppercase tracking-wider text-slate-600">Menge<input className={inputClass} type="number" min="0.000001" step="0.000001" value={line.quantity} disabled={Boolean(line.source_time_entry || line.source_service_entry)} onChange={(event) => lineField(index, "quantity", event.target.value)} required /></label>
+        <label className="text-xs font-bold uppercase tracking-wider text-slate-600">Einheit<select className={inputClass} value={line.unit} disabled={Boolean(line.source_time_entry || line.source_service_entry)} onChange={(event) => lineField(index, "unit", event.target.value)}>{Object.entries(unitLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
+        <label className="text-xs font-bold uppercase tracking-wider text-slate-600 md:col-span-2">Einzelpreis netto<input className={inputClass} type="number" min="0" step="0.01" value={line.unit_price_net} disabled={Boolean(line.source_time_entry || line.source_service_entry)} onChange={(event) => lineField(index, "unit_price_net", event.target.value)} required /></label>
+        <label className="text-xs font-bold uppercase tracking-wider text-slate-600">Rabatt %<input className={inputClass} type="number" min="0" max="100" step="0.01" value={line.discount_percent} disabled={Boolean(line.source_time_entry || line.source_service_entry)} onChange={(event) => lineField(index, "discount_percent", event.target.value)} required /></label>
+        <label className="text-xs font-bold uppercase tracking-wider text-slate-600">Steuer<select className={inputClass} value={line.tax_rate} disabled={form.tax_mode === "small_business" || Boolean(line.source_time_entry || line.source_service_entry)} onChange={(event) => lineField(index, "tax_rate", event.target.value)}><option value="19.00">19 %</option><option value="7.00">7 %</option><option value="0.00">0 %</option></select></label>
         {line.tax_rate === "0.00" && <label className="text-xs font-bold uppercase tracking-wider text-slate-600 md:col-span-6">Steuerhinweis<input className={inputClass} value={line.tax_note ?? ""} onChange={(event) => lineField(index, "tax_note", event.target.value)} required /></label>}
       </div>
     </section>)}</div>

@@ -101,6 +101,7 @@ class TimeEntryAuditEvent(models.Model):
         CREATED = "created", "Erstellt"
         UPDATED = "updated", "Geändert"
         ARCHIVED = "archived", "Archiviert"
+        BILLED = "billed", "Abgerechnet"
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     time_entry = models.ForeignKey(TimeEntry, on_delete=models.PROTECT, related_name="audit_events")
@@ -212,6 +213,7 @@ class ServiceEntryAuditEvent(models.Model):
         CREATED = "created", "Erstellt"
         UPDATED = "updated", "Geändert"
         ARCHIVED = "archived", "Archiviert"
+        BILLED = "billed", "Abgerechnet"
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     service_entry = models.ForeignKey(

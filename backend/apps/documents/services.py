@@ -1,13 +1,17 @@
 import hashlib
 import json
+from decimal import Decimal, ROUND_HALF_UP
 
 from django.core.exceptions import ValidationError
-from django.db import IntegrityError, transaction
+from django.db import IntegrityError, models, transaction
 from django.utils import timezone
 
 from apps.core.errors import VersionConflict
 from apps.core.models import CompanyProfile
 from apps.crm.models import Address
+from apps.timetracking.models import (
+    ServiceEntry, ServiceEntryAuditEvent, TimeEntry, TimeEntryAuditEvent,
+)
 
 from .models import (
     BusinessDocument, BusinessDocumentAuditEvent, DocumentLine,
@@ -25,14 +29,107 @@ SNAPSHOT_SCHEMA_VERSION = 1
 CALCULATION_VERSION = 1
 
 
+def _source_line_values(document, line_data):
+    time_entry = line_data.get("source_time_entry")
+    service_entry = line_data.get("source_service_entry")
+    if not time_entry and not service_entry:
+        return line_data
+    if time_entry and service_entry:
+        raise ValidationError("Eine Position darf nur eine Projektquelle besitzen.")
+    source = time_entry or service_entry
+    if document.project_id is None or source.project_id != document.project_id:
+        raise ValidationError("Die Projektleistung gehört nicht zum gewählten Projekt.")
+    if source.archived_at is not None or not source.billable:
+        raise ValidationError("Nur aktive, abrechenbare Projektleistungen können übernommen werden.")
+    if source.billing_status != source.BillingStatus.UNBILLED:
+        raise ValidationError("Die Projektleistung wurde bereits abgerechnet.")
+
+    description = line_data.get("description", "").strip()
+    tax_rate = Decimal("0") if document.tax_mode == BusinessDocument.TaxMode.SMALL_BUSINESS else None
+    tax_note = document.tax_exemption_note if tax_rate == 0 else ""
+    if time_entry:
+        if time_entry.hourly_rate_snapshot is None:
+            raise ValidationError("Für den Zeiteintrag fehlt ein abrechenbarer Stundensatz.")
+        return {
+            "catalog_item": None,
+            "source_time_entry": time_entry,
+            "source_service_entry": None,
+            "description": description or time_entry.description,
+            "quantity": time_entry.duration_hours.quantize(
+                Decimal("0.000001"), rounding=ROUND_HALF_UP
+            ),
+            "unit": DocumentLine.Unit.HOUR,
+            "unit_price_net": time_entry.hourly_rate_snapshot,
+            "discount_percent": Decimal("0"),
+            "tax_rate": tax_rate if tax_rate is not None else Decimal("19"),
+            "tax_note": tax_note,
+        }
+    return {
+        "catalog_item": service_entry.catalog_item,
+        "source_time_entry": None,
+        "source_service_entry": service_entry,
+        "description": description or service_entry.description
+        or service_entry.catalog_item_name_snapshot,
+        "quantity": service_entry.quantity,
+        "unit": service_entry.unit_snapshot,
+        "unit_price_net": service_entry.unit_price_snapshot,
+        "discount_percent": Decimal("0"),
+        "tax_rate": tax_rate if tax_rate is not None else service_entry.tax_rate_snapshot,
+        "tax_note": tax_note or service_entry.catalog_item.tax_note,
+    }
+
+
 def _replace_lines(document, lines):
+    time_ids = [line["source_time_entry"].id for line in lines if line.get("source_time_entry")]
+    service_ids = [
+        line["source_service_entry"].id for line in lines if line.get("source_service_entry")
+    ]
+    if len(time_ids) != len(set(time_ids)) or len(service_ids) != len(set(service_ids)):
+        raise ValidationError("Eine Projektleistung darf nur einmal übernommen werden.")
+    locked_time = {
+        item.id: item
+        for item in TimeEntry.objects.select_for_update().filter(id__in=time_ids)
+    }
+    locked_service = {
+        item.id: item
+        for item in ServiceEntry.objects.select_for_update().select_related(
+            "catalog_item"
+        ).filter(id__in=service_ids)
+    }
+    if len(locked_time) != len(time_ids) or len(locked_service) != len(service_ids):
+        raise ValidationError("Mindestens eine Projektleistung fehlt.")
+    reserved_time = DocumentLine.objects.filter(source_time_entry_id__in=time_ids).exclude(
+        document=document
+    ).exists()
+    reserved_service = DocumentLine.objects.filter(
+        source_service_entry_id__in=service_ids
+    ).exclude(document=document).exists()
+    if reserved_time or reserved_service:
+        raise ValidationError("Mindestens eine Projektleistung ist bereits einem Beleg zugeordnet.")
     document.lines.all().delete()
     instances = []
     for position, line_data in enumerate(lines, start=1):
-        line = DocumentLine(document=document, position=position, **line_data)
+        line_data = dict(line_data)
+        if line_data.get("source_time_entry"):
+            line_data["source_time_entry"] = locked_time[line_data["source_time_entry"].id]
+        if line_data.get("source_service_entry"):
+            line_data["source_service_entry"] = locked_service[
+                line_data["source_service_entry"].id
+            ]
+        line = DocumentLine(
+            document=document,
+            position=position,
+            **_source_line_values(document, line_data),
+        )
         line.full_clean()
         instances.append(line)
-    DocumentLine.objects.bulk_create(instances)
+    try:
+        with transaction.atomic():
+            DocumentLine.objects.bulk_create(instances)
+    except IntegrityError as error:
+        raise ValidationError(
+            "Mindestens eine Projektleistung wurde parallel einem anderen Beleg zugeordnet."
+        ) from error
 
 
 def _decimal_string(value):
@@ -100,6 +197,12 @@ def _snapshot_payload(document, company, address, number, finalized_at):
             "position": line.position,
             "catalog_item_id": str(line.catalog_item_id) if line.catalog_item_id else None,
             "catalog_item_number": line.catalog_item.item_number if line.catalog_item_id else None,
+            "source_time_entry_id": (
+                str(line.source_time_entry_id) if line.source_time_entry_id else None
+            ),
+            "source_service_entry_id": (
+                str(line.source_service_entry_id) if line.source_service_entry_id else None
+            ),
             "description": line.description,
             "quantity": _decimal_string(line.quantity),
             "unit": line.unit,
@@ -235,6 +338,7 @@ def archive_document(document_id, actor):
         document.version += 1
         document.updated_by = actor
         document.save(update_fields=("archived_at", "version", "updated_by", "updated_at"))
+        document.lines.update(source_time_entry=None, source_service_entry=None)
         BusinessDocumentAuditEvent.objects.create(
             document=document,
             action=BusinessDocumentAuditEvent.Action.ARCHIVED,
@@ -243,6 +347,104 @@ def archive_document(document_id, actor):
             changes={},
         )
     return document
+
+
+def _mark_sources_billed(document, actor):
+    lines = list(document.lines.select_related(
+        "source_time_entry", "source_service_entry"
+    ))
+    time_ids = [line.source_time_entry_id for line in lines if line.source_time_entry_id]
+    service_ids = [
+        line.source_service_entry_id for line in lines if line.source_service_entry_id
+    ]
+    time_entries = {
+        item.id: item for item in TimeEntry.objects.select_for_update().filter(id__in=time_ids)
+    }
+    service_entries = {
+        item.id: item
+        for item in ServiceEntry.objects.select_for_update().filter(id__in=service_ids)
+    }
+    if len(time_entries) != len(time_ids) or len(service_entries) != len(service_ids):
+        raise ValidationError("Mindestens eine übernommene Projektleistung fehlt.")
+    for source in (*time_entries.values(), *service_entries.values()):
+        if (
+            source.project_id != document.project_id
+            or not source.billable
+            or source.archived_at is not None
+            or source.billing_status != source.BillingStatus.UNBILLED
+        ):
+            raise ValidationError(
+                "Mindestens eine übernommene Projektleistung ist nicht mehr abrechenbar."
+            )
+        source.billing_status = source.BillingStatus.BILLED
+        source.version += 1
+        source.updated_by = actor
+        source.save(update_fields=("billing_status", "version", "updated_by", "updated_at"))
+        changes = {
+            "document_id": str(document.id),
+            "document_number": document.document_number,
+        }
+        if isinstance(source, TimeEntry):
+            TimeEntryAuditEvent.objects.create(
+                time_entry=source, action=TimeEntryAuditEvent.Action.BILLED,
+                version=source.version, actor=actor, changes=changes,
+            )
+        else:
+            ServiceEntryAuditEvent.objects.create(
+                service_entry=source, action=ServiceEntryAuditEvent.Action.BILLED,
+                version=source.version, actor=actor, changes=changes,
+            )
+
+
+def billable_project_items(project_id, document_id=None):
+    own_time_ids = []
+    own_service_ids = []
+    if document_id:
+        own_time_ids = DocumentLine.objects.filter(document_id=document_id).exclude(
+            source_time_entry=None
+        ).values_list("source_time_entry_id", flat=True)
+        own_service_ids = DocumentLine.objects.filter(document_id=document_id).exclude(
+            source_service_entry=None
+        ).values_list("source_service_entry_id", flat=True)
+    time_entries = TimeEntry.objects.filter(
+        project_id=project_id, archived_at__isnull=True, billable=True,
+        billing_status=TimeEntry.BillingStatus.UNBILLED,
+        hourly_rate_snapshot__isnull=False,
+    ).filter(
+        models.Q(document_line__isnull=True) | models.Q(id__in=own_time_ids)
+    ).select_related("employee", "work_package").order_by("work_date", "created_at")
+    service_entries = ServiceEntry.objects.filter(
+        project_id=project_id, archived_at__isnull=True, billable=True,
+        billing_status=ServiceEntry.BillingStatus.UNBILLED,
+    ).filter(
+        models.Q(document_line__isnull=True) | models.Q(id__in=own_service_ids)
+    ).select_related("employee", "work_package", "catalog_item").order_by(
+        "service_date", "created_at"
+    )
+    items = []
+    for entry in time_entries:
+        items.append({
+            "id": entry.id, "source_type": "time", "date": entry.work_date,
+            "description": entry.description, "quantity": entry.duration_hours,
+            "unit": DocumentLine.Unit.HOUR, "unit_label": "Stunde",
+            "unit_price_net": entry.hourly_rate_snapshot, "tax_rate": Decimal("19"),
+            "net_amount": entry.billable_value, "employee": entry.employee.get_full_name()
+            or entry.employee.username, "work_package": entry.work_package.title,
+        })
+    for entry in service_entries:
+        items.append({
+            "id": entry.id, "source_type": "service", "date": entry.service_date,
+            "description": entry.description or entry.catalog_item_name_snapshot,
+            "quantity": entry.quantity, "unit": entry.unit_snapshot,
+            "unit_label": DocumentLine.Unit(entry.unit_snapshot).label,
+            "unit_price_net": entry.unit_price_snapshot,
+            "tax_rate": entry.tax_rate_snapshot, "net_amount": entry.total_net,
+            "employee": entry.employee.get_full_name() or entry.employee.username,
+            "work_package": entry.work_package.title,
+            "catalog_item": entry.catalog_item_id,
+            "tax_note": entry.catalog_item.tax_note,
+        })
+    return sorted(items, key=lambda item: (item["date"], item["source_type"], str(item["id"])))
 
 
 @transaction.atomic
@@ -269,6 +471,7 @@ def finalize_document(document_id, expected_version, actor):
     document.finalized_at = finalized_at
     document.finalized_by = actor
     document.updated_by = actor
+    _mark_sources_billed(document, actor)
     document.version += 1
     document.save(update_fields=(
         "document_number", "status", "finalized_at", "finalized_by", "updated_by",

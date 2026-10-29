@@ -27,6 +27,7 @@ class DocumentLineSerializer(serializers.ModelSerializer):
         model = DocumentLine
         fields = (
             "id", "position", "catalog_item", "catalog_item_number", "catalog_item_name",
+            "source_time_entry", "source_service_entry",
             "description", "quantity", "unit", "unit_label", "unit_price_net",
             "discount_percent", "tax_rate", "tax_note", "net_amount",
         )
@@ -34,7 +35,7 @@ class DocumentLineSerializer(serializers.ModelSerializer):
 
 class DocumentLineWriteSerializer(serializers.ModelSerializer):
     quantity = serializers.DecimalField(
-        max_digits=12, decimal_places=3, min_value=Decimal("0.001")
+        max_digits=15, decimal_places=6, min_value=Decimal("0.000001")
     )
     unit_price_net = serializers.DecimalField(
         max_digits=12, decimal_places=2, min_value=Decimal("0")
@@ -47,12 +48,17 @@ class DocumentLineWriteSerializer(serializers.ModelSerializer):
     class Meta:
         model = DocumentLine
         fields = (
-            "catalog_item", "description", "quantity", "unit", "unit_price_net",
-            "discount_percent", "tax_rate", "tax_note",
+            "catalog_item", "source_time_entry", "source_service_entry", "description",
+            "quantity", "unit", "unit_price_net", "discount_percent", "tax_rate",
+            "tax_note",
         )
 
     def validate(self, attrs):
         item = attrs.get("catalog_item")
+        if attrs.get("source_time_entry") and attrs.get("source_service_entry"):
+            raise serializers.ValidationError(
+                "Eine Position darf nur eine Projektquelle besitzen."
+            )
         if item and item.archived_at is not None:
             raise serializers.ValidationError(
                 {"catalog_item": "Archivierte Katalogeinträge können nicht verwendet werden."}
@@ -62,6 +68,23 @@ class DocumentLineWriteSerializer(serializers.ModelSerializer):
                 {"tax_note": "Bei 0 % Steuer ist ein begründender Hinweis erforderlich."}
             )
         return attrs
+
+
+class BillableProjectItemSerializer(serializers.Serializer):
+    id = serializers.UUIDField()
+    source_type = serializers.ChoiceField(choices=("time", "service"))
+    date = serializers.DateField()
+    description = serializers.CharField()
+    quantity = serializers.DecimalField(max_digits=15, decimal_places=6)
+    unit = serializers.ChoiceField(choices=DocumentLine.Unit.choices)
+    unit_label = serializers.CharField()
+    unit_price_net = serializers.DecimalField(max_digits=12, decimal_places=2)
+    tax_rate = serializers.DecimalField(max_digits=5, decimal_places=2)
+    net_amount = serializers.DecimalField(max_digits=18, decimal_places=2)
+    employee = serializers.CharField()
+    work_package = serializers.CharField()
+    catalog_item = serializers.UUIDField(required=False)
+    tax_note = serializers.CharField(required=False, allow_blank=True)
 
 
 class TaxBreakdownSerializer(serializers.Serializer):

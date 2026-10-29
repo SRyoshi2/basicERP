@@ -484,6 +484,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/documents/billable-items/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["documents_billable_items_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/health/live/": {
         parameters: {
             query?: never;
@@ -1023,7 +1039,6 @@ export interface components {
             /** Format: uuid */
             readonly id: string;
             action: components["schemas"]["AbsenceActionEnum"];
-            /** Format: int64 */
             version: number;
             changes?: unknown;
             readonly actor: string | null;
@@ -1042,6 +1057,14 @@ export interface components {
          * @enum {string}
          */
         AbsenceStatusEnum: "requested" | "approved" | "rejected" | "cancelled";
+        /**
+         * @description * `created` - Erstellt
+         *     * `updated` - Geändert
+         *     * `archived` - Archiviert
+         *     * `billed` - Abgerechnet
+         * @enum {string}
+         */
+        Action320Enum: "created" | "updated" | "archived" | "billed";
         Address: {
             /** Format: uuid */
             readonly id: string;
@@ -1081,6 +1104,29 @@ export interface components {
          * @enum {string}
          */
         AuditActionEnum: "created" | "updated" | "archived";
+        BillableProjectItem: {
+            /** Format: uuid */
+            id: string;
+            source_type: components["schemas"]["SourceTypeEnum"];
+            /** Format: date */
+            date: string;
+            description: string;
+            /** Format: decimal */
+            quantity: string;
+            unit: components["schemas"]["CatalogUnitEnum"];
+            unit_label: string;
+            /** Format: decimal */
+            unit_price_net: string;
+            /** Format: decimal */
+            tax_rate: string;
+            /** Format: decimal */
+            net_amount: string;
+            employee: string;
+            work_package: string;
+            /** Format: uuid */
+            catalog_item?: string;
+            tax_note?: string;
+        };
         BusinessDocument: {
             /** Format: uuid */
             readonly id: string;
@@ -1121,7 +1167,6 @@ export interface components {
             readonly tax_breakdown: components["schemas"]["TaxBreakdown"][];
             readonly snapshot: components["schemas"]["DocumentSnapshotMetadata"] | null;
             readonly artifact: components["schemas"]["DocumentArtifactMetadata"] | null;
-            /** Format: int64 */
             version?: number;
             /** Format: date-time */
             archived_at?: string | null;
@@ -1136,7 +1181,6 @@ export interface components {
             /** Format: uuid */
             readonly id: string;
             action: components["schemas"]["BusinessDocumentAuditEventActionEnum"];
-            /** Format: int64 */
             version: number;
             changes?: unknown;
             actor: string | null;
@@ -1186,7 +1230,6 @@ export interface components {
             /** Format: uuid */
             readonly id: string;
             action: components["schemas"]["AuditActionEnum"];
-            /** Format: int64 */
             version: number;
             changes?: unknown;
             actor: string | null;
@@ -1205,7 +1248,6 @@ export interface components {
             tax_note?: string;
             readonly current_price: components["schemas"]["CatalogPrice"] | null;
             readonly prices: components["schemas"]["CatalogPrice"][];
-            /** Format: int64 */
             version?: number;
             /** Format: date-time */
             archived_at?: string | null;
@@ -1296,7 +1338,6 @@ export interface components {
             website?: string;
             vat_id?: string;
             leitweg_id?: string;
-            /** Format: int64 */
             version?: number;
             /** Format: date-time */
             archived_at?: string | null;
@@ -1338,7 +1379,6 @@ export interface components {
             /** Format: uuid */
             readonly id: string;
             action: components["schemas"]["AuditActionEnum"];
-            /** Format: int64 */
             version: number;
             changes?: unknown;
             readonly actor: string | null;
@@ -1424,7 +1464,6 @@ export interface components {
             sha256: string;
             size: number;
             renderer_version: string;
-            /** Format: int64 */
             template_version?: number;
             readonly download_url: string;
             /** Format: date-time */
@@ -1444,12 +1483,15 @@ export interface components {
         DocumentLine: {
             /** Format: uuid */
             readonly id: string;
-            /** Format: int64 */
             position: number;
             /** Format: uuid */
             catalog_item?: string | null;
             readonly catalog_item_number: string | null;
             readonly catalog_item_name: string | null;
+            /** Format: uuid */
+            source_time_entry?: string | null;
+            /** Format: uuid */
+            source_service_entry?: string | null;
             description: string;
             /** Format: decimal */
             quantity: string;
@@ -1474,6 +1516,10 @@ export interface components {
         DocumentLineWrite: {
             /** Format: uuid */
             catalog_item?: string | null;
+            /** Format: uuid */
+            source_time_entry?: string | null;
+            /** Format: uuid */
+            source_service_entry?: string | null;
             description: string;
             /** Format: decimal */
             quantity: string;
@@ -1585,13 +1631,11 @@ export interface components {
         LeaveEntitlement: {
             employee: number;
             readonly employee_name: string;
-            /** Format: int64 */
             year: number;
             /** Format: decimal */
             entitlement_days?: string;
             /** Format: decimal */
             carryover_days?: string;
-            /** Format: int64 */
             version?: number;
             /** Format: date-time */
             readonly updated_at: string;
@@ -1950,7 +1994,6 @@ export interface components {
             budget_hours?: string | null;
             /** Format: decimal */
             default_hourly_rate?: string | null;
-            /** Format: int64 */
             version?: number;
             /** Format: date-time */
             archived_at?: string | null;
@@ -1963,7 +2006,6 @@ export interface components {
             /** Format: uuid */
             readonly id: string;
             action: components["schemas"]["AuditActionEnum"];
-            /** Format: int64 */
             version: number;
             changes?: unknown;
             readonly actor: string | null;
@@ -2082,8 +2124,7 @@ export interface components {
         ServiceEntryAuditEvent: {
             /** Format: uuid */
             readonly id: string;
-            action: components["schemas"]["AuditActionEnum"];
-            /** Format: int64 */
+            action: components["schemas"]["Action320Enum"];
             version: number;
             changes?: unknown;
             readonly actor: string | null;
@@ -2104,6 +2145,12 @@ export interface components {
             description?: string;
             billable?: boolean;
         };
+        /**
+         * @description * `time` - time
+         *     * `service` - service
+         * @enum {string}
+         */
+        SourceTypeEnum: "time" | "service";
         TaxBreakdown: {
             /** Format: decimal */
             tax_rate: string;
@@ -2134,7 +2181,6 @@ export interface components {
             readonly work_package_title: string;
             /** Format: date */
             work_date: string;
-            /** Format: int64 */
             duration_minutes: number;
             /** Format: decimal */
             readonly duration_hours: string;
@@ -2157,8 +2203,7 @@ export interface components {
         TimeEntryAuditEvent: {
             /** Format: uuid */
             readonly id: string;
-            action: components["schemas"]["AuditActionEnum"];
-            /** Format: int64 */
+            action: components["schemas"]["Action320Enum"];
             version: number;
             changes?: unknown;
             readonly actor: string | null;
@@ -2255,7 +2300,6 @@ export interface components {
             readonly resolved_hourly_rate: string | null;
             /** Format: decimal */
             readonly planned_value: string | null;
-            /** Format: int64 */
             version?: number;
             /** Format: date-time */
             archived_at?: string | null;
@@ -2268,7 +2312,6 @@ export interface components {
             /** Format: uuid */
             readonly id: string;
             action: components["schemas"]["AuditActionEnum"];
-            /** Format: int64 */
             version: number;
             changes?: unknown;
             readonly actor: string | null;
@@ -3470,6 +3513,28 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DocumentSnapshot"];
+                };
+            };
+        };
+    };
+    documents_billable_items_list: {
+        parameters: {
+            query: {
+                document?: string;
+                project: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BillableProjectItem"][];
                 };
             };
         };

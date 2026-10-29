@@ -58,7 +58,10 @@ Snapshot atomar gespeichert. Ein Hintergrundprozess erzeugt daraus ein
 versioniertes Standard-PDF, prüft dessen Kerndaten, archiviert es
 SHA-256-adressiert und stellt es anschließend in der Belegliste zum Download
 bereit. Fehlgeschlagene Render-Versuche werden automatisch mit wachsendem
-Abstand wiederholt.
+Abstand wiederholt. Bei einem projektbezogenen Entwurf zeigt basicERP offene
+abrechenbare Zeiten und Mengenleistungen an. Übernommene Einträge sind gegen
+parallele Bearbeitung und Doppelzuordnung reserviert; erst die atomare
+Festschreibung markiert sie dauerhaft als abgerechnet.
 
 ## Schnellstart unter Ubuntu
 

@@ -163,7 +163,9 @@ Abnahmetests benötigen gemeinsame Entscheidungen und teilweise externe Prüfung
   automatischem Retry und Download in der Belegliste. **Erledigt.**
 - Offene Projektzeiten und Mengenleistungen in einen Rechnungsentwurf
   übernehmen und nach Festschreibung gegen Doppelabrechnung sperren.
-  **Nächster Schritt.**
+  **Erledigt.**
+- Finalisierte Standard-PDFs per SMTP versenden, Versandversuche auditieren und
+  Fehler sicher wiederholen. **Nächster Schritt.**
 
 ## 6. Arbeitsweise und Qualitätsregeln
 

@@ -139,12 +139,12 @@
       <aside class="status-card">
         <p class="eyebrow" style="color:#84caff">Aktueller Stand</p>
         <h2>Phase 4 in Umsetzung</h2>
-        <div class="big-number">60%</div>
-        <div class="progress" aria-label="Phase 4 zu 60 Prozent umgesetzt"><span style="width:60%"></span></div>
+        <div class="big-number">75%</div>
+        <div class="progress" aria-label="Phase 4 zu 75 Prozent umgesetzt"><span style="width:75%"></span></div>
         <ul class="meta">
-          <li><strong>Gesamtfortschritt:</strong> ca. 54 %</li>
+          <li><strong>Gesamtfortschritt:</strong> ca. 57 %</li>
           <li><strong>Letzte Aktualisierung:</strong> 29.10.2026</li>
-          <li><strong>Nächster Schritt:</strong> Projektzeiten und Leistungen in Rechnungsentwürfe übernehmen</li>
+          <li><strong>Nächster Schritt:</strong> PDF-Versand per E-Mail mit Audit und Retry</li>
           <li><strong>Zieltermin:</strong> keiner; Qualität vor Kalender</li>
         </ul>
       </aside>
@@ -187,9 +187,10 @@
         <li class="ok">Unveränderlicher Snapshot, SHA-256, Audit und Outbox</li>
         <li class="ok">Standard-PDF ausschließlich aus dem Snapshot</li>
         <li class="ok">Asynchrone Archivierung, Retry und PDF-Download</li>
-        <li class="wait">Projektleistungen übernehmen, Versand und Zahlungen</li>
+        <li class="ok">Projektzeiten und Mengenleistungen sicher übernehmen</li>
+        <li class="wait">E-Mail-Versand und Zahlungen</li>
       </ul>
-      <div class="notice success">Der dritte Phase-4-Schnitt ist fertig: Nach der atomaren Festschreibung erzeugt ein Hintergrundprozess das Standard-PDF ausschließlich aus dem unveränderlichen Snapshot. Kerndaten und PDF-Struktur werden geprüft, das Ergebnis SHA-256-adressiert archiviert und in der Belegliste zum Download angeboten. Unterbrochene oder fehlgeschlagene Versuche werden idempotent und mit wachsendem Abstand wiederholt.</div>
+      <div class="notice success">Der vierte Phase-4-Schnitt ist fertig: Ein projektbezogener Rechnungsentwurf zeigt offene abrechenbare Zeiten und Mengenleistungen. Die Auswahl übernimmt unveränderliche Mengen-, Preis- und Steuersnapshots serverseitig, reserviert jede Quelle exklusiv und sperrt parallele Änderungen. Archivieren gibt die Reservierung frei; die Rechnungsfestschreibung markiert alle Quellen atomar und auditiert als abgerechnet.</div>
     </section>
 
     <section id="phasen" class="panel">
@@ -233,6 +234,7 @@
         <li><strong>Abwesenheiten prüfen:</strong> Im Dashboard „Abwesenheiten“ öffnen, den Jahresanspruch als Administrator setzen und einen Urlaubsantrag anlegen. Unter „Offene Genehmigungen“ genehmigen oder ablehnen. Das Urlaubskonto muss beantragte, genehmigte und verbleibende Tage korrekt zeigen; Krankheit darf den Resturlaub nicht reduzieren.</li>
         <li><strong>Auswertung prüfen:</strong> Im Dashboard „Auswertung“ öffnen, einen Zeitraum sowie optional Projekt und Mitarbeiter wählen. Arbeitszeit, Zeitwert, Leistungswert und Gesamtwert müssen zu den zuvor erfassten Daten passen. „CSV für Excel exportieren“ lädt eine UTF-8-Datei mit Semikolon-Trennung und deutschen Dezimalzahlen; Mitarbeiter sehen ausschließlich eigene Daten.</li>
         <li><strong>Ausgangsbeleg prüfen:</strong> Im Dashboard „Ausgangsbelege“ öffnen und einen Rechnungsentwurf mit Kunde samt Rechnungsadresse, optionalem Projekt sowie mindestens zwei Positionen anlegen, beispielsweise 100,00 € zu 19 % und 50,00 € zu 7 %. Erwartet werden 150,00 € netto, 22,50 € Steuer und 172,50 € brutto. Belegart oder Position ändern und erneut speichern; die Version und Summen müssen aktualisiert werden.</li>
+        <li><strong>Projektleistungen übernehmen:</strong> Zuvor für ein Projekt eine abrechenbare Zeit und eine Mengenleistung erfassen. Im Rechnungsentwurf denselben Kunden und das Projekt wählen. Unter „Offene Projektleistungen“ beide Einträge markieren und „Auswahl übernehmen“ wählen. Menge, Einheit, Preis, Zeitraum und Summe müssen den Erfassungen entsprechen. Solange der Entwurf aktiv ist, dürfen die Quellen nicht in einen zweiten Beleg übernommen oder in der Zeiterfassung geändert werden. Nach Archivieren des Entwurfs sind sie wieder verfügbar; nach Festschreiben lauten beide dauerhaft „Abgerechnet“.</li>
         <li><strong>Rechnung festschreiben und PDF prüfen:</strong> Den gespeicherten Rechnungsentwurf erneut öffnen und „Endgültig festschreiben“ wählen. Zunächst erscheint die Nummer im Format <code>RE-JJJJ-0001</code> mit „PDF ausstehend“. Innerhalb weniger Sekunden wechselt der Status automatisch zu „Finalisiert“ und „PDF herunterladen“ wird sichtbar. Im PDF müssen Nummer, Aussteller, Empfänger, Positionen, Steuergruppen und Summen mit dem Entwurf übereinstimmen. Der Beleg lässt sich danach weder bearbeiten noch archivieren. Für reine Angebote ist die Festschreibung noch gesperrt.</li>
         <li><strong>E-Rechnungseingang prüfen:</strong> Im Dashboard „Rechnungseingang“ öffnen und <code>docs/examples/incoming-invoice-ubl.xml</code> hochladen. Erwartet werden „Basisprüfung bestanden“, Rechnungsnummer <code>BEISPIEL-2026-001</code>, Verkäufer und Zahlbetrag. Das heruntergeladene Original muss bytegleich sein. Derselbe erneute Upload erzeugt keinen zweiten Eintrag.</li>
         <li><strong>Normale Rechnung prüfen:</strong> Im Rechnungseingang „Normale PDF-Rechnung“ wählen, eine PDF auswählen und Rechnungsnummer, Datum, Verkäufer, Käufer, Betrag und Währung eintragen. Nach dem Speichern erscheint der Beleg als „Vollständig erfasst“; der Hinweis grenzt die manuelle Erfassung klar von einer inhaltlichen Prüfung ab.</li>
@@ -246,7 +248,7 @@
 npm run api:check</pre><p>Mit Node.js installiert: OpenAPI und generierte TypeScript-Typen müssen ohne Diff übereinstimmen.</p></article>
         <article class="test-card"><h3>5 · Backup</h3><pre>powershell -ExecutionPolicy Bypass -File .\scripts\backup-windows.ps1</pre><p>Erzeugt Dump, Archiv, Medien, Manifest und SHA-256-Prüfsummen unter <code>backups/</code>.</p></article>
       </div>
-      <div class="notice success">Zuletzt am 29.10.2026 auf dem aktuellen Windows-System erfolgreich getestet. Vor den additiven Artefaktmigrationen wurde das konsistente Backup <code>basicerp-20261029-153247</code> erstellt. Alle sechs Dienste laufen gesund. 81 Backend-Tests, Ruff, Frontend-Lint/-Build, OpenAPI-Synchronität und Abhängigkeitsprüfung waren erfolgreich. Der reale PostgreSQL-/Celery-Durchstich verarbeitete das ausstehende Ereignis für <code>RE-2026-0001</code> automatisch, erzeugte ein geprüftes einseitiges A4-PDF mit SHA-256 <code>a0aac023…c8250</code>, archivierte es unveränderlich und lieferte es über den geschützten Download mit HTTP 200 aus.</div>
+      <div class="notice success">Zuletzt am 29.10.2026 auf dem aktuellen Windows-System erfolgreich getestet. Vor den additiven Projektquellen-Migrationen wurde das konsistente Backup <code>basicerp-20261029-161012</code> erstellt. Alle sechs Dienste laufen gesund. 83 Backend-Tests, Ruff, Frontend-Lint/-Build, OpenAPI-Synchronität und Abhängigkeitsprüfung waren erfolgreich. Der reale PostgreSQL-Durchstich übernahm 481 Minuten als 8,016667 Stunden × 110,00 € centgenau mit 881,83 € netto in <code>RE-2026-0003</code>, bestätigte Reservierungs- und Änderungssperre sowie die atomare Abgerechnet-Markierung. Die gesamte Transaktion wurde zurückgerollt; Objektzahlen, Nummernkreis und vorhandene Buchungen blieben unverändert.</div>
     </section>
 
     <section id="ubuntu" class="panel">
@@ -300,6 +302,7 @@ docker compose logs --tail 100</pre>
       <table>
         <thead><tr><th>Datum</th><th>Schritt</th><th>Ergebnis</th></tr></thead>
         <tbody>
+          <tr><td>29.10.2026</td><td>Phase 4 / Projektabrechnung</td><td>Offene abrechenbare Zeiten und Mengenleistungen projektbezogen auswählbar gemacht. Servergeleitete Positionsübernahme, exklusive Entwurfsreservierung, Änderungssperre, Freigabe beim Archivieren und atomare Abgerechnet-Markierung mit Audit bei Festschreibung verhindern Doppelabrechnung. PDF-Versand per E-Mail ist der nächste Schritt.</td></tr>
           <tr><td>29.10.2026</td><td>Phase 4 / Standard-PDF</td><td>Versioniertes WeasyPrint-Standard-PDF ausschließlich aus dem finalen Snapshot, inhaltliche PDF-Prüfung, SHA-256-adressierte Archivierung, idempotente Celery-Outbox-Verarbeitung, automatische Wiederholung und Download in der Belegliste umgesetzt. Projektzeiten und Leistungen in Rechnungsentwürfe zu übernehmen ist der nächste Schritt.</td></tr>
           <tr><td>29.10.2026</td><td>Phase 4 / Festschreibung</td><td>Pflichtangaben-Gate, atomare jahresbezogene Rechnungsnummer, unveränderlicher versionierter Snapshot mit SHA-256 sowie Audit und transaktionales Outbox-Ereignis umgesetzt. 79 Backend-Tests und ein realer PostgreSQL-Durchstich bestätigten Summen, Snapshot und lückenlosen Nummern-Rollback; vorhandene Daten blieben unverändert.</td></tr>
           <tr><td>29.10.2026</td><td>Phase 4 / Dokumententwürfe</td><td>Angebote und normale Ausgangsrechnungen als Admin-Entwürfe mit Katalog-/Freitextpositionen, Rabatten, 0/7/19 %, Kleinunternehmer-Variante, kanonischer Steuerberechnung, Versionsschutz, Audit und Archivierung umgesetzt. 75 Backend-Tests und der zurückgerollte PostgreSQL-Durchstich waren erfolgreich; ein dabei erkannter optionaler Join in der Sperrabfrage wurde vor Freigabe korrigiert.</td></tr>

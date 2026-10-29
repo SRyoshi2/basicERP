@@ -241,8 +241,8 @@ Freigabelogik folgt der Trennung konsequent.
 | CatalogItem | Preis/Steueränderungen überschreiben keine historischen Belege |
 | Project | Kunde, Status und Budget; Sätze werden zeitlich/sachlich eindeutig aufgelöst |
 | WorkPackage | gehört genau zu einem Projekt; Status, Planstunden, Mitarbeiter und optionaler Satz-Override |
-| TimeEntry | positive Dauer, Mitarbeiter/Projekt/Arbeitspaket; Satz-Snapshot; Abrechnungsstatus; abgerechnete Einträge gesperrt |
-| ServiceEntry | positive Menge; Projekt/Arbeitspaket/Katalogleistung; Preis-/Steuer-/Text-Snapshot; abgerechnete Einträge gesperrt |
+| TimeEntry | positive Dauer, Mitarbeiter/Projekt/Arbeitspaket; Satz-Snapshot; Abrechnungsstatus; reservierte und abgerechnete Einträge gesperrt |
+| ServiceEntry | positive Menge; Projekt/Arbeitspaket/Katalogleistung; Preis-/Steuer-/Text-Snapshot; reservierte und abgerechnete Einträge gesperrt |
 | AbsenceRequest | Mitarbeiter, Typ und konsistenter Zeitraum; eindeutiger Statusfluss; keine offenen/genehmigten Überschneidungen |
 | LeaveEntitlement | genau ein Jahresanspruch je Mitarbeiter/Jahr; nichtnegative Anspruchs- und Übertragstage |
 | Invoice | Summe der Positionen/Steuern; erlaubter Zustandsübergang; finaler Snapshot unveränderlich |
@@ -265,6 +265,17 @@ und berechnet die Steuer genau einmal je Gruppe. Die SPA zeigt nur die vom
 Server gelieferten Summen an. Damit erhalten API, UI, späterer Snapshot, PDF
 und E-Rechnung dieselben Werte; Details und Alternativen dokumentiert
 [`ADR-0003`](adr/0003-kanonische-belegberechnung.md).
+
+Projektzeiten und Mengenleistungen können über je eine optionale One-to-one-
+Quelle an `DocumentLine` gebunden werden. Die Quelle bestimmt Menge, Einheit,
+Preis und Steuersatz serverseitig; nur der Positionstext bleibt im Entwurf
+anpassbar. Die eindeutige Datenbankbeziehung reserviert einen Eintrag für genau
+einen aktiven Entwurf. Änderungen und Archivierung der Quelle sind während der
+Reservierung gesperrt. Wird der Entwurf archiviert, werden die Referenzen
+gelöst. Bei der Festschreibung werden alle Quellen unter Row Locks erneut
+validiert, atomar auf `billed` gesetzt und separat auditiert. Damit kann weder
+ein zweiter Entwurf dieselbe Leistung reservieren noch ein paralleler Prozess
+sie doppelt abrechnen.
 
 Der Projektstamm ist als eigenes Aggregat im Modul `projects` umgesetzt. Er
 referenziert den Kunden per geschütztem Fremdschlüssel, übernimmt aber keine

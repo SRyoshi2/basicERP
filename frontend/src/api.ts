@@ -90,6 +90,22 @@ export type TimeReport = components["schemas"]["TimeReport"];
 export type BusinessDocument = components["schemas"]["BusinessDocument"];
 export type BusinessDocumentInput = components["schemas"]["BusinessDocumentCreate"];
 export type DocumentLineInput = components["schemas"]["DocumentLineWrite"];
+export type BillableProjectItem = {
+  id: string;
+  source_type: "time" | "service";
+  date: string;
+  description: string;
+  quantity: string;
+  unit: "hour" | "day" | "piece" | "flat";
+  unit_label: string;
+  unit_price_net: string;
+  tax_rate: string;
+  net_amount: string;
+  employee: string;
+  work_package: string;
+  catalog_item?: string;
+  tax_note?: string;
+};
 export type BusinessDocumentPage = Omit<
   components["schemas"]["PaginatedBusinessDocumentList"], "results"
 > & { results: BusinessDocument[] };
@@ -342,6 +358,16 @@ export async function getBusinessDocuments(options: {
   if (options.page && options.page > 1) params.set("page", String(options.page));
   const query = params.size ? `?${params.toString()}` : "";
   return request<BusinessDocumentPage>(`/api/v1/documents/${query}`);
+}
+
+export async function getBillableProjectItems(
+  projectId: string, documentId?: string,
+): Promise<BillableProjectItem[]> {
+  const params = new URLSearchParams({ project: projectId });
+  if (documentId) params.set("document", documentId);
+  return request<BillableProjectItem[]>(
+    `/api/v1/documents/billable-items/?${params.toString()}`,
+  );
 }
 
 export async function createBusinessDocument(

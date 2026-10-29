@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db.models import Q
 from django.http import FileResponse
@@ -14,11 +16,12 @@ from apps.core.serializers import ApiErrorResponseSerializer
 
 from .models import BusinessDocument, DocumentArtifact, DocumentSnapshot
 from .serializers import (
+    BillableProjectItemSerializer,
     BusinessDocumentAuditEventSerializer, BusinessDocumentCreateSerializer,
     BusinessDocumentSerializer, BusinessDocumentUpdateSerializer,
     DocumentSnapshotSerializer, FinalizeDocumentSerializer,
 )
-from .services import archive_document, finalize_document
+from .services import archive_document, billable_project_items, finalize_document
 
 
 class BusinessDocumentViewSet(
@@ -107,6 +110,33 @@ class BusinessDocumentViewSet(
                 {"error": {"code": "invalid_state", "message": str(error)}}, status=400
             )
         return Response(BusinessDocumentSerializer(document).data, status=status.HTTP_200_OK)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter("project", OpenApiTypes.UUID, required=True),
+            OpenApiParameter("document", OpenApiTypes.UUID),
+        ],
+        responses={200: BillableProjectItemSerializer(many=True)},
+    )
+    @action(detail=False, methods=["get"], url_path="billable-items", pagination_class=None)
+    def billable_items(self, request):
+        project_id = request.query_params.get("project")
+        if not project_id:
+            raise ValidationError({"project": "Ein Projekt ist erforderlich."})
+        try:
+            UUID(project_id)
+        except (TypeError, ValueError) as error:
+            raise ValidationError({"project": "Ungültige UUID."}) from error
+        document_id = request.query_params.get("document")
+        try:
+            if document_id:
+                UUID(document_id)
+        except (TypeError, ValueError) as error:
+            raise ValidationError({"document": "Ungültige UUID."}) from error
+        items = billable_project_items(
+            project_id, document_id
+        )
+        return Response(BillableProjectItemSerializer(items, many=True).data)
 
     @extend_schema(
         request=FinalizeDocumentSerializer,

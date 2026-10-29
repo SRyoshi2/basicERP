@@ -20,7 +20,11 @@ from apps.documents.models import (
     BusinessDocument, BusinessDocumentAuditEvent, DocumentArtifact,
     DocumentNumberSequence, DocumentOutboxEvent, DocumentSnapshot,
 )
-from apps.projects.models import Project
+from apps.projects.models import Project, WorkPackage
+from apps.timetracking.models import (
+    ServiceEntry, ServiceEntryAuditEvent, TimeEntry, TimeEntryAuditEvent,
+)
+from apps.timetracking.services import update_time_entry
 
 
 @pytest.fixture
@@ -89,6 +93,31 @@ def document_item(document_admin):
         unit=CatalogItem.Unit.HOUR, tax_rate="19.00", created_by=document_admin,
         updated_by=document_admin,
     )
+
+
+@pytest.fixture
+def document_sources(document_admin, document_project, document_item):
+    package = WorkPackage.objects.create(
+        project=document_project, title="Umsetzung", status=WorkPackage.Status.IN_PROGRESS,
+        planned_hours="10.00", hourly_rate_override="100.00",
+        created_by=document_admin, updated_by=document_admin,
+    )
+    time_entry = TimeEntry.objects.create(
+        employee=document_admin, project=document_project, work_package=package,
+        work_date=date.today(), duration_minutes=481, description="Konzeption",
+        billable=True, hourly_rate_snapshot="100.00", created_by=document_admin,
+        updated_by=document_admin,
+    )
+    service_entry = ServiceEntry.objects.create(
+        employee=document_admin, project=document_project, work_package=package,
+        catalog_item=document_item, service_date=date.today(), quantity="2.000",
+        description="Workshop", billable=True,
+        catalog_item_number_snapshot=document_item.item_number,
+        catalog_item_name_snapshot=document_item.name,
+        unit_snapshot=document_item.unit, unit_price_snapshot="50.00",
+        tax_rate_snapshot="19.00", created_by=document_admin, updated_by=document_admin,
+    )
+    return time_entry, service_entry
 
 
 @pytest.fixture
@@ -232,6 +261,117 @@ def test_valid_small_business_document_has_no_tax(
     assert response.data["net_total"] == "250.00"
     assert response.data["tax_total"] == "0.00"
     assert response.data["gross_total"] == "250.00"
+
+
+@pytest.mark.django_db
+def test_project_sources_can_be_reserved_released_and_cannot_be_edited(
+    api_client, document_admin, document_customer, document_project, document_sources
+):
+    time_entry, service_entry = document_sources
+    api_client.force_authenticate(document_admin)
+    available = api_client.get(
+        reverse("business-document-billable-items"), {"project": document_project.id}
+    )
+    assert available.status_code == 200, available.data
+    assert {(item["source_type"], item["id"]) for item in available.data} == {
+        ("time", str(time_entry.id)), ("service", str(service_entry.id)),
+    }
+    lines = [
+        {
+            "source_time_entry": str(time_entry.id), "source_service_entry": None,
+            "catalog_item": None, "description": "Konzeption", "quantity": "1.000",
+            "unit": "hour", "unit_price_net": "1.00", "discount_percent": "0.00",
+            "tax_rate": "19.00", "tax_note": "",
+        },
+        {
+            "source_time_entry": None, "source_service_entry": str(service_entry.id),
+            "catalog_item": str(service_entry.catalog_item_id), "description": "Workshop",
+            "quantity": "1.000", "unit": "hour", "unit_price_net": "1.00",
+            "discount_percent": "0.00", "tax_rate": "19.00", "tax_note": "",
+        },
+    ]
+    created = api_client.post(
+        reverse("business-document-list"),
+        document_payload(document_customer, document_project, lines=lines), format="json",
+    )
+    assert created.status_code == 201, created.data
+    assert created.data["net_total"] == "901.67"
+    assert created.data["gross_total"] == "1072.99"
+    assert created.data["lines"][0]["quantity"] == "8.016667"
+    assert created.data["lines"][0]["unit_price_net"] == "100.00"
+    time_item = next(item for item in available.data if item["source_type"] == "time")
+    assert time_item["net_amount"] == created.data["lines"][0]["net_amount"]
+    with pytest.raises(ValueError, match="Rechnungsentwurf"):
+        update_time_entry(
+            time_entry.id,
+            {
+                "version": time_entry.version, "project": document_project,
+                "work_package": time_entry.work_package, "work_date": time_entry.work_date,
+                "duration_minutes": 60, "description": time_entry.description,
+                "billable": True,
+            },
+            document_admin,
+        )
+    assert api_client.get(
+        reverse("business-document-billable-items"), {"project": document_project.id}
+    ).data == []
+    duplicate = api_client.post(
+        reverse("business-document-list"),
+        document_payload(document_customer, document_project, lines=lines), format="json",
+    )
+    assert duplicate.status_code == 400
+    archived = api_client.post(
+        reverse("business-document-archive", args=(created.data["id"],)), {}, format="json"
+    )
+    assert archived.status_code == 200
+    assert len(api_client.get(
+        reverse("business-document-billable-items"), {"project": document_project.id}
+    ).data) == 2
+
+
+@pytest.mark.django_db
+def test_finalization_marks_project_sources_billed_with_audit(
+    api_client, document_admin, document_customer, document_project, document_sources,
+    complete_company,
+):
+    time_entry, service_entry = document_sources
+    api_client.force_authenticate(document_admin)
+    lines = [
+        {
+            "source_time_entry": str(time_entry.id), "source_service_entry": None,
+            "catalog_item": None, "description": "Konzeption", "quantity": "2.000",
+            "unit": "hour", "unit_price_net": "100.00", "discount_percent": "0.00",
+            "tax_rate": "19.00", "tax_note": "",
+        },
+        {
+            "source_time_entry": None, "source_service_entry": str(service_entry.id),
+            "catalog_item": str(service_entry.catalog_item_id), "description": "Workshop",
+            "quantity": "2.000", "unit": "hour", "unit_price_net": "50.00",
+            "discount_percent": "0.00", "tax_rate": "19.00", "tax_note": "",
+        },
+    ]
+    created = api_client.post(
+        reverse("business-document-list"),
+        document_payload(document_customer, document_project, lines=lines), format="json",
+    )
+    finalized = api_client.post(
+        reverse("business-document-finalize", args=(created.data["id"],)),
+        {"version": created.data["version"]}, format="json",
+    )
+    assert finalized.status_code == 200, finalized.data
+    time_entry.refresh_from_db()
+    service_entry.refresh_from_db()
+    assert time_entry.billing_status == TimeEntry.BillingStatus.BILLED
+    assert service_entry.billing_status == ServiceEntry.BillingStatus.BILLED
+    assert TimeEntryAuditEvent.objects.filter(
+        time_entry=time_entry, action=TimeEntryAuditEvent.Action.BILLED
+    ).exists()
+    assert ServiceEntryAuditEvent.objects.filter(
+        service_entry=service_entry, action=ServiceEntryAuditEvent.Action.BILLED
+    ).exists()
+    snapshot = DocumentSnapshot.objects.get(document_id=created.data["id"])
+    assert snapshot.payload["lines"][0]["source_time_entry_id"] == str(time_entry.id)
+    assert snapshot.payload["lines"][1]["source_service_entry_id"] == str(service_entry.id)
 
 
 @pytest.mark.django_db

@@ -168,8 +168,16 @@ class DocumentLine(models.Model):
         "catalog.CatalogItem", null=True, blank=True, on_delete=models.PROTECT,
         related_name="document_lines",
     )
+    source_time_entry = models.OneToOneField(
+        "timetracking.TimeEntry", null=True, blank=True, on_delete=models.PROTECT,
+        related_name="document_line",
+    )
+    source_service_entry = models.OneToOneField(
+        "timetracking.ServiceEntry", null=True, blank=True, on_delete=models.PROTECT,
+        related_name="document_line",
+    )
     description = models.CharField(max_length=500)
-    quantity = models.DecimalField(max_digits=12, decimal_places=3)
+    quantity = models.DecimalField(max_digits=15, decimal_places=6)
     unit = models.CharField(max_length=16, choices=Unit.choices)
     unit_price_net = models.DecimalField(max_digits=12, decimal_places=2)
     discount_percent = models.DecimalField(max_digits=5, decimal_places=2, default=0)
@@ -195,6 +203,13 @@ class DocumentLine(models.Model):
                 condition=models.Q(discount_percent__gte=0)
                 & models.Q(discount_percent__lte=100),
                 name="document_line_discount_range",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    models.Q(source_time_entry__isnull=True)
+                    | models.Q(source_service_entry__isnull=True)
+                ),
+                name="document_line_single_source",
             ),
         ]
 
